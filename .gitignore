@@ -1,0 +1,14 @@
+.idea
+.vscode
+.DS_Store
+storage/
+storage-testnet/
+*.dat
+main
+goXdagWallet
+*.exe
+*.apk
+*.app
+*.log
+*.out
+._*
