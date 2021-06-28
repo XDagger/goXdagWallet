@@ -31,7 +31,7 @@ func main() {
 		return
 	}
 
-	hasAccount:= C.xdag_dnet_crpt_found() // cgo call xdag_runtime C library
+	hasAccount := C.xdag_dnet_crpt_found() // cgo call xdag_runtime C library
 	a := app.NewWithID("go.xdag.wallet")
 	a.SetIcon(resourceIconPng)
 	w := a.NewWindow(fmt.Sprintf(GetI18nString("LogonWindow_Title"), conf.Version))
@@ -39,10 +39,10 @@ func main() {
 
 	w.SetMaster()
 	var btn *widget.Button
-	if hasAccount == 0 {			// found wallet key file
-		btn = widget.NewButton("connect wallet", walletWindow)
-	} else if hasAccount == -1 {	 // not fount
-		btn = widget.NewButton("create wallet", walletWindow)
+	if hasAccount == 0 { // found wallet key file
+		btn = widget.NewButton(GetI18nString("LogonWindow_ConnectWallet"), walletWindow)
+	} else if hasAccount == -1 { // not fount
+		btn = widget.NewButton(GetI18nString("LogonWindow_RegisterWallet"), walletWindow)
 	}
 
 	btn.Importance = widget.HighImportance
@@ -54,7 +54,7 @@ func main() {
 			container.New(layout.NewPaddedLayout(), btn),
 			layout.NewSpacer()))
 	w.SetContent(content)
-	w.Resize(fyne.NewSize(420, 300))
+	w.Resize(fyne.NewSize(450, 300))
 	w.CenterOnScreen()
 
 	themes := GetConfig().Theme
