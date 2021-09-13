@@ -39,18 +39,19 @@ struct xfer_callback_data {
     int fieldsCount, keysCount, outsig;
     xdag_hash_t transactionBlockHash;
 };
+typedef int(*event_callback)(void*, xdag_event *);
+typedef int(*password_callback)(const char *prompt, char *buf, unsigned size);
 ////------------------------------------
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern int xdag_event_callback(void* thisObj, xdag_event *event);
+//extern int xdag_event_callback(void* thisObj, xdag_event *event);
 
 
 ////---- Exporting functions ----
 extern int xdag_init_wrap(int argc, char **argv, const char * pool_address);
-extern int xdag_set_password_callback_wrap(int(*callback)(const char *prompt, char *buf, unsigned size));
-extern int xdag_set_event_callback_wrap(int(*callback)(void*, xdag_event *));
+extern int xdag_set_password_callback_wrap(password_callback callback);
+extern int xdag_set_event_callback_wrap(event_callback callback);
 extern int xdag_get_state_wrap(void);
 extern int xdag_get_balance_wrap(void);
 extern int xdag_get_address_wrap(void);

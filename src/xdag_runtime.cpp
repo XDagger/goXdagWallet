@@ -34,7 +34,7 @@ int xdag_init_wrap(int argc, char **argv, const char* pool_address)
     return 0;
 }
 
-int xdag_set_event_callback_wrap(int(*callback)(void*, xdag_event *))
+int xdag_set_event_callback_wrap(event_callback callback)
 {
     return xdag_set_event_callback(callback);
 }
@@ -57,124 +57,124 @@ int xdag_get_address_wrap(void)
     return 0;
 }
 
-int xdag_event_callback(void* thisObj, xdag_event *event)
-{
-    if (!event) {
-        return -1;
-    }
+//int xdag_event_callback(void* thisObj, xdag_event *event)
+//{
+//    if (!event) {
+//        return -1;
+//    }
+//
+//    switch (event->event_id) {
+//        case event_id_init_done:
+//        {
+//            g_client_init_done = 1;
+//            break;
+//        }
+//        case event_id_log:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_interact:
+//        {
+//
+//            break;
+//        }
+//
+//            //		case event_id_err:
+//            //		{
+//            //			fprintf(stdout, "error : %x, msg : %s\n", event->error_no, event->event_data);
+//            //			fflush(stdout);
+//            //			break;
+//            //		}
+//
+//        case event_id_err_exit:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_account_done:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_address_done:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_balance_done:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_xfer_done:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_level_done:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_state_done:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_exit_done:
+//        {
+//
+//            break;
+//        }
+//
+//        case event_id_passwd:
+//        {
+//            break;
+//        }
+//
+//        case event_id_set_passwd:
+//        {
+//            break;
+//        }
+//
+//        case event_id_set_passwd_again:
+//        {
+//            break;
+//        }
+//
+//        case event_id_random_key:
+//        {
+//            break;
+//        }
+//
+//        case event_id_state_change:
+//        {
+//
+//            break;
+//        }
+//
+//        default:
+//        {
+//
+//            break;
+//        }
+//    }
+//    return 0;
+//}
 
-    switch (event->event_id) {
-        case event_id_init_done:
-        {
-            g_client_init_done = 1;
-            break;
-        }
-        case event_id_log:
-        {
-
-            break;
-        }
-
-        case event_id_interact:
-        {
-
-            break;
-        }
-
-            //		case event_id_err:
-            //		{
-            //			fprintf(stdout, "error : %x, msg : %s\n", event->error_no, event->event_data);
-            //			fflush(stdout);
-            //			break;
-            //		}
-
-        case event_id_err_exit:
-        {
-
-            break;
-        }
-
-        case event_id_account_done:
-        {
-
-            break;
-        }
-
-        case event_id_address_done:
-        {
-
-            break;
-        }
-
-        case event_id_balance_done:
-        {
-
-            break;
-        }
-
-        case event_id_xfer_done:
-        {
-
-            break;
-        }
-
-        case event_id_level_done:
-        {
-
-            break;
-        }
-
-        case event_id_state_done:
-        {
-
-            break;
-        }
-
-        case event_id_exit_done:
-        {
-
-            break;
-        }
-
-        case event_id_passwd:
-        {
-            break;
-        }
-
-        case event_id_set_passwd:
-        {
-            break;
-        }
-
-        case event_id_set_passwd_again:
-        {
-            break;
-        }
-
-        case event_id_random_key:
-        {
-            break;
-        }
-
-        case event_id_state_change:
-        {
-
-            break;
-        }
-
-        default:
-        {
-
-            break;
-        }
-    }
-    return 0;
-}
-
-int xdag_set_password_callback_wrap(int(*callback)(const char *prompt, char *buf, unsigned size))
+int xdag_set_password_callback_wrap(password_callback callback)
 {
     //// return xdag_set_password_callback(callback);
-    return xdag_user_crypt_action((uint32_t *)(void *)callback, 0, 0, 6);
+    return xdag_user_crypt_action((uint32_t *)(callback), 0, 0, 6);
 }
 
 int xdag_transfer_wrap(const char* toAddress, const char* amountString, const char* remarkString)

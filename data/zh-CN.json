@@ -53,7 +53,7 @@
   "WalletWindow_TabHistory": "历史记录",
   "WalletWindow_TabTransfer": "转账",
   "WalletWindow_TabSettings": "设置",
-  "LogonWindow_NoPoolAddress": "读取配置文件错误：请检查wallet-config.json文件，确认options/pool_address填写正确",
+  "LogonWindow_NoPoolAddress": "\n读取配置文件错误：\n请检查wallet-config.json文件，\n 确认options/pool_address填写正确\n",
   "WalletWindow_HistoryBusy": "正在读取交易信息数据...",
   "WalletWindow_HistoryColumns_Amount": "数额",
   "WalletWindow_HistoryColumns_BlockAddress": "区块地址",
