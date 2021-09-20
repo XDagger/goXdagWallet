@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -26,7 +26,7 @@ type WalletOption struct {
 	PoolAddress          string  `json:"pool_address"`
 }
 
-func initConfig() {
+func InitConfig() {
 	newConf := false
 
 	conf.Version = "0.4.0"

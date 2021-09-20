@@ -1,43 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fyne.io/fyne/v2"
-	"io/ioutil"
-	"path"
 )
 
-var i18n = make(map[string]string)
-
-func stringRead(res string) []byte {
-	bytes, err := ioutil.ReadFile(path.Join("data", res))
-	if err != nil {
-		return nil
-	}
-	return bytes
-}
-
-
-func LoadI18nStrings() error {
-	lang := GetConfig().CultureInfo
-	data := stringRead(lang + ".json")
-	if len(data) == 0 {
-		return nil
-	}
-	err := json.Unmarshal(data, &i18n)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func GetI18nString(id string) string {
-	str := i18n[id]
-	if str != "" {
-		return str
-	}
-	return id
-}
 var resourceIconPng = &fyne.StaticResource{
 	StaticName: "logo.png",
 	StaticContent: []byte(

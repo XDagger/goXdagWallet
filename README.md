@@ -13,7 +13,9 @@ Fyne is a cross-platform GUI in Go inspired by Material Design.
 
 ## environment variable
 
-CGO_ENABLED=1;FYNE_FONT=data/msyh.ttf;FYNE_SCALE=1.2
+CGO_ENABLED=1
+FYNE_FONT=data/myFont.ttf
+FYNE_SCALE=1.2
 
 ## features
 

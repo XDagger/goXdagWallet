@@ -22,6 +22,8 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"goXdagWallet/components"
+	"goXdagWallet/config"
+	"goXdagWallet/i18n"
 	"goXdagWallet/xlog"
 	"os"
 	"strings"
@@ -39,8 +41,8 @@ func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
 }
 
 func main() {
-	initConfig()
-	if LoadI18nStrings() != nil {
+	config.InitConfig()
+	if i18n.LoadI18nStrings() != nil {
 		return
 	}
 
@@ -48,21 +50,37 @@ func main() {
 	hasAccount := C.xdag_dnet_crpt_found() // cgo call xdag_runtime C library
 	WalletApp = app.NewWithID("go.xdag.wallet")
 	WalletApp.SetIcon(resourceIconPng)
-	w := WalletApp.NewWindow(fmt.Sprintf(GetI18nString("LogonWindow_Title"), conf.Version))
+	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
 	WalletWindow = w
 
-	//w.SetMaster()
 	var btn *widget.Button
 	if hasAccount == 0 { // found wallet key file
-		btn = widget.NewButton(GetI18nString("LogonWindow_ConnectWallet"), connectAccount)
+		btn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), connectAccount)
 	} else if hasAccount == -1 { // not fount
-		btn = widget.NewButton(GetI18nString("LogonWindow_RegisterWallet"), walletWindow)
+		btn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), walletWindow)
 	}
 
 	btn.Importance = widget.HighImportance
 	image := canvas.NewImageFromResource(resourceLogonPng)
+	settingBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
+		showLanguageDialog(i18n.GetString("SettingsWindow_ChooseLanguage"),
+			i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), func(lang string) {
+				config.GetConfig().CultureInfo = lang
+				config.SaveConfig()
+				i18n.LoadI18nStrings()
+				WalletWindow.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
+				if hasAccount == 0 { // found wallet key file
+					btn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
+				} else if hasAccount == -1 { // not fount
+					btn.SetText(i18n.GetString("LogonWindow_RegisterWallet"))
+				}
+			}, WalletWindow)
+	})
+	settingBtn.Resize(fyne.NewSize(20, 20))
+	settingBtn.Importance = widget.HighImportance
 	content := container.New(layout.NewMaxLayout(), image,
-		container.New(layout.NewVBoxLayout(), layout.NewSpacer(),
+		container.New(layout.NewVBoxLayout(),
+			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), settingBtn),
 			layout.NewSpacer(), layout.NewSpacer(),
 			layout.NewSpacer(), layout.NewSpacer(),
 			container.New(layout.NewPaddedLayout(), btn),
@@ -75,7 +93,7 @@ func main() {
 		os.Exit(0)
 	})
 
-	themes := GetConfig().Theme
+	themes := config.GetConfig().Theme
 	if themes != "Dark" && themes != "Light" {
 		WalletApp.Settings().SetTheme(theme.DarkTheme())
 	} else if themes == "Dark" {
@@ -87,32 +105,15 @@ func main() {
 }
 
 func connectAccount() {
-	if conf.Option.PoolAddress == "" {
-		dialog.ShowInformation(GetI18nString("Common_MessageTitle"),
-			GetI18nString("LogonWindow_NoPoolAddress"), WalletWindow)
+	if config.GetConfig().Option.PoolAddress == "" {
+		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+			i18n.GetString("LogonWindow_NoPoolAddress"), WalletWindow)
 		return
 	}
 
-	//pwdDialog := components.NewPasswordDialog(nil)
-	//pwdDialog.ShowPasswordDialog(GetI18nString("Common_MessageTitle"),
-	//	GetI18nString("PasswordWindow_InputPassword"),
-	//	GetI18nString("Common_Confirm"),
-	//	GetI18nString("Common_Cancel"), nil, WalletWindow
-	//	)
-	walletWindow()
-	C.init_event_callback()
-	C.init_password_callback()
+	showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
+		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), WalletWindow)
 
-	pa := C.CString(conf.Option.PoolAddress)
-	defer C.free(unsafe.Pointer(pa))
-
-	argv := make([]*C.char, 1)
-	cs := C.CString("xdag.exe")
-	defer C.free(unsafe.Pointer(cs))
-
-	argv[0] = cs
-	result := C.xdag_init_wrap(C.int(1), (**C.char)(unsafe.Pointer(&argv[0])), pa)
-	fmt.Println((int32)(result))
 	//switch result {
 	//
 	//}
@@ -120,17 +121,17 @@ func connectAccount() {
 
 func walletWindow() {
 	WalletWindow.Hide()
-	w := WalletApp.NewWindow(fmt.Sprintf(GetI18nString("LogonWindow_Title"), conf.Version))
+	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
 	WalletWindow = w
 	w.SetMaster()
 	tabs := container.NewAppTabs(
-		container.NewTabItemWithIcon(GetI18nString("WalletWindow_TabAccount"),
+		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAccount"),
 			theme.HomeIcon(), components.AccountPage(WalletWindow)),
-		container.NewTabItemWithIcon(GetI18nString("WalletWindow_TabTransfer"),
-			theme.MailSendIcon(), components.TransferPage(WalletWindow)),
-		container.NewTabItemWithIcon(GetI18nString("WalletWindow_TabHistory"),
+		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabTransfer"),
+			theme.MailSendIcon(), components.TransferPage(WalletWindow, transferWrap)),
+		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabHistory"),
 			theme.ContentPasteIcon(), components.HistoryPage(WalletWindow)),
-		container.NewTabItemWithIcon(GetI18nString("WalletWindow_TabSettings"),
+		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabSettings"),
 			theme.SettingsIcon(), components.SettingsPage(WalletWindow)))
 	if fyne.CurrentDevice().IsMobile() {
 		tabs.SetTabLocation(container.TabLocationBottom)
@@ -148,11 +149,66 @@ func walletWindow() {
 	w.Show()
 }
 
+func showPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
+	wgt := widget.NewEntry()
+	wgt.Password = true
+
+	dialog.ShowCustomConfirm(title, ok, dismiss, wgt, func(b bool) {
+		for i := range globalPassword {
+			globalPassword[i] = 0
+		}
+		str := wgt.Text
+		fmt.Println("b", b, "pwd", str)
+		if b && len(str) > 0 {
+			copy(globalPassword[:], str)
+			showWalletWin()
+		}
+	}, parent)
+
+}
+
+func showLanguageDialog(title, ok, dismiss string, callback func(string), parent fyne.Window) {
+	lang := "en-US"
+	radio := widget.NewRadioGroup([]string{"English", "中文"}, func(value string) {
+		if value == "English" {
+			lang = "en-US"
+		} else {
+			lang = "zh-CN"
+		}
+	})
+
+	dialog.ShowCustomConfirm(title, ok, dismiss, radio, func(b bool) {
+		if b {
+			callback(lang)
+		}
+	}, parent)
+
+}
+
+func showWalletWin() {
+	walletWindow()
+	C.init_event_callback()
+	C.init_password_callback()
+
+	pa := C.CString(config.GetConfig().Option.PoolAddress)
+	defer C.free(unsafe.Pointer(pa))
+
+	argv := make([]*C.char, 1)
+	cs := C.CString("xdag.exe")
+	defer C.free(unsafe.Pointer(cs))
+
+	argv[0] = cs
+	result := C.xdag_init_wrap(C.int(1), (**C.char)(unsafe.Pointer(&argv[0])), pa)
+	fmt.Println((int32)(result))
+
+}
+
 //export goEventCallback
 func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 	eventId := xdagEvent.event_id
 	eventData := C.GoString(xdagEvent.event_data)
-	//fmt.Println(eventData)
+	fmt.Println(int(eventId))
+	fmt.Println(eventData)
 
 	switch eventId {
 	case C.event_id_log:
@@ -179,6 +235,10 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 		xlog.Info(eventData)
 		//fmt.Println("event_id_balance_done")
 		break
+	case C.event_id_xfer_done:
+		fmt.Println("event_id_xfer_done")
+		xlog.Info(eventData)
+		break
 	case C.event_id_err_exit:
 		//fmt.Println("event_id_err_exit")
 		xlog.Error(eventData)
@@ -192,12 +252,29 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 
 //export goPasswordCallback
 func goPasswordCallback(prompt *C.cchar_t, buf *C.char, size C.uint) C.int {
-	for i := range globalPassword {
-		globalPassword[i] = 0
-	}
-	pwd := "ljr20040224"
-	copy(globalPassword[:], pwd)
+	//for i := range globalPassword {
+	//	globalPassword[i] = 0
+	//}
+	//pwd := "ljr20040224"
+	//copy(globalPassword[:], pwd)
 
 	C.memcpy(unsafe.Pointer(buf), unsafe.Pointer(&globalPassword[0]), C.size_t(size))
 	return C.int(0)
+}
+
+func transferWrap(address, amount, remark string) int {
+	// TODO: validate address, amount, remark
+
+	csAddress := C.CString(address)
+	defer C.free(unsafe.Pointer(csAddress))
+
+	csAmount := C.CString(amount)
+	defer C.free(unsafe.Pointer(csAmount))
+
+	csRemark := C.CString(remark)
+	defer C.free(unsafe.Pointer(csRemark))
+
+	result := C.xdag_transfer_wrap(csAddress, csAmount, csRemark)
+	fmt.Println(int(result))
+	return int(result)
 }
