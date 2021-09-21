@@ -31,8 +31,11 @@ import (
 )
 
 var WalletWindow fyne.Window
+var LogonWindow fyne.Window
 var WalletApp fyne.App
 var globalPassword [256]byte
+var globalAddress string
+var globalBalance string
 
 func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
 	if focused, ok := w.Canvas().Focused().(fyne.Shortcutable); ok {
@@ -51,33 +54,34 @@ func main() {
 	WalletApp = app.NewWithID("go.xdag.wallet")
 	WalletApp.SetIcon(resourceIconPng)
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
-	WalletWindow = w
+	LogonWindow = w
 
 	var btn *widget.Button
 	if hasAccount == 0 { // found wallet key file
-		btn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), connectAccount)
+		btn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), connectClick)
 	} else if hasAccount == -1 { // not fount
 		btn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), walletWindow)
 	}
-
 	btn.Importance = widget.HighImportance
-	image := canvas.NewImageFromResource(resourceLogonPng)
+
 	settingBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
 		showLanguageDialog(i18n.GetString("SettingsWindow_ChooseLanguage"),
 			i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), func(lang string) {
 				config.GetConfig().CultureInfo = lang
 				config.SaveConfig()
 				i18n.LoadI18nStrings()
-				WalletWindow.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
+				LogonWindow.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
 				if hasAccount == 0 { // found wallet key file
 					btn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
 				} else if hasAccount == -1 { // not fount
 					btn.SetText(i18n.GetString("LogonWindow_RegisterWallet"))
 				}
-			}, WalletWindow)
+			}, LogonWindow)
 	})
 	settingBtn.Resize(fyne.NewSize(20, 20))
 	settingBtn.Importance = widget.HighImportance
+
+	image := canvas.NewImageFromResource(resourceLogonPng)
 	content := container.New(layout.NewMaxLayout(), image,
 		container.New(layout.NewVBoxLayout(),
 			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), settingBtn),
@@ -86,7 +90,7 @@ func main() {
 			container.New(layout.NewPaddedLayout(), btn),
 			layout.NewSpacer()))
 	w.SetContent(content)
-	w.Resize(fyne.NewSize(450, 300))
+	w.Resize(fyne.NewSize(410, 300))
 	w.CenterOnScreen()
 	w.SetOnClosed(func() {
 		WalletApp.Quit()
@@ -104,15 +108,15 @@ func main() {
 	w.ShowAndRun()
 }
 
-func connectAccount() {
+func connectClick() {
 	if config.GetConfig().Option.PoolAddress == "" {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-			i18n.GetString("LogonWindow_NoPoolAddress"), WalletWindow)
+			i18n.GetString("LogonWindow_NoPoolAddress"), LogonWindow)
 		return
 	}
 
 	showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
-		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), WalletWindow)
+		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), LogonWindow)
 
 	//switch result {
 	//
@@ -120,13 +124,17 @@ func connectAccount() {
 }
 
 func walletWindow() {
-	WalletWindow.Hide()
+	if WalletWindow != nil {
+		return
+	}
+
+	LogonWindow.Hide()
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
 	WalletWindow = w
 	w.SetMaster()
 	tabs := container.NewAppTabs(
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAccount"),
-			theme.HomeIcon(), components.AccountPage(WalletWindow)),
+			theme.HomeIcon(), components.AccountPage(globalAddress, globalBalance, WalletWindow)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabTransfer"),
 			theme.MailSendIcon(), components.TransferPage(WalletWindow, transferWrap)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabHistory"),
@@ -161,7 +169,7 @@ func showPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
 		fmt.Println("b", b, "pwd", str)
 		if b && len(str) > 0 {
 			copy(globalPassword[:], str)
-			showWalletWin()
+			connectWallet()
 		}
 	}, parent)
 
@@ -185,8 +193,7 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 
 }
 
-func showWalletWin() {
-	walletWindow()
+func connectWallet() {
 	C.init_event_callback()
 	C.init_password_callback()
 
@@ -228,10 +235,15 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 		//fmt.Println("event_id_state_done")
 		break
 	case C.event_id_address_done:
+		globalAddress = eventData
 		xlog.Info(eventData)
 		//fmt.Println("event_id_address_done")
 		break
 	case C.event_id_balance_done:
+		if globalBalance != eventData {
+			globalBalance = eventData
+		}
+		walletWindow()
 		xlog.Info(eventData)
 		//fmt.Println("event_id_balance_done")
 		break
