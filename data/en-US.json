@@ -3,7 +3,7 @@
   "LogonWindow_ConnectWallet": "Connect Wallet",
   "LogonWindow_RegisterWallet": "Create New Wallet",
   "LogonWindow_SearchingConnection": "Searching connection...",
-  "LogonWindow_Title": "Welcome to XDAG Wallet (Version %s)",
+  "LogonWindow_Title": "Welcome to XDAG Wallet (Ver %s)",
   "Common_ConfirmTitle": "Confirm",
   "Common_MessageTitle": "Message",
   "Message_PasswordIncorrect": "Password is incorrect",

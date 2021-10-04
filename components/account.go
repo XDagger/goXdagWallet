@@ -3,17 +3,20 @@ package components
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"goXdagWallet/i18n"
 )
 
+var AccountBalance = binding.NewString()
+
 func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 	addr := widget.NewEntry()
 	addr.Text = address
 
-	bala := widget.NewEntry()
-	bala.Text = balance
+	bala := widget.NewEntryWithData(AccountBalance)
+	AccountBalance.Set(balance)
 
 	return container.NewGridWithRows(3,
 		layout.NewSpacer(),

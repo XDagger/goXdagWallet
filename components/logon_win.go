@@ -1,4 +1,4 @@
-package main
+package components
 
 import (
 	"fmt"
@@ -30,7 +30,7 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	if hasAccount == 0 { // found wallet key file
 		btn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), l.connectClick)
 	} else if hasAccount == -1 { // not fount
-		btn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), walletWindow)
+		btn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), l.connectClick)
 	}
 	btn.Importance = widget.HighImportance
 
@@ -105,14 +105,14 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 	wgt.Password = true
 
 	dialog.ShowCustomConfirm(title, ok, dismiss, wgt, func(b bool) {
-		for i := range globalPassword {
-			globalPassword[i] = 0
+		for i := range Password {
+			Password[i] = 0
 		}
 		str := wgt.Text
 		if b && len(str) > 0 {
-			copy(globalPassword[:], str)
+			copy(Password[:], str)
 			l.StartConnect()
-			connectWallet()
+			ConnectWallet()
 		}
 	}, parent)
 
@@ -134,4 +134,8 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 		}
 	}, parent)
 
+}
+
+func GetAppIcon() fyne.Resource {
+	return resourceIconPng
 }

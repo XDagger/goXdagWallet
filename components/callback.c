@@ -1,5 +1,5 @@
 #include "callback.h"
-#include "./src/xdag_runtime.h"
+#include "../src/xdag_runtime.h"
 void init_event_callback() {
     xdag_set_event_callback_wrap(goEventCallback);
 }

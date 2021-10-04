@@ -5,9 +5,9 @@
     "specified_pool_address": null,
     "is_test_net": false,
     "disable_mining": true,
-    "pool_address": "equal.xdag.org:13656"
+    "pool_address": "solo.xdag.org:13655"
   },
   "version": "0.4.0",
-  "culture_info": "zh-CN",
-  "theme": "Dark"
+  "culture_info": "en-US",
+  "theme": "Light"
 }
