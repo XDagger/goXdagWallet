@@ -20,6 +20,8 @@ type LogonWin struct {
 	BtnContainer      *fyne.Container
 	ProgressContainer *fyne.Container
 	StatusInfo        *canvas.Text
+	HasAccount        bool
+	Password          string
 }
 
 func (l *LogonWin) NewLogonWindow(hasAccount int) {
@@ -27,6 +29,7 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	l.Win = w
 
 	var btn *widget.Button
+	l.HasAccount = hasAccount == 0
 	if hasAccount == 0 { // found wallet key file
 		btn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), l.connectClick)
 	} else if hasAccount == -1 { // not fount
@@ -81,6 +84,11 @@ func (l *LogonWin) StartConnect() {
 	l.ProgressContainer.Show()
 	l.StatusInfo.Text = i18n.GetString("LogonWindow_ConnectingAccount")
 }
+func (l *LogonWin) StartRegister() {
+	l.BtnContainer.Hide()
+	l.ProgressContainer.Show()
+	l.StatusInfo.Text = i18n.GetString("WalletState_Registering")
+}
 
 func (l *LogonWin) WrongPassword() {
 	l.BtnContainer.Show()
@@ -98,6 +106,10 @@ func (l *LogonWin) connectClick() {
 	}
 	l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
 		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+	//if !l.HasAccount {
+	//	l.ReShowPasswordDialog(i18n.GetString("PasswordWindow_RetypePassword"),
+	//		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+	//}
 }
 
 func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
@@ -110,9 +122,39 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 		}
 		str := wgt.Text
 		if b && len(str) > 0 {
-			copy(Password[:], str)
-			l.StartConnect()
-			ConnectWallet()
+			if l.HasAccount {
+				copy(Password[:], str)
+				l.StartConnect()
+				ConnectWallet()
+			} else {
+				l.Password = str
+				l.ReShowPasswordDialog(i18n.GetString("PasswordWindow_RetypePassword"),
+					i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+			}
+		}
+
+	}, parent)
+
+}
+
+func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
+	wgt := widget.NewEntry()
+	wgt.Password = true
+
+	dialog.ShowCustomConfirm(title, ok, dismiss, wgt, func(b bool) {
+		for i := range Password {
+			Password[i] = 0
+		}
+		str := wgt.Text
+		if b && len(str) > 0 {
+			if str == l.Password {
+				copy(Password[:], str)
+				l.StartRegister()
+				ConnectWallet()
+			} else {
+				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+					i18n.GetString("PasswordWindow_PasswordMismatch"), l.Win)
+			}
 		}
 	}, parent)
 

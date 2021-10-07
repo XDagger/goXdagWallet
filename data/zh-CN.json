@@ -36,7 +36,7 @@
   "TransferWindow_CommitFailed": "提交转账请求失败：",
   "TransferWindow_CommitSuccess": "提交转账请求成功，请等待几分钟确认结果",
   "TransferWindow_CommittingTransaction": "正在提交转账请求...",
-  "TransferWindow_ConfirmTransfer": "确认要将%s XDAG转账至[%s]吗？",
+  "TransferWindow_ConfirmTransfer": "确认要将%s XDAG转账至\n[%s]吗？",
   "TransferWindow_InsufficientAmount": "你的账户没有足够的余额",
   "TransferWindow_Title": "转账信息",
   "TransferWindow_TransferTitle": "转账",

@@ -20,8 +20,11 @@ import (
 	"goXdagWallet/xlog"
 	"os"
 	"strings"
+	"time"
 	"unsafe"
 )
+
+var chanBalance = make(chan int, 1)
 
 func Xdag_Wallet_fount() int {
 	res := C.xdag_dnet_crpt_found()
@@ -86,6 +89,8 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 	case C.event_id_balance_done:
 		if Balance != eventData {
 			Balance = eventData
+			AccountBalance.Set(Balance)
+			TransStatus.Text = ""
 		}
 		NewWalletWindow()
 		xlog.Info(eventData)
@@ -184,9 +189,22 @@ func NewWalletWindow() {
 	w.SetContent(tabs)
 	w.Resize(fyne.NewSize(640, 480))
 	w.CenterOnScreen()
+	go checkBalance()
 	w.SetOnClosed(func() {
+		chanBalance <- 1
 		WalletApp.Quit()
 		os.Exit(0)
 	})
 	w.Show()
+}
+
+func checkBalance() {
+	for {
+		select {
+		case <-chanBalance:
+			return
+		case <-time.After(time.Second * 30):
+			C.xdag_get_balance_wrap()
+		}
+	}
 }

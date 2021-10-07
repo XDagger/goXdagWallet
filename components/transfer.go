@@ -33,7 +33,8 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 			if !checkInput(addr.Text, amount.Text, remark.Text, w) {
 				return
 			}
-			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount, addr)
+			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, addr.Text)
+			fmt.Println(message)
 			dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
 				message, func(b bool) {
 					if b {
@@ -76,7 +77,7 @@ func checkInput(addr, amount, remark string, window fyne.Window) bool {
 	}
 
 	value, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
+	if err != nil || value <= 0.0 {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_AmountFormatError"), window)
 		return false
