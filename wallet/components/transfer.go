@@ -1,6 +1,6 @@
 package components
 
-//#include "../src/xdag_runtime.h"
+//#include "../../clib/xdag_runtime.h"
 //#include <stdlib.h>
 import "C"
 import (

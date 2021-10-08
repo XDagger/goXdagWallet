@@ -91,11 +91,11 @@ func (l *LogonWin) StartRegister() {
 }
 
 func (l *LogonWin) WrongPassword() {
-	l.BtnContainer.Show()
+	l.BtnContainer.Hide()
 	l.ProgressContainer.Hide()
-	l.StatusInfo.Text = ""
-	dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-		i18n.GetString("Message_PasswordIncorrect"), l.Win)
+	l.StatusInfo.Text = i18n.GetString("Message_PasswordIncorrect")
+	//dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+	//	i18n.GetString("Message_PasswordIncorrect"), l.Win)
 }
 
 func (l *LogonWin) connectClick() {
@@ -106,10 +106,6 @@ func (l *LogonWin) connectClick() {
 	}
 	l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
 		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
-	//if !l.HasAccount {
-	//	l.ReShowPasswordDialog(i18n.GetString("PasswordWindow_RetypePassword"),
-	//		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
-	//}
 }
 
 func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
@@ -134,7 +130,6 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 		}
 
 	}, parent)
-
 }
 
 func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
@@ -157,7 +152,6 @@ func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.W
 			}
 		}
 	}, parent)
-
 }
 
 func showLanguageDialog(title, ok, dismiss string, callback func(string), parent fyne.Window) {
@@ -169,13 +163,11 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 			lang = "zh-CN"
 		}
 	})
-
 	dialog.ShowCustomConfirm(title, ok, dismiss, radio, func(b bool) {
 		if b {
 			callback(lang)
 		}
 	}, parent)
-
 }
 
 func GetAppIcon() fyne.Resource {

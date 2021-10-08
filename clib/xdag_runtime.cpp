@@ -57,6 +57,12 @@ int xdag_get_address_wrap(void)
     return 0;
 }
 
+int xdag_exit_wrap(void)
+{
+    xdag_wrapper_exit();
+	pthread_cancel(g_client_thread);
+}
+
 //int xdag_event_callback(void* thisObj, xdag_event *event)
 //{
 //    if (!event) {

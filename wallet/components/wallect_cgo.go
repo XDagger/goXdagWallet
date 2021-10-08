@@ -1,7 +1,7 @@
 package components
 
-//#cgo linux LDFLAGS: -L${SRCDIR}/../lib -lxdag_runtime -L/usr/lib -lsecp256k1 -lssl -lcrypto -lm
-//#include "../src/xdag_runtime.h"
+//#cgo linux LDFLAGS: -L${SRCDIR}/../../clib -lxdag_runtime -L/usr/lib -lsecp256k1 -lssl -lcrypto -lm
+//#include "../../clib/xdag_runtime.h"
 //#include "callback.h"
 //#include <stdlib.h>
 //#include <string.h>
@@ -103,10 +103,11 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 		break
 	case C.event_id_err_exit:
 		//fmt.Println("event_id_err_exit")
+		xlog.Error(eventData)
+		C.xdag_exit_wrap()
 		if int(errCode) == 0x1002 { // password incorrect
 			LogonWindow.WrongPassword()
 		}
-		xlog.Error(eventData)
 		break
 	default:
 		break
@@ -203,7 +204,7 @@ func checkBalance() {
 		select {
 		case <-chanBalance:
 			return
-		case <-time.After(time.Second * 30):
+		case <-time.After(time.Second * 130):
 			C.xdag_get_balance_wrap()
 		}
 	}

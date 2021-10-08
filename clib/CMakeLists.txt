@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_FLAGS "-std=gnu11 -O3 -g -Wall -fpic -Wmissing-prototypes -Wno-unused-result")
 
-set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR})
 
 #set(ENV{PKG_CONFIG_PATH} secp256k1)
 if ( NOT DEFINED ENV{SECP256K1_ROOT_DIR})
@@ -69,16 +69,16 @@ include_directories(
 if(APPLE)
     add_library(
             ${PROJECT_NAME} STATIC
-            src/xdag_runtime.cpp
-            src/xdag_runtime.h
+            ./xdag_runtime.cpp
+            ./xdag_runtime.h
             ${DAGGER_HEADERS}
             ${DAGGER_SOURCES}
     )
 else(UNIX)
     add_library(
             ${PROJECT_NAME} STATIC
-            src/xdag_runtime.cpp
-            src/xdag_runtime.h
+            ./xdag_runtime.cpp
+            ./xdag_runtime.h
             ${DAGGER_HEADERS}
             ${DAGGER_SOURCES}
     )

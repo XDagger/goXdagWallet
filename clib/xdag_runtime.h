@@ -8,14 +8,14 @@
 
 #define _TIMESPEC_DEFINED
 
-#include "../xDagWallet/src/client/common.h"
-#include "../xDagWallet/src/client/commands.h"
-#include "../xDagWallet/src/client/client.h"
-#include "../xDagWallet/src/client/events.h"
-#include "../xDagWallet/src/client/utils/utils.h"
-#include "../xDagWallet/src/client/address.h"
-#include "../xDagWallet/src/client/dnet_crypt.h"
-#include "../xDagWallet/src/client/xdag_wrapper.h"
+#include "xDagWallet/src/client/common.h"
+#include "xDagWallet/src/client/commands.h"
+#include "xDagWallet/src/client/client.h"
+#include "xDagWallet/src/client/events.h"
+#include "xDagWallet/src/client/utils/utils.h"
+#include "xDagWallet/src/client/address.h"
+#include "xDagWallet/src/client/dnet_crypt.h"
+#include "xDagWallet/src/client/xdag_wrapper.h"
 
 ////---- Duplicated from dnet_crypt.c ----
 #define KEYFILE	    "dnet_key.dat"
@@ -55,6 +55,7 @@ extern int xdag_set_event_callback_wrap(event_callback callback);
 extern int xdag_get_state_wrap(void);
 extern int xdag_get_balance_wrap(void);
 extern int xdag_get_address_wrap(void);
+extern int xdag_exit_wrap(void);
 
 
 extern int xdag_transfer_wrap(const char* toAddress, const char* amountString, const char* remarkString);
