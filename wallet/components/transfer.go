@@ -1,8 +1,5 @@
 package components
 
-//#include "../../clib/xdag_runtime.h"
-//#include <stdlib.h>
-import "C"
 import (
 	"fmt"
 	"fyne.io/fyne/v2"

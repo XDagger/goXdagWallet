@@ -90,21 +90,19 @@ func (l *LogonWin) StartRegister() {
 	l.StatusInfo.Text = i18n.GetString("WalletState_Registering")
 }
 
-func (l *LogonWin) WrongPassword() {
-	l.BtnContainer.Hide()
-	l.ProgressContainer.Hide()
-	l.StatusInfo.Text = i18n.GetString("Message_PasswordIncorrect")
-	//dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-	//	i18n.GetString("Message_PasswordIncorrect"), l.Win)
-}
-
 func (l *LogonWin) connectClick() {
 	if config.GetConfig().Option.PoolAddress == "" {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("LogonWindow_NoPoolAddress"), l.Win)
 		return
 	}
-	l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
+	var title string
+	if l.HasAccount {
+		title = i18n.GetString("PasswordWindow_InputPassword")
+	} else {
+		title = i18n.GetString("PasswordWindow_SetPassword")
+	}
+	l.showPasswordDialog(title,
 		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
 }
 
