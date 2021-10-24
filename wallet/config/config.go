@@ -14,7 +14,6 @@ type Config struct {
 	Option      WalletOption `json:"wallet_option"`
 	Version     string       `json:"version"`
 	CultureInfo string       `json:"culture_info"`
-	Theme       string       `json:"theme"`
 }
 
 type WalletOption struct {
@@ -30,7 +29,6 @@ func InitConfig() {
 	newConf := false
 
 	conf.Version = "0.4.0"
-	conf.Theme = "Dark"
 	conf.CultureInfo = "en-US"
 	conf.Option.DisableMining = true
 	conf.Option.PoolAddress = "equal.xdag.org:13656"

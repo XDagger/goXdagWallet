@@ -13,6 +13,7 @@ import (
 	"goXdagWallet/i18n"
 	"image/color"
 	"os"
+	"time"
 )
 
 type LogonWin struct {
@@ -77,6 +78,7 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 		WalletApp.Quit()
 		os.Exit(0)
 	})
+	settingBtn.Refresh()
 }
 
 func (l *LogonWin) StartConnect() {
@@ -88,6 +90,7 @@ func (l *LogonWin) StartRegister() {
 	l.BtnContainer.Hide()
 	l.ProgressContainer.Show()
 	l.StatusInfo.Text = i18n.GetString("WalletState_Registering")
+	go l.registerTimer()
 }
 
 func (l *LogonWin) connectClick() {
@@ -170,4 +173,21 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 
 func GetAppIcon() fyne.Resource {
 	return resourceIconPng
+}
+
+func (l *LogonWin) registerTimer() {
+	start := time.Now()
+	timer := time.NewTimer(1 * time.Second)
+	for {
+		select {
+		case <-timer.C:
+			span := time.Now().Sub(start)
+			z := time.Unix(0, 0).UTC()
+			l.StatusInfo.Text = fmt.Sprintf(i18n.GetString("LogonWindow_InitializingElapsedTime"),
+				z.Add(span).Format("04:05"))
+			break
+		case <-regDone:
+			return
+		}
+	}
 }

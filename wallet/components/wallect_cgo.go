@@ -25,6 +25,7 @@ import (
 )
 
 var chanBalance = make(chan int, 1)
+var regDone = make(chan int, 1)
 
 func Xdag_Wallet_fount() int {
 	res := C.xdag_dnet_crpt_found()
@@ -92,6 +93,7 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 			AccountBalance.Set(Balance)
 			TransStatus.Text = ""
 		}
+		regDone <- 1
 		NewWalletWindow()
 		xlog.Info(eventData)
 		//fmt.Println("event_id_balance_done")

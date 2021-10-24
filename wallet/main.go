@@ -4,7 +4,6 @@ package main
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/theme"
 	"goXdagWallet/components"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
@@ -28,14 +27,5 @@ func main() {
 	components.WalletApp = app.NewWithID("go.xdag.wallet")
 	components.WalletApp.SetIcon(components.GetAppIcon())
 	components.LogonWindow.NewLogonWindow(hasAccount)
-
-	themes := config.GetConfig().Theme
-	if themes != "Dark" && themes != "Light" {
-		components.WalletApp.Settings().SetTheme(theme.DarkTheme())
-	} else if themes == "Dark" {
-		components.WalletApp.Settings().SetTheme(theme.DarkTheme())
-	} else {
-		components.WalletApp.Settings().SetTheme(theme.LightTheme())
-	}
 	components.LogonWindow.Win.ShowAndRun()
 }
