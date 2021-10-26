@@ -56,6 +56,7 @@
   "WalletWindow_TabSettings": "Settings",
   "LogonWindow_NoPoolAddress": "\nRead PoolAddress from config file failed. \nPlease check wallet-config.json \nto make sure pool_address is set correctly under Options.\n",
   "WalletWindow_HistoryBusy": "Loading History Data...",
+  "WalletWindow_HistoryError": "Failed to Load history Data",
   "WalletWindow_HistoryColumns_Amount": "Amount",
   "WalletWindow_HistoryColumns_BlockAddress": "Block Address",
   "WalletWindow_HistoryColumns_Direction": "Direction",

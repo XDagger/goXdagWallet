@@ -63,7 +63,7 @@ func refreshTable() {
 	var body []byte
 	err := getUrl(Address, "https://explorer.xdag.io/api/block", &body)
 	if err != nil {
-		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
+		historyStatus.Set(i18n.GetString("WalletWindow_HistoryError"))
 		return
 	}
 
@@ -84,7 +84,7 @@ func refreshTable() {
 	HistoryProgressContainer.Hide()
 	HistoryRefreshContainer.Show()
 	if err != nil {
-		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
+		historyStatus.Set(i18n.GetString("WalletWindow_HistoryError"))
 		return
 	}
 
