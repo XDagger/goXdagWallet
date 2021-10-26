@@ -141,6 +141,9 @@ func TransferWrap(address, amount, remark string) int {
 
 	result := C.xdag_transfer_wrap(csAddress, csAmount, csRemark)
 	fmt.Println(int(result))
+	if int(result) == 0 {
+		config.InsertAddress(address)
+	}
 	return int(result)
 }
 
@@ -184,8 +187,9 @@ func NewWalletWindow() {
 			theme.MailSendIcon(), TransferPage(WalletWindow, TransferWrap)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabHistory"),
 			theme.ContentPasteIcon(), HistoryPage(WalletWindow)),
-		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabSettings"),
-			theme.SettingsIcon(), SettingsPage(WalletWindow)))
+	//container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabSettings"),
+	//	theme.SettingsIcon(), SettingsPage(WalletWindow))
+	)
 	if fyne.CurrentDevice().IsMobile() {
 		tabs.SetTabLocation(container.TabLocationBottom)
 	} else {

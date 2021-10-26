@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"strconv"
 )
@@ -15,10 +16,10 @@ import (
 var TransStatus = widget.NewLabel("")
 var TransBtnContainer *fyne.Container
 var TransProgressContainer *fyne.Container
+var AddressList *widget.List
+var AddressEntry = widget.NewEntry()
 
 func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fyne.Container {
-
-	addr := widget.NewEntry()
 	amount := widget.NewEntry()
 	remark := widget.NewEntry()
 
@@ -27,10 +28,10 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 
 	btn := widget.NewButtonWithIcon(i18n.GetString("TransferWindow_TransferTitle"), theme.ConfirmIcon(),
 		func() {
-			if !checkInput(addr.Text, amount.Text, remark.Text, w) {
+			if !checkInput(AddressEntry.Text, amount.Text, remark.Text, w) {
 				return
 			}
-			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, addr.Text)
+			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, AddressEntry.Text)
 			fmt.Println(message)
 			dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
 				message, func(b bool) {
@@ -38,33 +39,37 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 						TransProgressContainer.Show()
 						TransBtnContainer.Hide()
 						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						transWrap(addr.Text, amount.Text, remark.Text)
+						transWrap(AddressEntry.Text, amount.Text, remark.Text)
 					}
 				}, w)
 
 		})
 	btn.Importance = widget.HighImportance
 	TransBtnContainer = container.New(layout.NewPaddedLayout(), btn)
-
-	return container.NewGridWithRows(4,
-		layout.NewSpacer(),
+	makeAddrList()
+	top := container.NewVBox(
+		container.NewHBox(
+			layout.NewSpacer(), TransStatus, layout.NewSpacer()),
 		container.New(layout.NewMaxLayout(), &widget.Form{
 			Items: []*widget.FormItem{ // we can specify items in the constructor
-				{Text: i18n.GetString("WalletWindow_Transfer_ToAddress"), Widget: addr},
+				{Text: i18n.GetString("WalletWindow_Transfer_ToAddress"), Widget: AddressEntry},
 				{Text: i18n.GetString("WalletWindow_Transfer_Amount"), Widget: amount},
 				{Text: i18n.GetString("WalletWindow_Transfer_Remark"), Widget: remark},
 			},
 		}),
-		container.NewVBox(container.NewHBox(
-			layout.NewSpacer(), TransStatus, layout.NewSpacer()),
+		container.NewVBox(
 			TransProgressContainer,
 			TransBtnContainer),
-		layout.NewSpacer())
-}
+		widget.NewLabel(""),
+		widget.NewLabel(i18n.GetString("TransferWindow_MostRecently")),
+	)
 
-//func doTransfer() {
-//	transfer("Rr7mGuOOlpnhmYwb3eJQ4G48U4fiKD1m", "1.5", "goxdagwallet")
-//}
+	return container.New(
+		layout.NewBorderLayout(top, nil, nil, nil),
+		top,
+		AddressList,
+	)
+}
 
 func checkInput(addr, amount, remark string, window fyne.Window) bool {
 	if len(addr) == 0 || !ValidateAddress(addr) {
@@ -95,11 +100,28 @@ func checkInput(addr, amount, remark string, window fyne.Window) bool {
 	return true
 }
 
+func makeAddrList() {
+	AddressList = widget.NewList(
+		func() int {
+			return len(config.GetConfig().Addresses)
+		},
+		func() fyne.CanvasObject {
+			return container.NewHBox(widget.NewIcon(theme.ContentCopyIcon()), widget.NewLabel("address"))
+		},
+		func(id widget.ListItemID, item fyne.CanvasObject) {
+			item.(*fyne.Container).Objects[1].(*widget.Label).SetText(config.GetConfig().Addresses[id])
+		})
+	AddressList.OnSelected = func(id widget.ListItemID) {
+		AddressEntry.SetText(config.GetConfig().Addresses[id])
+	}
+}
+
 func setTransferDone() {
 	TransProgressContainer.Hide()
 	TransBtnContainer.Show()
 	dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 		i18n.GetString("TransferWindow_CommitSuccess"), WalletWindow)
+	makeAddrList()
 }
 
 func setTransferError(e string) {

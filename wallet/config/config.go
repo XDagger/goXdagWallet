@@ -14,6 +14,7 @@ type Config struct {
 	Option      WalletOption `json:"wallet_option"`
 	Version     string       `json:"version"`
 	CultureInfo string       `json:"culture_info"`
+	Addresses   []string     `json:"addresses"`
 }
 
 type WalletOption struct {
@@ -51,6 +52,19 @@ func InitConfig() {
 		data, _ = json.MarshalIndent(conf, "", "  ")
 		ioutil.WriteFile(configFile, data, 666)
 	}
+}
+
+func InsertAddress(address string) {
+	for _, item := range conf.Addresses {
+		if item == address {
+			return
+		}
+	}
+	conf.Addresses = append([]string{address}, conf.Addresses...)
+	if len(conf.Addresses) > 10 {
+		conf.Addresses = conf.Addresses[:10]
+	}
+	SaveConfig()
 }
 
 func SaveConfig() error {

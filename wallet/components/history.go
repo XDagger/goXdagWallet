@@ -63,6 +63,8 @@ func refreshTable() {
 	var body []byte
 	err := getUrl(Address, "https://explorer.xdag.io/api/block", &body)
 	if err != nil {
+		HistoryProgressContainer.Hide()
+		HistoryRefreshContainer.Show()
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryError"))
 		return
 	}
@@ -115,7 +117,12 @@ func refreshTable() {
 			} else {
 				switch id.Col {
 				case 0:
-					label.SetText(HistoryData[id.Row-1].Direction)
+					if HistoryData[id.Row-1].Direction == "input" {
+						label.SetText(i18n.GetString("WalletWindow_History_Input"))
+					} else {
+						label.SetText(i18n.GetString("WalletWindow_History_Output"))
+					}
+
 				case 1:
 					label.SetText(HistoryData[id.Row-1].Amount)
 				case 2:

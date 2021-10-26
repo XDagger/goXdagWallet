@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/cmd/fyne_settings/settings"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
@@ -61,10 +62,19 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	settingBtn.Resize(fyne.NewSize(20, 20))
 	settingBtn.Importance = widget.HighImportance
 
-	image := canvas.NewImageFromResource(resourceLogonPng)
+	appearanceBtn := widget.NewButtonWithIcon("", theme.ColorPaletteIcon(), func() {
+		fyneSetting := WalletApp.NewWindow(i18n.GetString("LogonWindow_AppearanceSetting"))
+		fyneSetting.SetContent(settings.NewSettings().LoadAppearanceScreen(w))
+		fyneSetting.Resize(fyne.NewSize(480, 480))
+		fyneSetting.Show()
+	})
+	appearanceBtn.Resize(fyne.NewSize(20, 20))
+	appearanceBtn.Importance = widget.HighImportance
+
+	image := canvas.NewImageFromResource(resourceDaggerLogoCPng)
 	content := container.New(layout.NewMaxLayout(), image,
 		container.New(layout.NewVBoxLayout(),
-			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), settingBtn),
+			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), appearanceBtn, settingBtn),
 			layout.NewSpacer(), layout.NewSpacer(),
 			layout.NewSpacer(),
 			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), l.StatusInfo, layout.NewSpacer()),
@@ -73,12 +83,13 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 			layout.NewSpacer()))
 	w.SetContent(content)
 	w.Resize(fyne.NewSize(410, 300))
-	w.CenterOnScreen()
 	w.SetOnClosed(func() {
 		WalletApp.Quit()
 		os.Exit(0)
 	})
+	w.CenterOnScreen()
 	settingBtn.Refresh()
+	appearanceBtn.Refresh()
 }
 
 func (l *LogonWin) StartConnect() {
@@ -172,7 +183,7 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 }
 
 func GetAppIcon() fyne.Resource {
-	return resourceIconPng
+	return resourceLogoPng
 }
 
 func (l *LogonWin) registerTimer() {
