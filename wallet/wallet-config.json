@@ -8,6 +8,9 @@
     "pool_address": "equal.xdag.org:13656"
   },
   "version": "0.4.0",
-  "culture_info": "en-US",
-  "addresses": []
+  "culture_info": "zh-CN",
+  "addresses": [
+    "Rr7mGuOOlpnhmYwb3eJQ4G48U4fiKD1m",
+    "voda0xgG3pi5lI89YnI+IEGa29GYPBOt"
+  ]
 }

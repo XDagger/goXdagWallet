@@ -32,7 +32,7 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 				return
 			}
 			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, AddressEntry.Text)
-			fmt.Println(message)
+			//fmt.Println(message)
 			dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
 				message, func(b bool) {
 					if b {

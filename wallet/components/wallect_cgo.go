@@ -12,6 +12,7 @@ import "C"
 import (
 	"fmt"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"goXdagWallet/config"
@@ -67,8 +68,13 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 	case C.event_id_state_change:
 		//fmt.Println("event_id_state_change")
 		state, ok := wallet_state.MessageToState(eventData)
-		if ok && state != wallet_state.TransferPending {
-			LogonWindow.StatusInfo.Text = wallet_state.Localize(state)
+		if ok && state == wallet_state.LoadingBlocks {
+			regDone <- 1
+			StatusInfo.Text = wallet_state.Localize(state)
+			canvas.Refresh(StatusInfo)
+		} else if ok && state != wallet_state.TransferPending {
+			StatusInfo.Text = wallet_state.Localize(state)
+			canvas.Refresh(StatusInfo)
 		} else if ok && state == wallet_state.TransferPending {
 			TransStatus.Text = wallet_state.Localize(state)
 		}
@@ -93,7 +99,6 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 			AccountBalance.Set(Balance)
 			TransStatus.Text = ""
 		}
-		regDone <- 1
 		NewWalletWindow()
 		xlog.Info(eventData)
 		//fmt.Println("event_id_balance_done")

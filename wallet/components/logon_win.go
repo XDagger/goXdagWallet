@@ -21,10 +21,11 @@ type LogonWin struct {
 	Win               fyne.Window
 	BtnContainer      *fyne.Container
 	ProgressContainer *fyne.Container
-	StatusInfo        *canvas.Text
 	HasAccount        bool
 	Password          string
 }
+
+var StatusInfo = canvas.NewText("", color.White)
 
 func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
@@ -39,7 +40,8 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	}
 	btn.Importance = widget.HighImportance
 
-	l.StatusInfo = canvas.NewText("", color.White)
+	//l.StatusInfo = canvas.NewText("", color.White)
+	StatusInfo.Alignment = fyne.TextAlignCenter
 	progress := widget.NewProgressBarInfinite()
 	l.BtnContainer = container.New(layout.NewPaddedLayout(), btn)
 	l.ProgressContainer = container.New(layout.NewPaddedLayout(), progress)
@@ -77,7 +79,8 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), appearanceBtn, settingBtn),
 			layout.NewSpacer(), layout.NewSpacer(),
 			layout.NewSpacer(),
-			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), l.StatusInfo, layout.NewSpacer()),
+			//container.New(layout.NewHBoxLayout(), layout.NewSpacer(), StatusInfo, layout.NewSpacer()),
+			StatusInfo,
 			l.BtnContainer,
 			l.ProgressContainer,
 			layout.NewSpacer()))
@@ -95,13 +98,15 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 func (l *LogonWin) StartConnect() {
 	l.BtnContainer.Hide()
 	l.ProgressContainer.Show()
-	l.StatusInfo.Text = i18n.GetString("LogonWindow_ConnectingAccount")
+	StatusInfo.Text = i18n.GetString("LogonWindow_ConnectingAccount")
+	canvas.Refresh(StatusInfo)
 }
 func (l *LogonWin) StartRegister() {
 	l.BtnContainer.Hide()
 	l.ProgressContainer.Show()
-	l.StatusInfo.Text = i18n.GetString("WalletState_Registering")
-	go l.registerTimer()
+	StatusInfo.Text = i18n.GetString("WalletState_Registering")
+	canvas.Refresh(StatusInfo)
+	go registerTimer()
 }
 
 func (l *LogonWin) connectClick() {
@@ -186,19 +191,22 @@ func GetAppIcon() fyne.Resource {
 	return resourceLogoPng
 }
 
-func (l *LogonWin) registerTimer() {
+func registerTimer() {
 	start := time.Now()
-	timer := time.NewTimer(1 * time.Second)
+	timer := time.NewTicker(1 * time.Second)
 	for {
 		select {
 		case <-timer.C:
 			span := time.Now().Sub(start)
 			z := time.Unix(0, 0).UTC()
-			l.StatusInfo.Text = fmt.Sprintf(i18n.GetString("LogonWindow_InitializingElapsedTime"),
+			StatusInfo.Text = fmt.Sprintf(i18n.GetString("LogonWindow_InitializingElapsedTime"),
 				z.Add(span).Format("04:05"))
+			canvas.Refresh(StatusInfo)
 			break
 		case <-regDone:
 			return
+		default:
+
 		}
 	}
 }

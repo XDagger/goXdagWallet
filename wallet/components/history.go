@@ -139,7 +139,7 @@ func refreshTable() {
 		})
 	HistoryTable.SetColumnWidth(0, 82)
 	HistoryTable.SetColumnWidth(1, 142)
-	HistoryTable.SetColumnWidth(2, 362)
+	HistoryTable.SetColumnWidth(2, 372)
 	HistoryTable.SetColumnWidth(3, 222)
 	HistoryTable.SetColumnWidth(4, 152)
 
