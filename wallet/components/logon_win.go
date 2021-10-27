@@ -43,9 +43,9 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	//l.StatusInfo = canvas.NewText("", color.White)
 	StatusInfo.Alignment = fyne.TextAlignCenter
 	progress := widget.NewProgressBarInfinite()
+	progress.Hide() // for primary color changing
 	l.BtnContainer = container.New(layout.NewPaddedLayout(), btn)
 	l.ProgressContainer = container.New(layout.NewPaddedLayout(), progress)
-	l.ProgressContainer.Hide()
 
 	settingBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
 		showLanguageDialog(i18n.GetString("SettingsWindow_ChooseLanguage"),
@@ -97,13 +97,13 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 
 func (l *LogonWin) StartConnect() {
 	l.BtnContainer.Hide()
-	l.ProgressContainer.Show()
+	l.ProgressContainer.Objects[0].Show() // for primary color changing
 	StatusInfo.Text = i18n.GetString("LogonWindow_ConnectingAccount")
 	canvas.Refresh(StatusInfo)
 }
 func (l *LogonWin) StartRegister() {
 	l.BtnContainer.Hide()
-	l.ProgressContainer.Show()
+	l.ProgressContainer.Objects[0].Show() // for primary color changing
 	StatusInfo.Text = i18n.GetString("WalletState_Registering")
 	canvas.Refresh(StatusInfo)
 	go registerTimer()
