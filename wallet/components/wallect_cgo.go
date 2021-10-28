@@ -112,13 +112,14 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 	case C.event_id_err_exit:
 		//fmt.Println("event_id_err_exit")
 		xlog.Error(eventData)
-		C.xdag_exit_wrap()
+
 		if int(errCode) == 0x1002 { // password incorrect
-			fyne.CurrentApp().SendNotification(&fyne.Notification{
+			WalletApp.SendNotification(&fyne.Notification{
 				Title:   i18n.GetString("WalletWindow_Title"),
 				Content: i18n.GetString("Message_PasswordIncorrect"),
 			})
 		}
+		C.xdag_exit_wrap()
 		os.Exit(1)
 	default:
 		break
