@@ -114,10 +114,13 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 		xlog.Error(eventData)
 
 		if int(errCode) == 0x1002 { // password incorrect
-			WalletApp.SendNotification(&fyne.Notification{
-				Title:   i18n.GetString("WalletWindow_Title"),
-				Content: i18n.GetString("Message_PasswordIncorrect"),
-			})
+			StatusInfo.Text = i18n.GetString("Message_PasswordIncorrect")
+			canvas.Refresh(StatusInfo)
+			//WalletApp.SendNotification(&fyne.Notification{
+			//	Title:   i18n.GetString("WalletWindow_Title"),
+			//	Content: i18n.GetString("Message_PasswordIncorrect"),
+			//})
+			time.Sleep(time.Second * 2)
 		}
 		C.xdag_exit_wrap()
 		os.Exit(1)
