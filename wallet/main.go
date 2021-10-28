@@ -8,7 +8,15 @@ import (
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"goXdagWallet/xlog"
+	"os"
+	"path"
 )
+
+func init() {
+	pwd, _ := os.Getwd()
+	os.Setenv("FYNE_FONT", path.Join(pwd, "data", "myFont.ttf"))
+
+}
 
 func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
 	if focused, ok := w.Canvas().Focused().(fyne.Shortcutable); ok {
@@ -28,4 +36,5 @@ func main() {
 	components.WalletApp.SetIcon(components.GetAppIcon())
 	components.LogonWindow.NewLogonWindow(hasAccount)
 	components.LogonWindow.Win.ShowAndRun()
+	os.Unsetenv("FYNE_FONT")
 }

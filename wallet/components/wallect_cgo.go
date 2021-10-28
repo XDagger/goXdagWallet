@@ -1,6 +1,7 @@
 package components
 
 //#cgo linux LDFLAGS: -L${SRCDIR}/../../clib -lxdag_runtime -L/usr/lib -lsecp256k1 -lssl -lcrypto -lm
+//#cgo windows LDFLAGS: -L${SRCDIR}/../../clib -lxdag_runtime_windows -L/usr/lib -L/usr/local/lib -lsecp256k1 -lssl -lcrypto -lm -lws2_32
 //#include "../../clib/xdag_runtime.h"
 //#include "callback.h"
 //#include <stdlib.h>

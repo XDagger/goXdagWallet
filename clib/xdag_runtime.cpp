@@ -1,7 +1,10 @@
 //
 // Created by swordlet on 2021/3/24.
 //
+#if defined(_WIN32) || defined(_WIN64)
+#else
 #include <unistd.h>
+#endif
 #include <cstdlib>
 #include <cstring>
 #include "xdag_runtime.h"

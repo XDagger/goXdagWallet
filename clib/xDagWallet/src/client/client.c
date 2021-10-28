@@ -148,8 +148,11 @@ static int send_to_pool(struct xdag_field *fld, int nfld)
 		}
 
 		if(!(p.revents & POLLOUT)) continue;
-
-		int res = (int)write(g_socket, (uint8_t*)f + done, todo);
+#if defined(_WIN32) || defined(_WIN64)
+        int res = (int)send(g_socket, (uint8_t*)f + done, todo, 0);
+#else
+        int res = (int)write(g_socket, (uint8_t*)f + done, todo);
+#endif
 		if(res <= 0) {
 			return -1;
 		}
@@ -456,7 +459,11 @@ begin:
 		}
         
 		if(p.revents & POLLIN) {
-			res = (int)read(g_socket, (uint8_t*)data + ndata, maxndata - ndata);
+#if defined(_WIN32) || defined(_WIN64)
+            res = (int)recv(g_socket, (uint8_t*)data + ndata, maxndata - ndata, 0);
+#else
+            res = (int)read(g_socket, (uint8_t*)data + ndata, maxndata - ndata);
+#endif
 			if(res < 0) {
 				xdag_err(error_socket_read, "read error on socket");
 				goto err;
@@ -533,7 +540,11 @@ begin:
 
 err:
 	if(g_socket != INVALID_SOCKET) {
-		close(g_socket);
+#if defined(_WIN32) || defined(_WIN64)
+        closesocket(g_socket);
+#else
+        close(g_socket);
+#endif
 		g_socket = INVALID_SOCKET;
 	}
 	sleep(5);
@@ -541,7 +552,11 @@ err:
 
 end:
 	if(g_socket != INVALID_SOCKET) {
-		close(g_socket);
+#if defined(_WIN32) || defined(_WIN64)
+        closesocket(g_socket);
+#else
+        close(g_socket);
+#endif
 		g_socket = INVALID_SOCKET;
 	}
     

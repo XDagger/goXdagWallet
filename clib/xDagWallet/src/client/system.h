@@ -41,9 +41,9 @@ static inline xdag_diff_t xdag_diff_div(xdag_diff_t p, xdag_diff_t q)
 #define strdup(x)               _strdup(x)
 #define ioctl                   ioctlsocket
 #define fcntl(a, b, c)          0
-#define close                   closesocket
-#define write(a, b, c)          send(a, b, c, 0)
-#define read(a, b, c)           recv(a, b, c, 0)
+//#define close                   closesocket
+//#define read(a, b, c)           recv(a, b, c, 0)
+//#define write(a, b, c)          send(a, b, c, 0)
 #define sysconf(x)              (512)
 
 //#define xOPENSSL_ia32_cpuid     OPENSSL_ia32_cpuid
