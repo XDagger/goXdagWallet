@@ -9,20 +9,26 @@ Fyne is a cross-platform GUI in Go inspired by Material Design.
    - xDagWallet - XDAG wallet C library
  - wallet - golang XDAG wallet app 
    - i18n - international strings
-   - data - i18n config json, images, fonts
+   - data - i18n config json, fonts
+   - images - bundled in components/resource.go
    - component - ui of wallet window
    - config - wallet config
    - wallet_state - wallet state
    - xlog - wallet log
 
-## environment variable
+## build
+enter /clib
 
-CGO_ENABLED=1
+build runtime library with CMakeLists.txt
 
-FYNE_FONT=data/myFont.ttf
+need MingW in Windows
 
-FYNE_SCALE=1.2
+enter /wallet 
+
+CGO_ENABLED=1 go build
+
+add "-ldflags -H=windowsgui" in Windows
 
 ## features
 
- - frequent transfer address 
+ - most recently transferred addresses list 
