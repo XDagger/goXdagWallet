@@ -84,6 +84,8 @@ else(UNIX)
     )
 endif()
 
+set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX _${CMAKE_SYSTEM_NAME}.a)
+
 target_link_libraries(
         ${PROJECT_NAME}
         PUBLIC

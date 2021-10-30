@@ -4,13 +4,17 @@ import (
 	"encoding/json"
 	"goXdagWallet/config"
 	"io/ioutil"
+	"os"
 	"path"
 )
 
 var i18n = make(map[string]string)
 
 func stringRead(res string) []byte {
-	bytes, err := ioutil.ReadFile(path.Join("data", res))
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+
+	bytes, err := ioutil.ReadFile(path.Join(pwd, "data", res))
 	if err != nil {
 		return nil
 	}

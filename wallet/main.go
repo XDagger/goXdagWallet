@@ -13,7 +13,9 @@ import (
 )
 
 func init() {
-	pwd, _ := os.Getwd()
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+
 	os.Setenv("FYNE_FONT", path.Join(pwd, "data", "myFont.ttf"))
 
 }
