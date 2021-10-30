@@ -73,19 +73,19 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	appearanceBtn.Resize(fyne.NewSize(20, 20))
 	appearanceBtn.Importance = widget.HighImportance
 
-	image := canvas.NewImageFromResource(resourceDaggerLogoCPng)
+	image := canvas.NewImageFromResource(resourceBannerPng)
 	content := container.New(layout.NewMaxLayout(), image,
 		container.New(layout.NewVBoxLayout(),
 			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), appearanceBtn, settingBtn),
-			layout.NewSpacer(), layout.NewSpacer(),
+			layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(),
+			layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(),
 			layout.NewSpacer(),
-			//container.New(layout.NewHBoxLayout(), layout.NewSpacer(), StatusInfo, layout.NewSpacer()),
 			StatusInfo,
 			l.BtnContainer,
 			l.ProgressContainer,
 			layout.NewSpacer()))
 	w.SetContent(content)
-	w.Resize(fyne.NewSize(410, 300))
+	w.Resize(fyne.NewSize(410, 305))
 	w.SetOnClosed(func() {
 		WalletApp.Quit()
 		os.Exit(0)
@@ -188,7 +188,7 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 }
 
 func GetAppIcon() fyne.Resource {
-	return resourceLogoPng
+	return resourceIconPng
 }
 
 func registerTimer() {
