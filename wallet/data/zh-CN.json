@@ -45,7 +45,7 @@
   "WalletWindow_AddressCopied": "钱包地址已拷贝到剪切板",
   "WalletWindow_CopyAddress": "复制钱包地址",
   "WalletWindow_AddressTitle": "钱包地址：",
-  "WalletWindow_BalanceTitle": "余额：",
+  "WalletWindow_BalanceTitle": "钱包余额：",
   "WalletWindow_StatusTitle": "状态：",
   "WalletWindow_Title": "XDAG 钱包账户",
   "WalletWindow_TransferTitle": "发起转账请求",
