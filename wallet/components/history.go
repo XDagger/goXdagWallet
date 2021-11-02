@@ -2,9 +2,11 @@ package components
 
 import (
 	"compress/gzip"
+	"errors"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -13,6 +15,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -26,46 +29,134 @@ type HistoryItem struct {
 }
 
 var historyStatus = binding.NewString()
-var HistoryContainer *fyne.Container
-var HistoryProgressContainer *fyne.Container
-var HistoryRefreshContainer *fyne.Container
-var HistoryData = make([]HistoryItem, 0, 10)
-var HistoryTable *widget.Table
+var historyContainer *fyne.Container
+var historyProgressContainer *fyne.Container
+var historyRefreshContainer *fyne.Container
+var historyData = make([]HistoryItem, 0, 10)
+var historyTable *widget.Table
 var curPage = 0
 var pageCount = 0
 var nextBtn *widget.Button
 var prevBtn *widget.Button
 var pageLabel = binding.NewString()
+var queryParam string
+var re = regexp.MustCompile("((19|20)\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])")
+
+func dateValidator() fyne.StringValidator {
+	return func(text string) error {
+		if text == "" {
+			return nil
+		}
+		if re.MatchString(text) {
+			return nil
+		}
+		return errors.New("not a valid date")
+	}
+}
+
+func translateDirect(direction string) string {
+	switch direction {
+	case i18n.GetString("WalletWindow_History_Input"):
+		return "input"
+	case i18n.GetString("WalletWindow_History_Output"):
+		return "output"
+	default:
+		return ""
+	}
+}
+
+func makeQuery(amountFrom, amountTo, dateFrom, dateTo, remark, direction string) string {
+	var condition string
+	if len(dateFrom) > 0 {
+		condition = condition + "&addresses_date_from=" + dateFrom
+	}
+	if len(dateTo) > 0 {
+		condition = condition + "&addresses_date_to=" + dateTo
+	}
+	if len(amountFrom) > 0 {
+		condition = condition + "&addresses_amount_from=" + amountFrom
+	}
+	if len(amountTo) > 0 {
+		condition = condition + "&addresses_amount_to=" + amountTo
+	}
+	if len(remark) > 0 {
+		condition = condition + "&addresses_remark=" + remark
+	}
+	if len(translateDirect(direction)) > 0 {
+		condition = condition + "&addresses_directions[]=" + translateDirect(direction)
+	}
+	return condition
+}
 
 func HistoryPage(w fyne.Window) *fyne.Container {
 	refreshBtn := widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
-		HistoryProgressContainer.Show()
-		HistoryRefreshContainer.Hide()
-		HistoryData = HistoryData[:0]
-		HistoryContainer.Remove(HistoryTable)
-		go refreshTable(curPage)
+		historyProgressContainer.Show()
+		historyRefreshContainer.Hide()
+		historyData = historyData[:0]
+		historyContainer.Remove(historyTable)
+		queryParam = ""
+		go refreshTable(1, queryParam)
 	})
 	refreshBtn.Importance = widget.HighImportance
 
 	filterBtn := widget.NewButtonWithIcon("", theme.SearchIcon(), func() {
-		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
-		HistoryProgressContainer.Show()
-		HistoryRefreshContainer.Hide()
-		HistoryData = HistoryData[:0]
-		HistoryContainer.Remove(HistoryTable)
-		go refreshTable(curPage)
+		dateFrom := widget.NewEntry()
+		dateFrom.SetPlaceHolder(time.Unix(1515192320, 0).Format("2006-01-02"))
+		dateFrom.Validator = dateValidator()
+
+		dateTo := widget.NewEntry()
+		dateTo.SetPlaceHolder(time.Now().Format("2006-01-02"))
+		dateTo.Validator = dateValidator()
+
+		remark := widget.NewEntry()
+		amountFrom := newNumericalEntry()
+		amountTo := newNumericalEntry()
+		direction := widget.NewRadioGroup([]string{
+			i18n.GetString("WalletWindow_History_Input"),
+			i18n.GetString("WalletWindow_History_Output")}, func(string) {
+		})
+		direction.Horizontal = true
+
+		content := []*widget.FormItem{ // we can specify items in the constructor
+			{Text: i18n.GetString("WalletWindow_Filter_AmountFrom"), Widget: amountFrom},
+			{Text: i18n.GetString("WalletWindow_Filter_AmountTo"), Widget: amountTo},
+			{Text: i18n.GetString("WalletWindow_Filter_DateFrom"), Widget: dateFrom},
+			{Text: i18n.GetString("WalletWindow_Filter_DateTo"), Widget: dateTo},
+			{Text: i18n.GetString("WalletWindow_Transfer_Remark"), Widget: remark},
+			{Text: i18n.GetString("WalletWindow_HistoryColumns_Direction"), Widget: direction},
+		}
+
+		query := dialog.NewForm(i18n.GetString("WalletWindow_History_Filter"),
+			"   "+i18n.GetString("Common_Confirm")+"    ",
+			"    "+i18n.GetString("Common_Cancel")+"     ",
+			content,
+			func(b bool) {
+				if b {
+					historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
+					historyProgressContainer.Show()
+					historyRefreshContainer.Hide()
+					historyData = historyData[:0]
+					historyContainer.Remove(historyTable)
+					queryParam = makeQuery(amountFrom.Text, amountTo.Text,
+						dateFrom.Text, dateTo.Text, remark.Text, direction.Selected)
+					go refreshTable(1, queryParam)
+				}
+			},
+			w)
+		query.Resize(fyne.NewSize(150, 200))
+		query.Show()
 	})
 	filterBtn.Importance = widget.HighImportance
 
 	nextBtn = widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
 		if curPage < pageCount {
 			curPage += 1
-			HistoryProgressContainer.Show()
-			HistoryRefreshContainer.Hide()
-			HistoryData = HistoryData[:0]
-			HistoryContainer.Remove(HistoryTable)
-			go refreshTable(curPage)
+			historyProgressContainer.Show()
+			historyRefreshContainer.Hide()
+			historyData = historyData[:0]
+			historyContainer.Remove(historyTable)
+			go refreshTable(curPage, queryParam)
 		}
 	})
 	nextBtn.Importance = widget.HighImportance
@@ -73,39 +164,40 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 	prevBtn = widget.NewButtonWithIcon("", theme.NavigateBackIcon(), func() {
 		if curPage > 1 {
 			curPage -= 1
-			HistoryProgressContainer.Show()
-			HistoryRefreshContainer.Hide()
-			HistoryData = HistoryData[:0]
-			HistoryContainer.Remove(HistoryTable)
-			go refreshTable(curPage)
+			historyProgressContainer.Show()
+			historyRefreshContainer.Hide()
+			historyData = historyData[:0]
+			historyContainer.Remove(historyTable)
+			go refreshTable(curPage, queryParam)
 		}
 	})
 	prevBtn.Importance = widget.HighImportance
 	label := widget.NewLabelWithData(pageLabel)
-	HistoryProgressContainer = container.New(layout.NewPaddedLayout(), widget.NewProgressBarInfinite())
-	HistoryRefreshContainer = container.New(layout.NewHBoxLayout(), prevBtn, label, nextBtn, layout.NewSpacer(), refreshBtn)
-	HistoryRefreshContainer.Hide()
-	HistoryContainer = container.New(layout.NewMaxLayout())
+	historyProgressContainer = container.New(layout.NewPaddedLayout(), widget.NewProgressBarInfinite())
+	historyRefreshContainer = container.New(layout.NewHBoxLayout(),
+		prevBtn, label, nextBtn, layout.NewSpacer(), filterBtn, refreshBtn)
+	historyRefreshContainer.Hide()
+	historyContainer = container.New(layout.NewMaxLayout())
 	HistoryTitle := widget.NewLabelWithData(historyStatus)
 	historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
 	pageLabel.Set("1/1")
-	go refreshTable(1)
+	go refreshTable(1, "")
 	top := container.NewVBox(
 		container.NewHBox(layout.NewSpacer(), HistoryTitle, layout.NewSpacer()),
-		HistoryRefreshContainer,
-		HistoryProgressContainer)
+		historyRefreshContainer,
+		historyProgressContainer)
 	return container.New(
 		layout.NewBorderLayout(top, nil, nil, nil),
 		top,
-		HistoryContainer)
+		historyContainer)
 }
 
-func refreshTable(page int) {
+func refreshTable(page int, query string) {
 	var body []byte
-	err := getUrl(Address, "https://explorer.xdag.io/api/block", page, &body)
+	err := getUrl("https://explorer.xdag.io/api/block", Address, query, page, &body)
 	if err != nil {
-		HistoryProgressContainer.Hide()
-		HistoryRefreshContainer.Show()
+		historyProgressContainer.Hide()
+		historyRefreshContainer.Show()
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryError"))
 		return
 	}
@@ -116,7 +208,7 @@ func refreshTable(page int) {
 		amount, _ := jsonparser.GetString(value, "amount")
 		times, _ := jsonparser.GetString(value, "time")
 		remark, _ := jsonparser.GetString(value, "remark")
-		HistoryData = append(HistoryData, HistoryItem{
+		historyData = append(historyData, HistoryItem{
 			Direction: direction,
 			Address:   address,
 			Amount:    amount,
@@ -124,8 +216,8 @@ func refreshTable(page int) {
 			Remark:    remark,
 		})
 	}, "block_as_address")
-	HistoryProgressContainer.Hide()
-	HistoryRefreshContainer.Show()
+	historyProgressContainer.Hide()
+	historyRefreshContainer.Show()
 	if err != nil {
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryError"))
 		return
@@ -154,8 +246,8 @@ func refreshTable(page int) {
 
 	historyStatus.Set(i18n.GetString("WalletWindow_HistoryColumns_BlockAddress") + " : " + Address)
 
-	HistoryTable = widget.NewTable(
-		func() (int, int) { return len(HistoryData) + 1, 5 },
+	historyTable = widget.NewTable(
+		func() (int, int) { return len(historyData) + 1, 5 },
 		func() fyne.CanvasObject {
 			return widget.NewLabel("Cell")
 		},
@@ -179,38 +271,41 @@ func refreshTable(page int) {
 			} else {
 				switch id.Col {
 				case 0:
-					if HistoryData[id.Row-1].Direction == "input" {
+					if historyData[id.Row-1].Direction == "input" {
 						label.SetText(i18n.GetString("WalletWindow_History_Input"))
 					} else {
 						label.SetText(i18n.GetString("WalletWindow_History_Output"))
 					}
 
 				case 1:
-					label.SetText(HistoryData[id.Row-1].Amount)
+					label.SetText(historyData[id.Row-1].Amount)
 				case 2:
-					label.SetText(HistoryData[id.Row-1].Address)
+					label.SetText(historyData[id.Row-1].Address)
 				case 3:
-					label.SetText(HistoryData[id.Row-1].Time)
+					label.SetText(historyData[id.Row-1].Time)
 				case 4:
-					label.SetText(HistoryData[id.Row-1].Remark)
+					label.SetText(historyData[id.Row-1].Remark)
 				default:
 					label.SetText("cell")
 				}
 			}
 
 		})
-	HistoryTable.SetColumnWidth(0, 82)
-	HistoryTable.SetColumnWidth(1, 142)
-	HistoryTable.SetColumnWidth(2, 372)
-	HistoryTable.SetColumnWidth(3, 222)
-	HistoryTable.SetColumnWidth(4, 152)
-	HistoryTable.Refresh()
+	historyTable.SetColumnWidth(0, 82)
+	historyTable.SetColumnWidth(1, 178)
+	historyTable.SetColumnWidth(2, 372)
+	historyTable.SetColumnWidth(3, 222)
+	historyTable.SetColumnWidth(4, 152)
+	historyTable.Refresh()
 
-	HistoryContainer.Add(HistoryTable)
+	historyContainer.Add(historyTable)
 }
-func getUrl(params, apiUrl string, page int, body *[]byte) error {
-	urlString := apiUrl + "/" + params +
+func getUrl(apiUrl, address, query string, page int, body *[]byte) error {
+	urlString := apiUrl + "/" + address +
 		"?addresses_per_page=10&addresses_page=" + strconv.Itoa(page)
+	if len(query) > 0 {
+		urlString = urlString + query
+	}
 	req, err := http.NewRequest("GET", urlString, nil)
 	if err != nil {
 		return err
