@@ -55,16 +55,26 @@ func InitConfig() {
 }
 
 func InsertAddress(address string) {
-	for _, item := range conf.Addresses {
+	pos := -1
+	for i, item := range conf.Addresses {
 		if item == address {
-			return
+			pos = i
+			break
 		}
 	}
-	conf.Addresses = append([]string{address}, conf.Addresses...)
-	if len(conf.Addresses) > 10 {
-		conf.Addresses = conf.Addresses[:10]
+	if pos > 0 {
+		conf.Addresses = append(conf.Addresses[:pos], conf.Addresses[pos+1:]...)
+		conf.Addresses = append([]string{address}, conf.Addresses...)
+	} else if pos == -1 {
+		conf.Addresses = append([]string{address}, conf.Addresses...)
+		if len(conf.Addresses) > 10 {
+			conf.Addresses = conf.Addresses[:10]
+		}
 	}
-	SaveConfig()
+	if pos != 0 {
+		SaveConfig()
+	}
+
 }
 
 func SaveConfig() error {

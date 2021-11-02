@@ -56,6 +56,7 @@
   "WalletWindow_TabHistory": "Transactions",
   "WalletWindow_TabTransfer": "Transfer",
   "WalletWindow_TabSettings": "Settings",
+  "WalletWindow_TabAbout": "About",
   "LogonWindow_NoPoolAddress": "\nRead PoolAddress from config file failed. \nPlease check wallet-config.json \nto make sure pool_address is set correctly under Options.\n",
   "WalletWindow_HistoryBusy": "Loading History Data...",
   "WalletWindow_HistoryError": "Failed to Load history Data",

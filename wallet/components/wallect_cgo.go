@@ -198,6 +198,8 @@ func NewWalletWindow() {
 			theme.MailSendIcon(), TransferPage(WalletWindow, TransferWrap)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabHistory"),
 			theme.ContentPasteIcon(), HistoryPage(WalletWindow)),
+		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAbout"),
+			theme.InfoIcon(), AboutPage(WalletWindow)),
 	//container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabSettings"),
 	//	theme.SettingsIcon(), SettingsPage(WalletWindow))
 	)

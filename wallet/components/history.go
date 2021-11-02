@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -30,25 +31,65 @@ var HistoryProgressContainer *fyne.Container
 var HistoryRefreshContainer *fyne.Container
 var HistoryData = make([]HistoryItem, 0, 10)
 var HistoryTable *widget.Table
+var curPage = 0
+var pageCount = 0
+var nextBtn *widget.Button
+var prevBtn *widget.Button
+var pageLabel = binding.NewString()
 
 func HistoryPage(w fyne.Window) *fyne.Container {
 	refreshBtn := widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
 		HistoryProgressContainer.Show()
 		HistoryRefreshContainer.Hide()
+		HistoryData = HistoryData[:0]
 		HistoryContainer.Remove(HistoryTable)
-		go refreshTable()
+		go refreshTable(curPage)
 	})
 	refreshBtn.Importance = widget.HighImportance
 
+	filterBtn := widget.NewButtonWithIcon("", theme.SearchIcon(), func() {
+		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
+		HistoryProgressContainer.Show()
+		HistoryRefreshContainer.Hide()
+		HistoryData = HistoryData[:0]
+		HistoryContainer.Remove(HistoryTable)
+		go refreshTable(curPage)
+	})
+	filterBtn.Importance = widget.HighImportance
+
+	nextBtn = widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
+		if curPage < pageCount {
+			curPage += 1
+			HistoryProgressContainer.Show()
+			HistoryRefreshContainer.Hide()
+			HistoryData = HistoryData[:0]
+			HistoryContainer.Remove(HistoryTable)
+			go refreshTable(curPage)
+		}
+	})
+	nextBtn.Importance = widget.HighImportance
+
+	prevBtn = widget.NewButtonWithIcon("", theme.NavigateBackIcon(), func() {
+		if curPage > 1 {
+			curPage -= 1
+			HistoryProgressContainer.Show()
+			HistoryRefreshContainer.Hide()
+			HistoryData = HistoryData[:0]
+			HistoryContainer.Remove(HistoryTable)
+			go refreshTable(curPage)
+		}
+	})
+	prevBtn.Importance = widget.HighImportance
+	label := widget.NewLabelWithData(pageLabel)
 	HistoryProgressContainer = container.New(layout.NewPaddedLayout(), widget.NewProgressBarInfinite())
-	HistoryRefreshContainer = container.New(layout.NewHBoxLayout(), layout.NewSpacer(), refreshBtn)
+	HistoryRefreshContainer = container.New(layout.NewHBoxLayout(), prevBtn, label, nextBtn, layout.NewSpacer(), refreshBtn)
 	HistoryRefreshContainer.Hide()
 	HistoryContainer = container.New(layout.NewMaxLayout())
 	HistoryTitle := widget.NewLabelWithData(historyStatus)
 	historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
-
-	go refreshTable()
+	pageLabel.Set("1/1")
+	go refreshTable(1)
 	top := container.NewVBox(
 		container.NewHBox(layout.NewSpacer(), HistoryTitle, layout.NewSpacer()),
 		HistoryRefreshContainer,
@@ -59,9 +100,9 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 		HistoryContainer)
 }
 
-func refreshTable() {
+func refreshTable(page int) {
 	var body []byte
-	err := getUrl(Address, "https://explorer.xdag.io/api/block", &body)
+	err := getUrl(Address, "https://explorer.xdag.io/api/block", page, &body)
 	if err != nil {
 		HistoryProgressContainer.Hide()
 		HistoryRefreshContainer.Show()
@@ -89,6 +130,27 @@ func refreshTable() {
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryError"))
 		return
 	}
+
+	total, _ := jsonparser.GetInt(body, "addresses_pagination", "last_page")
+	pageCount = int(total)
+
+	current, _ := jsonparser.GetInt(body, "addresses_pagination", "current_page")
+	prev, _ := jsonparser.GetString(body, "addresses_pagination", "links", "prev")
+	if len(prev) == 0 {
+		current = 0
+		prevBtn.Disable()
+	} else {
+		prevBtn.Enable()
+	}
+	curPage = int(current + 1)
+
+	next, _ := jsonparser.GetString(body, "addresses_pagination", "links", "next")
+	if len(next) == 0 {
+		nextBtn.Disable()
+	} else {
+		nextBtn.Enable()
+	}
+	pageLabel.Set(strconv.Itoa(curPage) + "/" + strconv.Itoa(pageCount))
 
 	historyStatus.Set(i18n.GetString("WalletWindow_HistoryColumns_BlockAddress") + " : " + Address)
 
@@ -142,11 +204,13 @@ func refreshTable() {
 	HistoryTable.SetColumnWidth(2, 372)
 	HistoryTable.SetColumnWidth(3, 222)
 	HistoryTable.SetColumnWidth(4, 152)
+	HistoryTable.Refresh()
 
 	HistoryContainer.Add(HistoryTable)
 }
-func getUrl(params, apiUrl string, body *[]byte) error {
-	urlString := apiUrl + "/" + params
+func getUrl(params, apiUrl string, page int, body *[]byte) error {
+	urlString := apiUrl + "/" + params +
+		"?addresses_per_page=10&addresses_page=" + strconv.Itoa(page)
 	req, err := http.NewRequest("GET", urlString, nil)
 	if err != nil {
 		return err
