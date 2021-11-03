@@ -73,6 +73,8 @@
   "WalletWindow_Filter_AmountTo": "金额小于",
   "WalletWindow_Filter_DateFrom": "起始日期",
   "WalletWindow_Filter_DateTo": "结束日期",
+  "WalletWindow_Filter_NoResult": "无相关数据",
+  "WalletWindow_Filter_AllDirect": "转入转出",
   "WalletWindow_VersionLabel": "版本:%s",
   "WalletWindow_Transfer_Amount": "转账数额：",
   "WalletWindow_Transfer_ToAddress": "目标地址：",

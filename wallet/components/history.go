@@ -32,6 +32,7 @@ var historyStatus = binding.NewString()
 var historyContainer *fyne.Container
 var historyProgressContainer *fyne.Container
 var historyRefreshContainer *fyne.Container
+var historyNoResultContainer *fyne.Container
 var historyData = make([]HistoryItem, 0, 10)
 var historyTable *widget.Table
 var curPage = 0
@@ -94,6 +95,7 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 		historyProgressContainer.Show()
 		historyRefreshContainer.Hide()
 		historyData = historyData[:0]
+		historyContainer.Remove(historyNoResultContainer)
 		historyContainer.Remove(historyTable)
 		queryParam = ""
 		go refreshTable(1, queryParam)
@@ -102,29 +104,35 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 
 	filterBtn := widget.NewButtonWithIcon("", theme.SearchIcon(), func() {
 		dateFrom := widget.NewEntry()
-		dateFrom.SetPlaceHolder(time.Unix(1515192320, 0).Format("2006-01-02"))
+		//dateFrom.SetPlaceHolder(time.Unix(1515192320, 0).Format("2006-01-02"))
+		dateFrom.SetPlaceHolder(time.Now().AddDate(0, 0, -7).Format("2006-01-02"))
 		dateFrom.Validator = dateValidator()
+		dateFrom.Text = time.Now().AddDate(0, 0, -7).Format("2006-01-02")
 
 		dateTo := widget.NewEntry()
 		dateTo.SetPlaceHolder(time.Now().Format("2006-01-02"))
 		dateTo.Validator = dateValidator()
+		dateTo.Text = time.Now().Format("2006-01-02")
 
 		remark := widget.NewEntry()
 		amountFrom := newNumericalEntry()
+		amountFrom.Text = "0.1"
 		amountTo := newNumericalEntry()
 		direction := widget.NewRadioGroup([]string{
+			i18n.GetString("WalletWindow_Filter_AllDirect"),
 			i18n.GetString("WalletWindow_History_Input"),
 			i18n.GetString("WalletWindow_History_Output")}, func(string) {
 		})
-		direction.Horizontal = true
+		//direction.Horizontal = true
+		direction.Selected = i18n.GetString("WalletWindow_Filter_AllDirect")
 
 		content := []*widget.FormItem{ // we can specify items in the constructor
-			{Text: i18n.GetString("WalletWindow_Filter_AmountFrom"), Widget: amountFrom},
-			{Text: i18n.GetString("WalletWindow_Filter_AmountTo"), Widget: amountTo},
-			{Text: i18n.GetString("WalletWindow_Filter_DateFrom"), Widget: dateFrom},
-			{Text: i18n.GetString("WalletWindow_Filter_DateTo"), Widget: dateTo},
+			{Text: i18n.GetString("WalletWindow_Filter_AmountFrom") + ":", Widget: amountFrom},
+			{Text: i18n.GetString("WalletWindow_Filter_AmountTo") + ":", Widget: amountTo},
+			{Text: i18n.GetString("WalletWindow_Filter_DateFrom") + ":", Widget: dateFrom},
+			{Text: i18n.GetString("WalletWindow_Filter_DateTo") + ":", Widget: dateTo},
 			{Text: i18n.GetString("WalletWindow_Transfer_Remark"), Widget: remark},
-			{Text: i18n.GetString("WalletWindow_HistoryColumns_Direction"), Widget: direction},
+			{Text: i18n.GetString("WalletWindow_HistoryColumns_Direction") + ":", Widget: direction},
 		}
 
 		query := dialog.NewForm(i18n.GetString("WalletWindow_History_Filter"),
@@ -137,6 +145,7 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 					historyProgressContainer.Show()
 					historyRefreshContainer.Hide()
 					historyData = historyData[:0]
+					historyContainer.Remove(historyNoResultContainer)
 					historyContainer.Remove(historyTable)
 					queryParam = makeQuery(amountFrom.Text, amountTo.Text,
 						dateFrom.Text, dateTo.Text, remark.Text, direction.Selected)
@@ -167,12 +176,14 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 			historyProgressContainer.Show()
 			historyRefreshContainer.Hide()
 			historyData = historyData[:0]
+			historyContainer.Remove(historyNoResultContainer)
 			historyContainer.Remove(historyTable)
 			go refreshTable(curPage, queryParam)
 		}
 	})
 	prevBtn.Importance = widget.HighImportance
 	label := widget.NewLabelWithData(pageLabel)
+
 	historyProgressContainer = container.New(layout.NewPaddedLayout(), widget.NewProgressBarInfinite())
 	historyRefreshContainer = container.New(layout.NewHBoxLayout(),
 		prevBtn, label, nextBtn, layout.NewSpacer(), filterBtn, refreshBtn)
@@ -181,6 +192,10 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 	HistoryTitle := widget.NewLabelWithData(historyStatus)
 	historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
 	pageLabel.Set("1/1")
+
+	historyNoResultContainer = container.NewHBox(layout.NewSpacer(),
+		widget.NewLabel(i18n.GetString("WalletWindow_Filter_NoResult")),
+		layout.NewSpacer())
 	go refreshTable(1, "")
 	top := container.NewVBox(
 		container.NewHBox(layout.NewSpacer(), HistoryTitle, layout.NewSpacer()),
@@ -222,9 +237,9 @@ func refreshTable(page int, query string) {
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryError"))
 		return
 	}
-
-	total, _ := jsonparser.GetInt(body, "addresses_pagination", "last_page")
-	pageCount = int(total)
+	total, _ := jsonparser.GetInt(body, "addresses_pagination", "total")
+	lastPage, _ := jsonparser.GetInt(body, "addresses_pagination", "last_page")
+	pageCount = int(lastPage)
 
 	current, _ := jsonparser.GetInt(body, "addresses_pagination", "current_page")
 	prev, _ := jsonparser.GetString(body, "addresses_pagination", "links", "prev")
@@ -297,8 +312,12 @@ func refreshTable(page int, query string) {
 	historyTable.SetColumnWidth(3, 222)
 	historyTable.SetColumnWidth(4, 152)
 	historyTable.Refresh()
+	if total == 0 {
+		historyContainer.Add(historyNoResultContainer)
+	} else {
+		historyContainer.Add(historyTable)
+	}
 
-	historyContainer.Add(historyTable)
 }
 func getUrl(apiUrl, address, query string, page int, body *[]byte) error {
 	urlString := apiUrl + "/" + address +

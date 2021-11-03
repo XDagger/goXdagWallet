@@ -73,6 +73,8 @@
   "WalletWindow_Filter_AmountTo": "Amount To",
   "WalletWindow_Filter_DateFrom": "Date From",
   "WalletWindow_Filter_DateTo": "Date To",
+  "WalletWindow_Filter_NoResult": "There are no results.",
+  "WalletWindow_Filter_AllDirect": "All",
   "WalletWindow_VersionLabel": "Version %s",
   "WalletWindow_Transfer_Amount": "Amount:",
   "WalletWindow_Transfer_ToAddress": "To Address:",
