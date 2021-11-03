@@ -41,7 +41,7 @@ var nextBtn *widget.Button
 var prevBtn *widget.Button
 var pageLabel = binding.NewString()
 var queryParam string
-var re = regexp.MustCompile("((19|20)\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])")
+var re = regexp.MustCompile("^((19|20|21)\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$")
 
 func dateValidator() fyne.StringValidator {
 	return func(text string) error {
@@ -104,7 +104,6 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 
 	filterBtn := widget.NewButtonWithIcon("", theme.SearchIcon(), func() {
 		dateFrom := widget.NewEntry()
-		//dateFrom.SetPlaceHolder(time.Unix(1515192320, 0).Format("2006-01-02"))
 		dateFrom.SetPlaceHolder(time.Now().AddDate(0, 0, -7).Format("2006-01-02"))
 		dateFrom.Validator = dateValidator()
 		dateFrom.Text = time.Now().AddDate(0, 0, -7).Format("2006-01-02")
@@ -119,20 +118,49 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 		amountFrom.Text = "0.1"
 		amountTo := newNumericalEntry()
 		direction := widget.NewRadioGroup([]string{
-			i18n.GetString("WalletWindow_Filter_AllDirect"),
 			i18n.GetString("WalletWindow_History_Input"),
-			i18n.GetString("WalletWindow_History_Output")}, func(string) {
+			i18n.GetString("WalletWindow_History_Output"),
+			i18n.GetString("WalletWindow_Filter_AllDirect")}, func(string) {
 		})
-		//direction.Horizontal = true
+		direction.Horizontal = true
 		direction.Selected = i18n.GetString("WalletWindow_Filter_AllDirect")
+
+		transferTime := widget.NewRadioGroup([]string{
+			i18n.GetString("WalletWindow_Filter_Week"),
+			i18n.GetString("WalletWindow_Filter_Month"),
+			i18n.GetString("WalletWindow_Filter_Year")}, func(selected string) {
+			dateTo.Text = time.Now().Format("2006-01-02")
+			dateTo.Refresh()
+			switch selected {
+			case i18n.GetString("WalletWindow_Filter_Week"):
+				dateFrom.Text = time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+				dateFrom.Refresh()
+				return
+			case i18n.GetString("WalletWindow_Filter_Month"):
+				dateFrom.Text = time.Now().AddDate(0, -1, 0).Format("2006-01-02")
+				dateFrom.Refresh()
+				return
+			case i18n.GetString("WalletWindow_Filter_Year"):
+				dateFrom.Text = time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
+				dateFrom.Refresh()
+				return
+			}
+		})
+		transferTime.Horizontal = true
+		transferTime.Selected = i18n.GetString("WalletWindow_Filter_Week")
+
+		remember := widget.NewCheck(i18n.GetString("WalletWindow_Filter_RemOption"),
+			func(b bool) {})
 
 		content := []*widget.FormItem{ // we can specify items in the constructor
 			{Text: i18n.GetString("WalletWindow_Filter_AmountFrom") + ":", Widget: amountFrom},
 			{Text: i18n.GetString("WalletWindow_Filter_AmountTo") + ":", Widget: amountTo},
+			{Text: i18n.GetString("WalletWindow_HistoryColumns_TimeStamp") + ":", Widget: transferTime},
 			{Text: i18n.GetString("WalletWindow_Filter_DateFrom") + ":", Widget: dateFrom},
 			{Text: i18n.GetString("WalletWindow_Filter_DateTo") + ":", Widget: dateTo},
 			{Text: i18n.GetString("WalletWindow_Transfer_Remark"), Widget: remark},
 			{Text: i18n.GetString("WalletWindow_HistoryColumns_Direction") + ":", Widget: direction},
+			{Text: i18n.GetString("WalletWindow_Filter_Remember"), Widget: remember},
 		}
 
 		query := dialog.NewForm(i18n.GetString("WalletWindow_History_Filter"),
