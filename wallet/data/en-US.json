@@ -29,7 +29,7 @@
   "Common_Cancel": "Cancel",
   "LogonWindow_InitializeFailed": "Initializing Failed:",
   "LogonWindow_InitializingAccount": "Initializing Account...",
-  "LogonWindow_InitializingElapsedTime": "Elapsed Time:[%s](Need about 10-15 minutes)",
+  "LogonWindow_InitializingElapsedTime": "Elapsed Time:[%s](Need about 5-10 minutes)",
   "PasswordWindow_PasswordMismatch": "Password is not matched with\n previous you entered.",
   "TransferWindow_AccountFormatError": "Wallet Address format is incorrect.",
   "TransferWindow_AddressTitle": "To address:",
