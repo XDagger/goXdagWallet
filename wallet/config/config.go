@@ -15,6 +15,7 @@ type Config struct {
 	Version     string       `json:"version"`
 	CultureInfo string       `json:"culture_info"`
 	Addresses   []string     `json:"addresses"`
+	Query       DefaultQuery `json:"query"`
 }
 
 type WalletOption struct {
@@ -24,6 +25,13 @@ type WalletOption struct {
 	IsTestNet            bool    `json:"is_test_net"`
 	DisableMining        bool    `json:"disable_mining"`
 	PoolAddress          string  `json:"pool_address"`
+}
+type DefaultQuery struct {
+	AmountFrom string `json:"amount_from"`
+	AmountTo   string `json:"amount_to"`
+	Timestamp  string `json:"timestamp"`
+	Remark     string `json:"remark"`
+	Direction  string `json:"direction"`
 }
 
 func InitConfig() {
@@ -53,18 +61,34 @@ func InitConfig() {
 		ioutil.WriteFile(configFile, data, 666)
 	}
 }
+func DeleteAddress(id int) {
+	if id >= 0 && id < len(conf.Addresses) {
+		conf.Addresses = append(conf.Addresses[:id], conf.Addresses[id+1:]...)
+		SaveConfig()
+	}
+}
 
 func InsertAddress(address string) {
-	for _, item := range conf.Addresses {
+	pos := -1
+	for i, item := range conf.Addresses {
 		if item == address {
-			return
+			pos = i
+			break
 		}
 	}
-	conf.Addresses = append([]string{address}, conf.Addresses...)
-	if len(conf.Addresses) > 10 {
-		conf.Addresses = conf.Addresses[:10]
+	if pos > 0 {
+		conf.Addresses = append(conf.Addresses[:pos], conf.Addresses[pos+1:]...)
+		conf.Addresses = append([]string{address}, conf.Addresses...)
+	} else if pos == -1 {
+		conf.Addresses = append([]string{address}, conf.Addresses...)
+		if len(conf.Addresses) > 10 {
+			conf.Addresses = conf.Addresses[:10]
+		}
 	}
-	SaveConfig()
+	if pos != 0 {
+		SaveConfig()
+	}
+
 }
 
 func SaveConfig() error {
