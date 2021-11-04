@@ -4,6 +4,9 @@ This is a cross-platform XDAG GUI wallet, especially for macOS and Linux, powere
 
 Fyne is a cross-platform GUI in Go inspired by Material Design.
 
+The wallet can run on Windows, Linux, Mac now.
+
+Mobile version is coming.
 ## repo structure
  - clib - a wrapper of XDAG Wallet C library
    - xDagWallet - XDAG wallet C library
@@ -17,22 +20,27 @@ Fyne is a cross-platform GUI in Go inspired by Material Design.
    - xlog - wallet log
 
 ## build
-support Windows, Linux, Mac now.
-
-mobile version is coming.
-
 enter /clib
 
 build runtime library with CMakeLists.txt
 
 need MingW64 in Windows
 
-enter /wallet 
+enter /wallet
 
-CGO_ENABLED=1 go build
+`go mod tidy`
 
-add "-ldflags -H=windowsgui" in Windows
+`CGO_ENABLED=1 go build`
+
+in Windows add 
+
+`-ldflags -H=windowsgui`
+
+in Mac
+
+`export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/opt/openssl/lib`
 
 ## features
 
- - most recently transferred addresses list 
+ - frequently transferred addresses list 
+ - history query filter and pagination
