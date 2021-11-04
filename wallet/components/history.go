@@ -11,6 +11,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/buger/jsonparser"
+	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"io"
 	"io/ioutil"
@@ -41,6 +42,7 @@ var nextBtn *widget.Button
 var prevBtn *widget.Button
 var pageLabel = binding.NewString()
 var queryParam string
+var defaultParam string
 var re = regexp.MustCompile("^((19|20|21)\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$")
 
 func dateValidator() fyne.StringValidator {
@@ -66,7 +68,7 @@ func translateDirect(direction string) string {
 	}
 }
 
-func makeQuery(amountFrom, amountTo, dateFrom, dateTo, remark, direction string) string {
+func makeQuery(amountFrom, amountTo, dateFrom, dateTo, remark, direction, timestamp string, remember bool) string {
 	var condition string
 	if len(dateFrom) > 0 {
 		condition = condition + "&addresses_date_from=" + dateFrom
@@ -86,10 +88,115 @@ func makeQuery(amountFrom, amountTo, dateFrom, dateTo, remark, direction string)
 	if len(translateDirect(direction)) > 0 {
 		condition = condition + "&addresses_directions[]=" + translateDirect(direction)
 	}
+	defaultParam = condition
+	if remember {
+		saveQuery(amountFrom, amountTo, remark, translateDirect(direction), timestamp)
+	}
 	return condition
 }
 
+func saveQuery(amountFrom, amountTo, remark, direction, timestamp string) {
+	config.GetConfig().Query.AmountFrom = amountFrom
+	config.GetConfig().Query.AmountTo = amountTo
+	config.GetConfig().Query.Remark = remark
+	config.GetConfig().Query.Direction = direction
+	switch timestamp {
+	case i18n.GetString("WalletWindow_Filter_Week"):
+		config.GetConfig().Query.Timestamp = "week"
+		break
+	case i18n.GetString("WalletWindow_Filter_Month"):
+		config.GetConfig().Query.Timestamp = "month"
+		break
+	case i18n.GetString("WalletWindow_Filter_Year"):
+		config.GetConfig().Query.Timestamp = "year"
+		break
+	default:
+		config.GetConfig().Query.Timestamp = "week"
+	}
+	config.SaveConfig()
+}
+func loadQuery() string {
+	var condition string
+	query := config.GetConfig().Query
+	switch query.Timestamp {
+	case "week":
+		condition = condition + "&addresses_date_from=" +
+			time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+		break
+	case "month":
+		condition = condition + "&addresses_date_from=" +
+			time.Now().AddDate(0, -1, 0).Format("2006-01-02")
+		break
+	case "year":
+		condition = condition + "&addresses_date_from=" +
+			time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
+		break
+	default:
+		condition = condition + "&addresses_date_from=" +
+			time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+	}
+	if len(query.Timestamp) > 0 {
+		condition = condition + "&addresses_date_to=" + time.Now().Format("2006-01-02")
+	}
+
+	if len(query.AmountFrom) > 0 {
+		condition = condition + "&addresses_amount_from=" + query.AmountFrom
+	}
+	if len(query.AmountTo) > 0 {
+		condition = condition + "&addresses_amount_to=" + query.AmountTo
+	}
+	if len(query.Remark) > 0 {
+		condition = condition + "&addresses_remark=" + query.Remark
+	}
+	if len(query.Direction) > 0 {
+		condition = condition + "&addresses_directions[]=" + query.Direction
+	}
+	return condition
+}
+func setDefaultFilter(amountFrom, amountTo *numericalEntry, dateFrom, remark *widget.Entry,
+	transferTime, direction *widget.RadioGroup) {
+	query := config.GetConfig().Query
+	switch query.Timestamp {
+	case "week":
+		transferTime.Selected = i18n.GetString("WalletWindow_Filter_Week")
+		dateFrom.Text =
+			time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+		break
+	case "month":
+		transferTime.Selected = i18n.GetString("WalletWindow_Filter_Month")
+		dateFrom.Text =
+			time.Now().AddDate(0, -1, 0).Format("2006-01-02")
+		break
+	case "year":
+		transferTime.Selected = i18n.GetString("WalletWindow_Filter_Year")
+		dateFrom.Text =
+			time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
+		break
+	default:
+		transferTime.Selected = i18n.GetString("WalletWindow_Filter_Week")
+		dateFrom.Text =
+			time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+	}
+
+	if len(query.AmountFrom) > 0 {
+		amountFrom.Text = query.AmountFrom
+	}
+	if len(query.AmountTo) > 0 {
+		amountTo.Text = query.AmountTo
+	}
+	if len(query.Remark) > 0 {
+		remark.Text = query.Remark
+	}
+	if query.Direction == "input" {
+		direction.Selected = i18n.GetString("WalletWindow_History_Input")
+	} else if query.Direction == "output" {
+		direction.Selected = i18n.GetString("WalletWindow_History_Output")
+	} else {
+		direction.Selected = i18n.GetString("WalletWindow_Filter_AllDirect")
+	}
+}
 func HistoryPage(w fyne.Window) *fyne.Container {
+	defaultParam = loadQuery()
 	refreshBtn := widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
 		historyProgressContainer.Show()
@@ -97,8 +204,7 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 		historyData = historyData[:0]
 		historyContainer.Remove(historyNoResultContainer)
 		historyContainer.Remove(historyTable)
-		queryParam = ""
-		go refreshTable(1, queryParam)
+		go refreshTable(1, defaultParam)
 	})
 	refreshBtn.Importance = widget.HighImportance
 
@@ -106,7 +212,7 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 		dateFrom := widget.NewEntry()
 		dateFrom.SetPlaceHolder(time.Now().AddDate(0, 0, -7).Format("2006-01-02"))
 		dateFrom.Validator = dateValidator()
-		dateFrom.Text = time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+		//dateFrom.Text = time.Now().AddDate(0, 0, -7).Format("2006-01-02")
 
 		dateTo := widget.NewEntry()
 		dateTo.SetPlaceHolder(time.Now().Format("2006-01-02"))
@@ -115,7 +221,7 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 
 		remark := widget.NewEntry()
 		amountFrom := newNumericalEntry()
-		amountFrom.Text = "0.1"
+		//amountFrom.Text = "0.1"
 		amountTo := newNumericalEntry()
 		direction := widget.NewRadioGroup([]string{
 			i18n.GetString("WalletWindow_History_Input"),
@@ -123,7 +229,8 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 			i18n.GetString("WalletWindow_Filter_AllDirect")}, func(string) {
 		})
 		direction.Horizontal = true
-		direction.Selected = i18n.GetString("WalletWindow_Filter_AllDirect")
+		//direction.Selected = i18n.GetString("WalletWindow_Filter_AllDirect")
+		direction.Required = true
 
 		transferTime := widget.NewRadioGroup([]string{
 			i18n.GetString("WalletWindow_Filter_Week"),
@@ -147,8 +254,9 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 			}
 		})
 		transferTime.Horizontal = true
-		transferTime.Selected = i18n.GetString("WalletWindow_Filter_Week")
-
+		//transferTime.Selected = i18n.GetString("WalletWindow_Filter_Week")
+		transferTime.Required = true
+		setDefaultFilter(amountFrom, amountTo, dateFrom, remark, transferTime, direction)
 		remember := widget.NewCheck(i18n.GetString("WalletWindow_Filter_RemOption"),
 			func(b bool) {})
 
@@ -176,7 +284,8 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 					historyContainer.Remove(historyNoResultContainer)
 					historyContainer.Remove(historyTable)
 					queryParam = makeQuery(amountFrom.Text, amountTo.Text,
-						dateFrom.Text, dateTo.Text, remark.Text, direction.Selected)
+						dateFrom.Text, dateTo.Text, remark.Text, direction.Selected,
+						transferTime.Selected, remember.Checked)
 					go refreshTable(1, queryParam)
 				}
 			},
@@ -224,7 +333,7 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 	historyNoResultContainer = container.NewHBox(layout.NewSpacer(),
 		widget.NewLabel(i18n.GetString("WalletWindow_Filter_NoResult")),
 		layout.NewSpacer())
-	go refreshTable(1, "")
+	go refreshTable(1, defaultParam)
 	top := container.NewVBox(
 		container.NewHBox(layout.NewSpacer(), HistoryTitle, layout.NewSpacer()),
 		historyRefreshContainer,

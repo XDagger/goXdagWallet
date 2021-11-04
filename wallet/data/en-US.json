@@ -38,6 +38,7 @@
   "TransferWindow_CommitSuccess": "Transfer has been committed. Please wait for a while to get it done.",
   "TransferWindow_CommittingTransaction": "Committing transaction...",
   "TransferWindow_ConfirmTransfer": "Are you sure you want to transfer %s XDAGs\n to [%s]?",
+  "TransferWindow_ConfirmDelete": "Are you sure you want to delete [%s]？",
   "TransferWindow_InsufficientAmount": "Your wallet balance is insufficient.",
   "TransferWindow_Title": "Transfer XDAG to address",
   "TransferWindow_TransferTitle": "Transfer",

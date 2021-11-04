@@ -1,6 +1,7 @@
 package components
 
 import (
+	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -19,9 +20,35 @@ var TransProgressContainer *fyne.Container
 var AddressList *widget.List
 var AddressEntry = widget.NewEntry()
 
+func addressValidator() fyne.StringValidator {
+	return func(text string) error {
+		if text == "" {
+			return nil
+		}
+		if ValidateAddress(text) {
+			return nil
+		}
+		return errors.New(i18n.GetString("TransferWindow_AccountFormatError"))
+	}
+}
+
+func remarkValidator() fyne.StringValidator {
+	return func(text string) error {
+		if text == "" {
+			return nil
+		}
+		if ValidateRemark(text) {
+			return nil
+		}
+		return errors.New(i18n.GetString("TransferWindow_RemarkFormatError"))
+	}
+}
+
 func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fyne.Container {
-	amount := widget.NewEntry()
+	amount := newNumericalEntry()
 	remark := widget.NewEntry()
+	AddressEntry.Validator = addressValidator()
+	remark.Validator = remarkValidator()
 
 	TransProgressContainer = container.New(layout.NewPaddedLayout(), widget.NewProgressBarInfinite())
 	TransProgressContainer.Hide()
@@ -106,10 +133,25 @@ func makeAddrList() {
 			return len(config.GetConfig().Addresses)
 		},
 		func() fyne.CanvasObject {
-			return container.NewHBox(widget.NewIcon(theme.ContentCopyIcon()), widget.NewLabel("address"))
+			return container.NewHBox(widget.NewIcon(theme.ContentCopyIcon()), widget.NewLabel("address"),
+				layout.NewSpacer(), widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
+
+				}))
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
-			item.(*fyne.Container).Objects[1].(*widget.Label).SetText(config.GetConfig().Addresses[id])
+			address := config.GetConfig().Addresses[id]
+			item.(*fyne.Container).Objects[1].(*widget.Label).SetText(address)
+			item.(*fyne.Container).Objects[3].(*widget.Button).OnTapped = func() {
+				dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
+					fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmDelete"), address),
+					func(b bool) {
+						if b {
+							config.DeleteAddress(id)
+							AddressList.Refresh()
+						}
+					}, WalletWindow)
+
+			}
 		})
 	AddressList.OnSelected = func(id widget.ListItemID) {
 		AddressEntry.SetText(config.GetConfig().Addresses[id])

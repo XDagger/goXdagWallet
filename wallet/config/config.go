@@ -15,6 +15,7 @@ type Config struct {
 	Version     string       `json:"version"`
 	CultureInfo string       `json:"culture_info"`
 	Addresses   []string     `json:"addresses"`
+	Query       DefaultQuery `json:"query"`
 }
 
 type WalletOption struct {
@@ -24,6 +25,13 @@ type WalletOption struct {
 	IsTestNet            bool    `json:"is_test_net"`
 	DisableMining        bool    `json:"disable_mining"`
 	PoolAddress          string  `json:"pool_address"`
+}
+type DefaultQuery struct {
+	AmountFrom string `json:"amount_from"`
+	AmountTo   string `json:"amount_to"`
+	Timestamp  string `json:"timestamp"`
+	Remark     string `json:"remark"`
+	Direction  string `json:"direction"`
 }
 
 func InitConfig() {
@@ -51,6 +59,12 @@ func InitConfig() {
 	if newConf {
 		data, _ = json.MarshalIndent(conf, "", "  ")
 		ioutil.WriteFile(configFile, data, 666)
+	}
+}
+func DeleteAddress(id int) {
+	if id >= 0 && id < len(conf.Addresses) {
+		conf.Addresses = append(conf.Addresses[:id], conf.Addresses[id+1:]...)
+		SaveConfig()
 	}
 }
 
