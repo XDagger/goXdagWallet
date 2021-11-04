@@ -29,7 +29,7 @@
   "Common_Cancel": "取    消",
   "LogonWindow_InitializeFailed": "初始化账户失败：",
   "LogonWindow_InitializingAccount": "正在初始化账户信息...",
-  "LogonWindow_InitializingElapsedTime": "初始化中[%s]（约需要10-15分钟）",
+  "LogonWindow_InitializingElapsedTime": "初始化中[%s]（约需要5-10分钟）",
   "PasswordWindow_PasswordMismatch": "两次输入的密码不相符，请重新输入",
   "TransferWindow_AccountFormatError": "目标钱包地址格式错误，应为32位字符串",
   "TransferWindow_AddressTitle": "目标账户：",
