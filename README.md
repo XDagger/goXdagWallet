@@ -32,13 +32,17 @@ enter /wallet
 
 `CGO_ENABLED=1 go build`
 
-in Windows add 
+in Windows
 
-`-ldflags -H=windowsgui`
+`CGO_ENABLED=1 go build -ldflags -H=windowsgui`
 
 in Mac
 
-`export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/opt/openssl/lib`
+if library not found , go to /wallet/components/wallet_cgo.go
+
+change the library path in code: 
+
+`//#cgo darwin LDFLAGS: ....`
 
 ## features
 
