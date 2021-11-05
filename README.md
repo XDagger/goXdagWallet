@@ -49,11 +49,11 @@ enter /wallet
 
 copy goXdagWallet(.exe), wallet-config.json and data folder to your deployment path.
 
-###Windows 
+### Windows 
 
 also need copy libcrypto-1_1-x64.dll and libwinpthread-1.dll in MingW64's bin path to deployment path.
 
-###Linux and Mac
+### Linux and Mac
 
 need install secp256k1 and openssl first
 
