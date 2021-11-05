@@ -28,17 +28,63 @@ need MingW64 in Windows
 
 enter /wallet
 
-`go mod tidy`
+`$ go mod tidy`
 
-`CGO_ENABLED=1 go build`
+`$ CGO_ENABLED=1 go build`
 
-in Windows add 
+in Windows
 
-`-ldflags -H=windowsgui`
+`> CGO_ENABLED=1 go build -ldflags -H=windowsgui`
 
 in Mac
 
-`export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/opt/openssl/lib`
+if library not found , go to /wallet/components/wallet_cgo.go
+
+change the library path in code: 
+
+`//#cgo darwin LDFLAGS: ....`
+
+## deployment
+enter /wallet
+
+copy goXdagWallet(.exe), wallet-config.json and data folder to your deployment path.
+
+###Windows 
+
+also need copy libcrypto-1_1-x64.dll and libwinpthread-1.dll in MingW64's bin path to deployment path.
+
+###Linux and Mac
+
+need install secp256k1 and openssl first
+
+- Ubuntu and Debian:
+
+`$ sudo apt-get install libsecp256k1-dev openssl libssl-dev`
+
+- Fedora and Centos:
+
+`$ sudo yum install openssl openssl-devel`
+
+download and build from source
+
+`github.com/bitcoin-core/secp256k1.git`
+
+
+- Manjaro and Arch linux:
+
+`$ sudo pacman libsecp256k1 openssl`
+
+- Mac 
+
+`$ brew install openssl`
+
+`$ echo 'export PATH="/usr/local/opt/openssl/bin:$PATH"' >> ~/.bash_profile`
+
+`$ source ~/.bash_profile`
+
+build secp256k1 from source
+
+`github.com/bitcoin-core/secp256k1.git`
 
 ## features
 
