@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"os"
+	"path"
 )
 
 const configFile = "wallet-config.json"
@@ -42,7 +44,9 @@ func InitConfig() {
 	conf.Option.DisableMining = true
 	conf.Option.PoolAddress = "equal.xdag.org:13656"
 
-	data, err := ioutil.ReadFile(configFile)
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+	data, err := ioutil.ReadFile(path.Join(pwd, configFile))
 	if err == nil {
 		err = json.Unmarshal(data, &conf)
 		if err != nil {

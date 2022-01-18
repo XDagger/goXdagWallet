@@ -22,6 +22,7 @@ import (
 	"goXdagWallet/wallet_state"
 	"goXdagWallet/xlog"
 	"os"
+	"path"
 	"strings"
 	"time"
 	"unsafe"
@@ -31,8 +32,21 @@ var chanBalance = make(chan int, 1)
 var regDone = make(chan int, 1)
 
 func Xdag_Wallet_fount() int {
-	res := C.xdag_dnet_crpt_found()
-	return int(res)
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+	pathName := path.Join(pwd, "dnet_key.dat")
+
+	fi, err := os.Stat(pathName)
+	if err != nil {
+		return -1
+	}
+	if fi.Size() != 2048 {
+		return -1
+	}
+	return 0
+
+	//res := C.xdag_dnet_crpt_found()
+	//return int(res)
 }
 func ConnectWallet() {
 	C.init_event_callback()
@@ -42,7 +56,11 @@ func ConnectWallet() {
 	defer C.free(unsafe.Pointer(pa))
 
 	argv := make([]*C.char, 1)
-	cs := C.CString("xdag.exe")
+
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+	cs := C.CString(path.Join(pwd, "xdag.exe"))
+
 	defer C.free(unsafe.Pointer(cs))
 
 	argv[0] = cs
@@ -200,8 +218,8 @@ func NewWalletWindow() {
 			theme.ContentPasteIcon(), HistoryPage(WalletWindow)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAbout"),
 			theme.InfoIcon(), AboutPage(WalletWindow)),
-	//container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabSettings"),
-	//	theme.SettingsIcon(), SettingsPage(WalletWindow))
+		//container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabSettings"),
+		//	theme.SettingsIcon(), SettingsPage(WalletWindow))
 	)
 	if fyne.CurrentDevice().IsMobile() {
 		tabs.SetTabLocation(container.TabLocationBottom)
