@@ -15,12 +15,13 @@ import (
 func AboutPage(w fyne.Window) *fyne.Container {
 	link, _ := url.Parse("https://xdag.io/")
 	tele, _ := url.Parse("https://t.me/dagger_cryptocurrency")
+	discord, _ := url.Parse("https://discord.gg/YxXUVQJ")
 	address := "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
 
 	cnContainer := container.NewVBox(
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("XDAG钱包（0.4.0）"), layout.NewSpacer()),
+			widget.NewLabel("XDAG钱包（0.4.1）"), layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("XDAG是基于PoW共识算法和DAG技术的加密货币，解决了传统区块链技术"),
 			layout.NewSpacer()),
@@ -32,12 +33,13 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			widget.NewLabel("社区网站："), widget.NewHyperlink("xdag.io", link),
 			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("电报群："), widget.NewHyperlink("Telegram", tele),
+			widget.NewLabel("加入社区："), widget.NewHyperlink("Discord", discord),
+			widget.NewHyperlink("Telegram", tele),
 			layout.NewSpacer()),
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("为社区团队捐赠XDAG:"),
-			layout.NewSpacer()),
+			layout.NewSpacer(), layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel(address),
 			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
@@ -50,7 +52,7 @@ func AboutPage(w fyne.Window) *fyne.Container {
 	enContainer := container.NewVBox(
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("XDAG wallet(0.4.0)"), layout.NewSpacer()),
+			widget.NewLabel("XDAG wallet(0.4.1)"), layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("XDAG is a novel application of Directed Acyclic Graph (DAG) technology that"),
 			layout.NewSpacer()),
@@ -64,7 +66,8 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			widget.NewLabel("Website："), widget.NewHyperlink("xdag.io", link),
 			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("Join XDAG："), widget.NewHyperlink("Telegram", tele),
+			widget.NewLabel("Join XDAG："), widget.NewHyperlink("Discord", discord),
+			widget.NewHyperlink("Telegram", tele),
 			layout.NewSpacer()),
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
