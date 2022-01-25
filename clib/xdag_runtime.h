@@ -49,7 +49,7 @@ extern "C" {
 
 
 ////---- Exporting functions ----
-extern int xdag_init_wrap(int argc, char **argv, const char * pool_address);
+extern int xdag_init_wrap(int argc, char **argv, const char * pool_address, int testnet);
 extern int xdag_set_password_callback_wrap(password_callback callback);
 extern int xdag_set_event_callback_wrap(event_callback callback);
 extern int xdag_get_state_wrap(void);

@@ -13,7 +13,7 @@
 extern pthread_t g_client_thread;
 static int g_client_init_done = 0;
 ////---- Exporting functions wrapping functions ----
-int xdag_init_wrap(int argc, char **argv, const char* pool_address)
+int xdag_init_wrap(int argc, char **argv, const char* pool_address, int testnet)
 {
     xdag_init_path(argv[0]);
 
@@ -23,7 +23,7 @@ int xdag_init_wrap(int argc, char **argv, const char* pool_address)
 
     xdag_thread_param_t param;
     strncpy(param.pool_arg, pool_address, 255);
-    param.testnet = 0;
+    param.testnet = testnet;
 
     int err = pthread_create(&g_client_thread, 0, xdag_client_thread, (void*)&param);
     if (err != 0) {
@@ -63,7 +63,7 @@ int xdag_get_address_wrap(void)
 int xdag_exit_wrap(void)
 {
     xdag_wrapper_exit();
-	pthread_cancel(g_client_thread);
+    return pthread_cancel(g_client_thread);
 }
 
 //int xdag_event_callback(void* thisObj, xdag_event *event)

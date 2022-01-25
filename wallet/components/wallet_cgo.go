@@ -54,6 +54,10 @@ func ConnectWallet() {
 
 	pa := C.CString(config.GetConfig().Option.PoolAddress)
 	defer C.free(unsafe.Pointer(pa))
+	var testnet int
+	if config.GetConfig().Option.IsTestNet {
+		testnet = 1
+	}
 
 	argv := make([]*C.char, 1)
 
@@ -64,7 +68,7 @@ func ConnectWallet() {
 	defer C.free(unsafe.Pointer(cs))
 
 	argv[0] = cs
-	result := C.xdag_init_wrap(C.int(1), (**C.char)(unsafe.Pointer(&argv[0])), pa)
+	result := C.xdag_init_wrap(C.int(1), (**C.char)(unsafe.Pointer(&argv[0])), pa, C.int(testnet))
 	fmt.Println((int32)(result))
 
 }
@@ -99,7 +103,8 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 			TransStatus.Text = wallet_state.Localize(state)
 		}
 		xlog.Info(eventData)
-		if strings.Contains(eventData, "Connected to the mainnet pool") {
+		if (!config.GetConfig().Option.IsTestNet && strings.Contains(eventData, "Connected to the mainnet pool")) ||
+			(config.GetConfig().Option.IsTestNet && strings.Contains(eventData, "Connected to the testnet pool")) {
 			C.xdag_get_address_wrap()
 			C.xdag_get_balance_wrap()
 		}
