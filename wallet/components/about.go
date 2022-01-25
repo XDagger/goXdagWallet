@@ -39,7 +39,7 @@ func AboutPage(w fyne.Window) *fyne.Container {
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("为社区团队捐赠XDAG:"),
-			layout.NewSpacer(), layout.NewSpacer()),
+			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel(address),
 			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
