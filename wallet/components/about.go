@@ -17,11 +17,19 @@ func AboutPage(w fyne.Window) *fyne.Container {
 	tele, _ := url.Parse("https://t.me/dagger_cryptocurrency")
 	discord, _ := url.Parse("https://discord.gg/YxXUVQJ")
 	address := "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
+	var testNet string
+	if config.GetConfig().Option.IsTestNet {
+		if config.GetConfig().CultureInfo == "zh-CN" {
+			testNet = "测试网"
+		} else {
+			testNet = "Test Net"
+		}
+	}
 
 	cnContainer := container.NewVBox(
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("XDAG钱包（0.4.1）"), layout.NewSpacer()),
+			widget.NewLabel("XDAG钱包（0.4.1）"+testNet), layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("XDAG是基于PoW共识算法和DAG技术的加密货币，解决了传统区块链技术"),
 			layout.NewSpacer()),
@@ -52,7 +60,7 @@ func AboutPage(w fyne.Window) *fyne.Container {
 	enContainer := container.NewVBox(
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("XDAG wallet(0.4.1)"), layout.NewSpacer()),
+			widget.NewLabel("XDAG wallet(0.4.1) "+testNet), layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("XDAG is a novel application of Directed Acyclic Graph (DAG) technology that"),
 			layout.NewSpacer()),

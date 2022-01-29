@@ -27,6 +27,7 @@ type WalletOption struct {
 	IsTestNet            bool    `json:"is_test_net"`
 	DisableMining        bool    `json:"disable_mining"`
 	PoolAddress          string  `json:"pool_address"`
+	TestnetApiUrl        string  `json:"testnet_api_url"`
 }
 type DefaultQuery struct {
 	AmountFrom string `json:"amount_from"`
