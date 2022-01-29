@@ -28,7 +28,9 @@ type LogonWin struct {
 var StatusInfo = canvas.NewText("", color.White)
 
 func (l *LogonWin) NewLogonWindow(hasAccount int) {
-	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
+
+	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
+		getTestTitle())
 	l.Win = w
 
 	var btn *widget.Button
@@ -53,7 +55,8 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 				config.GetConfig().CultureInfo = lang
 				config.SaveConfig()
 				i18n.LoadI18nStrings()
-				l.Win.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
+				l.Win.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
+					getTestTitle())
 				if hasAccount == 0 { // found wallet key file
 					btn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
 				} else if hasAccount == -1 { // not fount
@@ -209,4 +212,16 @@ func registerTimer() {
 
 		}
 	}
+}
+
+func getTestTitle() string {
+	var testNet string
+	if config.GetConfig().Option.IsTestNet {
+		if config.GetConfig().CultureInfo == "zh-CN" {
+			testNet = "测试网"
+		} else {
+			testNet = "Test Net"
+		}
+	}
+	return testNet
 }

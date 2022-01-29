@@ -16,6 +16,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"time"
@@ -346,7 +347,10 @@ func HistoryPage(w fyne.Window) *fyne.Container {
 
 func refreshTable(page int, query string) {
 	var body []byte
-	err := getUrl("https://explorer.xdag.io/api/block", Address, query, page, &body)
+	if getApiUrl() == "" {
+		return
+	}
+	err := getUrl(getApiUrl(), Address, query, page, &body)
 	if err != nil {
 		historyProgressContainer.Hide()
 		historyRefreshContainer.Show()
@@ -497,4 +501,16 @@ func getUrl(apiUrl, address, query string, page int, body *[]byte) error {
 		return err
 	}
 	return nil
+}
+
+func getApiUrl() string {
+	if config.GetConfig().Option.IsTestNet {
+		if apiUrl, err := url.Parse(config.GetConfig().Option.TestnetApiUrl); err == nil && apiUrl.IsAbs() {
+			return config.GetConfig().Option.TestnetApiUrl
+		} else {
+			return "https://testexplorer.xdag.io/api/block"
+		}
+	} else {
+		return "https://explorer.xdag.io/api/block"
+	}
 }

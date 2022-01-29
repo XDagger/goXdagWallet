@@ -5,7 +5,8 @@
     "specified_pool_address": null,
     "is_test_net": false,
     "disable_mining": true,
-    "pool_address": "equal.xdag.org:13654"
+    "pool_address": "equal.xdag.org:13654",
+    "testnet_api_url": ""
   },
   "version": "0.4.1",
   "culture_info": "en-US",
