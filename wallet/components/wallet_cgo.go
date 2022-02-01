@@ -211,7 +211,8 @@ func NewWalletWindow() {
 	}
 
 	LogonWindow.Win.Hide()
-	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version))
+	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
+		getTestTitle())
 	WalletWindow = w
 	w.SetMaster()
 	tabs := container.NewAppTabs(
