@@ -34,7 +34,7 @@ func main() {
 
 	xlog.SetLogFile("./", "go_wallet.log")
 	hasAccount := components.Xdag_Wallet_fount() // cgo call xdag_runtime C library
-	components.WalletApp = app.NewWithID("io.xdag.wallet")
+	components.WalletApp = app.NewWithID("io.xdagj.wallet")
 	components.WalletApp.SetIcon(components.GetAppIcon())
 	components.LogonWindow.NewLogonWindow(hasAccount)
 	components.LogonWindow.Win.ShowAndRun()
