@@ -76,7 +76,7 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	appearanceBtn.Resize(fyne.NewSize(20, 20))
 	appearanceBtn.Importance = widget.HighImportance
 
-	image := canvas.NewImageFromResource(resourceXj2Png)
+	image := canvas.NewImageFromResource(resourceXj3Png)
 	content := container.New(layout.NewMaxLayout(), image,
 		container.New(layout.NewVBoxLayout(),
 			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), appearanceBtn, settingBtn),
