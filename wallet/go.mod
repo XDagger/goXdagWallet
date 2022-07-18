@@ -5,6 +5,7 @@ go 1.17
 require (
 	fyne.io/fyne/v2 v2.1.0
 	github.com/buger/jsonparser v1.1.1
+	github.com/otiai10/copy v1.7.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 )
 

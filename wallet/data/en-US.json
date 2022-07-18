@@ -1,9 +1,9 @@
 {
   "LogonWindow_ConnectingAccount": "Connecting account...",
   "LogonWindow_ConnectWallet": "Connect Wallet",
-  "LogonWindow_RegisterWallet": "Create New Wallet",
+  "LogonWindow_RegisterWallet": "Create or Import Wallet",
   "LogonWindow_SearchingConnection": "Searching connection...",
-  "LogonWindow_Title": "XDAGJ MainNet Trial (Ver %s)",
+  "LogonWindow_Title": "Tesing Xdagj Only(Ver %s)",
   "LogonWindow_AppearanceSetting": "Appearance Setting",
   "Common_ConfirmTitle": "Confirm",
   "Common_MessageTitle": "Message",
@@ -88,5 +88,11 @@
   "WalletWindow_Transfer_Remark": "Remark:",
   "WalletWindow_HistoryColumns_Remark": "Remark",
   "Dark": "Dark",
-  "Light": "Light"
+  "Light": "Light",
+  "WalletImport_WalletNotExist": "Wallet Files not Exist",
+  "WalletImport_FilesCopyFailed": "Copy Wallet Files Failed",
+  "Wallet_CreateOrImport": "Please make a choice, create or import a wallet?",
+  "Wallet_Choice": "Choice",
+  "Wallet_Create": "Create",
+  "Wallet_Import": "Import"
 }

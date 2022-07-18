@@ -34,7 +34,9 @@ var regDone = make(chan int, 1)
 func Xdag_Wallet_fount() int {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
-	pathName := path.Join(pwd, "dnet_key.dat")
+	pathName := path.Join(pwd, "xdagj_test", "dnet_key.dat")
+	// change current working directory
+	os.Chdir(pwd)
 
 	fi, err := os.Stat(pathName)
 	if err != nil {

@@ -21,7 +21,7 @@
 #include "common.h"
 #include "xdag_wrapper.h"
 
-#define KEYFILE	    "dnet_key.dat"
+#define KEYFILE	    "xdagj_test" DELIMITER "dnet_key.dat"
 #define PWDLEN	    64
 #define SECTOR_LOG  9
 #define SECTOR_SIZE (1 << SECTOR_LOG)

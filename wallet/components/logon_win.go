@@ -1,6 +1,7 @@
 package components
 
 import (
+	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -10,10 +11,13 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	cp "github.com/otiai10/copy"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"image/color"
+	"io"
 	"os"
+	"path"
 	"time"
 )
 
@@ -118,14 +122,70 @@ func (l *LogonWin) connectClick() {
 			i18n.GetString("LogonWindow_NoPoolAddress"), l.Win)
 		return
 	}
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
 	var title string
 	if l.HasAccount {
 		title = i18n.GetString("PasswordWindow_InputPassword")
+		l.showPasswordDialog(title,
+			i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
 	} else {
-		title = i18n.GetString("PasswordWindow_SetPassword")
+
+		confirmFrm := dialog.NewConfirm(i18n.GetString("Wallet_Choice"),
+			i18n.GetString("Wallet_CreateOrImport"),
+			func(b bool) {
+				if b {
+					dlgOpen := dialog.NewFolderOpen(
+						func(uri fyne.ListableURI, err error) {
+							defer func() {
+								l.Win.Resize(fyne.NewSize(410, 305))
+							}()
+
+							if uri == nil || err != nil {
+								return
+							}
+							if !checkOldWallet(uri.Path()) {
+								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+									i18n.GetString("WalletImport_WalletNotExist"), l.Win)
+								return
+							}
+							if copyOldWallet(uri.Path()) != nil {
+								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+									i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
+								return
+							}
+							l.HasAccount = true
+							title = i18n.GetString("PasswordWindow_InputPassword")
+							l.showPasswordDialog(title,
+								i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+
+						}, l.Win)
+					l.Win.Resize(fyne.NewSize(800, 500))
+					dlgOpen.Resize(fyne.NewSize(800, 500))
+					dlgOpen.Show()
+
+				} else {
+
+					pathDest := path.Join(pwd, "xdagj_test")
+					if err := os.RemoveAll(pathDest); err != nil {
+						dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+							i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
+						return
+					}
+					if err := os.MkdirAll(pathDest, 0666); err != nil {
+						dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+							i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
+						return
+					}
+					title = i18n.GetString("PasswordWindow_SetPassword")
+					l.showPasswordDialog(title,
+						i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+				}
+			}, l.Win)
+		confirmFrm.SetConfirmText(i18n.GetString("Wallet_Import"))
+		confirmFrm.SetDismissText(i18n.GetString("Wallet_Create"))
+		confirmFrm.Show()
 	}
-	l.showPasswordDialog(title,
-		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
 }
 
 func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
@@ -224,4 +284,78 @@ func getTestTitle() string {
 		}
 	}
 	return testNet
+}
+
+func checkOldWallet(walletDir string) bool {
+
+	pathName := path.Join(walletDir, "dnet_key.dat")
+	fi, err := os.Stat(pathName)
+	if err != nil {
+		return false
+	}
+	if fi.Size() != 2048 {
+		return false
+	}
+
+	pathName = path.Join(walletDir, "wallet.dat")
+	fi, err = os.Stat(pathName)
+	if err != nil {
+		return false
+	}
+	if fi.Size() != 32 {
+		return false
+	}
+
+	pathName = path.Join(walletDir, "storage")
+	fi, err = os.Stat(pathName)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func copyOldWallet(walletDir string) error {
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+	pathDest := path.Join(pwd, "xdagj_test")
+	if err := os.RemoveAll(pathDest); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(pathDest, 0666); err != nil {
+		return err
+	}
+	if err := copyFile(walletDir, pathDest, "dnet_key.dat", 2048); err != nil {
+		return err
+	}
+	if err := copyFile(walletDir, pathDest, "wallet.dat", 32); err != nil {
+		return err
+	}
+	if err := cp.Copy(path.Join(walletDir, "storage"), path.Join(pathDest, "storage")); err != nil {
+		return err
+	}
+	return nil
+}
+
+func copyFile(walletDir, pathDest, fileName string, n int64) error {
+	pathName := path.Join(walletDir, fileName)
+	source, err := os.Open(pathName)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(path.Join(pathDest, fileName))
+	if err != nil {
+		return err
+	}
+	defer destination.Close()
+
+	nBytes, err := io.Copy(destination, source)
+	if err != nil {
+		return err
+	}
+	if nBytes != n {
+		return errors.New(fileName + " copy  failed")
+	}
+	return nil
 }

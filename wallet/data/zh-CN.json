@@ -1,9 +1,9 @@
 {
   "LogonWindow_ConnectingAccount": "正在连接账户...",
   "LogonWindow_ConnectWallet": "连接",
-  "LogonWindow_RegisterWallet": "注册新钱包",
+  "LogonWindow_RegisterWallet": "新建或导入钱包",
   "LogonWindow_SearchingConnection": "正在查找网络连接...",
-  "LogonWindow_Title": "XDAGJ主网测试(版本 %s)",
+  "LogonWindow_Title": "测试专用版(%s)",
   "LogonWindow_AppearanceSetting": "外观设置",
   "Common_ConfirmTitle": "确认",
   "Common_MessageTitle": "提示",
@@ -88,5 +88,11 @@
   "WalletWindow_Transfer_Remark": "备注信息：",
   "WalletWindow_HistoryColumns_Remark": "备注",
   "Dark": "黑夜",
-  "Light": "白天"
+  "Light": "白天",
+  "WalletImport_WalletNotExist": "钱包文件不存在",
+  "WalletImport_FilesCopyFailed": "复制钱包文件失败",
+  "Wallet_CreateOrImport": "请选择新建还是导入钱包？",
+  "Wallet_Choice": "选择",
+  "Wallet_Create": "新建",
+  "Wallet_Import": "导入"
 }
