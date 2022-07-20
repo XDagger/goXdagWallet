@@ -24,6 +24,7 @@ endif()
 
 file(GLOB_RECURSE DAGGER_SOURCES
         xDagWallet/src/client/*.c
+        xDagWallet/src/client/utils/*.c
         xDagWallet/src/dnet/*.c
         xDagWallet/src/dus/*.c
         xDagWallet/src/ldus/*.c
@@ -32,6 +33,7 @@ file(GLOB_RECURSE DAGGER_SOURCES
 
 file(GLOB_RECURSE DAGGER_HEADERS
         xDagWallet/src/client/*.h
+        xDagWallet/src/client/utils/*.h
         xDagWallet/src/dnet/*.h
         xDagWallet/src/dus/*.h
         xDagWallet/src/ldus/*.h

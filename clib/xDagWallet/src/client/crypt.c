@@ -14,8 +14,21 @@
 #include "utils/log.h"
 #include "system.h"
 #include "dnet_crypt.h"
+#include "utils/uint256.h"
 
 static EC_GROUP *group;
+
+//FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+static xdag_hash_t secp256k1_ecdsa_const_order = {
+        0xBFD25E8CD0364141UL,0xBAAEDCE6AF48A03BUL,
+        0xFFFFFFFFFFFFFFFEUL, 0xFFFFFFFEFFFFFFFFUL
+};
+
+//7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
+static xdag_hash_t half_ecdsa_const_order = {
+        0xDFE92F46681B20A0UL,0x5D576E7357A4501DUL,
+        0xFFFFFFFFFFFFFFFFUL, 0x7FFFFFFEFFFFFFFFUL
+};
 
 //extern unsigned int xOPENSSL_ia32cap_P[4];
 //extern int xOPENSSL_ia32_cpuid(unsigned int *);
@@ -288,6 +301,13 @@ int xdag_sign(const void *key, const xdag_hash_t hash, xdag_hash_t sign_r, xdag_
 		memset(sign_s, 0, sizeof(xdag_hash_t));
 		memcpy((uint8_t*)sign_s + sizeof(xdag_hash_t) - s, p, s);
 	}
+
+    if (memcmp(sign_s, half_ecdsa_const_order, sizeof(xdag_hash_t)) > 0) {
+        xdag_hash_t new_s;
+        minus256((uint256_t*)secp256k1_ecdsa_const_order, (uint256_t*)sign_s,
+                 (uint256_t*)new_s);
+        memcpy(sign_s,new_s, sizeof(xdag_hash_t));
+    }
 
 	xdag_debug("Sign  : hash=[%s] sign=[%s] r=[%s], s=[%s]", xdag_log_hash(hash),
 		xdag_log_array(buf, sig_len), xdag_log_hash(sign_r), xdag_log_hash(sign_s));
