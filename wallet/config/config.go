@@ -60,7 +60,7 @@ func InitConfig() {
 	if conf.CultureInfo == "" {
 		conf.CultureInfo = "en-US"
 	}
-	conf.Option.PoolAddress = "test.xdag.org:13656"
+	conf.Option.PoolAddress = "86.48.0.150:13656"
 	if newConf {
 		data, _ = json.MarshalIndent(conf, "", "  ")
 		ioutil.WriteFile(configFile, data, 666)

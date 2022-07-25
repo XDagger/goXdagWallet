@@ -20,16 +20,17 @@ static EC_GROUP *group;
 
 //FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 static xdag_hash_t secp256k1_ecdsa_const_order = {
-    0xFFFFFFFEFFFFFFFFUL,0xFFFFFFFFFFFFFFFEUL,
+    0xFFFFFFFFFFFFFFFFUL,0xFFFFFFFFFFFFFFFEUL,
     0xBAAEDCE6AF48A03BUL,0xBFD25E8CD0364141UL
 };
 
 //7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
 static xdag_hash_t half_ecdsa_const_order = {
-    0x7FFFFFFEFFFFFFFFUL, 0xFFFFFFFFFFFFFFFFUL,
+    0x7FFFFFFFFFFFFFFFUL, 0xFFFFFFFFFFFFFFFFUL,
     0x5D576E7357A4501DUL,0xDFE92F46681B20A0UL
 };
-void reverseHash(const xdag_hash_t hash, xdag_hash_t target);
+void reverse(const xdag_hash_t hash, xdag_hash_t target);
+uint64_t swapInt64(uint64_t value);
 
 //extern unsigned int xOPENSSL_ia32cap_P[4];
 //extern int xOPENSSL_ia32_cpuid(unsigned int *);
@@ -304,13 +305,13 @@ int xdag_sign(const void *key, const xdag_hash_t hash, xdag_hash_t sign_r, xdag_
 	}
 
     xdag_hash_t temp;
-    reverseHash(sign_s, temp);
+    reverse(sign_s, temp);
 
     if (gt256((uint256_t*)temp, (uint256_t*)half_ecdsa_const_order)) {
         xdag_hash_t new_s;
         minus256((uint256_t*)secp256k1_ecdsa_const_order, (uint256_t*)temp,
                  (uint256_t*)new_s);
-        reverseHash(new_s,sign_s);
+        reverse(new_s,sign_s);
     }
 
 	xdag_debug("Sign  : hash=[%s] sign=[%s] r=[%s], s=[%s]", xdag_log_hash(hash),
@@ -361,10 +362,22 @@ int xdag_verify_signature(const void *key, const xdag_hash_t hash, const xdag_ha
 	return res != 1;
 }
 
-void reverseHash(const xdag_hash_t hash, xdag_hash_t target)
+void reverse(const xdag_hash_t hash, xdag_hash_t target)
 {
-    target[0]=hash[3];
-    target[1]=hash[2];
-    target[2]=hash[1];
-    target[3]=hash[0];
+    for(int i=0;i<4;i++){
+        target[i] = swapInt64(hash[i]);
+    }
+}
+
+uint64_t swapInt64(uint64_t value){
+    uint64_t res = 0;
+    res =   ((value & 0x00000000000000FF) <<56) +
+            ((value & 0x000000000000FF00) <<40) +
+            ((value & 0x0000000000FF0000) <<24) +
+            ((value & 0x00000000FF000000) <<8) +
+            ((value & 0x000000FF00000000) >>8) +
+            ((value & 0x0000FF0000000000) >>24) +
+            ((value & 0x00FF000000000000) >>40) +
+            ((value & 0xFF00000000000000) >>56);
+    return res;
 }
