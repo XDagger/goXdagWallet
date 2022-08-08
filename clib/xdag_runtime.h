@@ -18,7 +18,7 @@
 #include "xDagWallet/src/client/xdag_wrapper.h"
 
 ////---- Duplicated from dnet_crypt.c ----
-#define KEYFILE	    "xdagj_test" DELIMITER "dnet_key.dat"
+#define KEYFILE	    "xdagj_dat" DELIMITER "dnet_key.dat"
 struct dnet_keys {
     struct dnet_key priv;
     struct dnet_key pub;

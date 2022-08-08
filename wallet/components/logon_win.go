@@ -14,6 +14,7 @@ import (
 	cp "github.com/otiai10/copy"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
+	"goXdagWallet/xlog"
 	"image/color"
 	"io"
 	"os"
@@ -94,6 +95,7 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 	w.SetContent(content)
 	w.Resize(fyne.NewSize(410, 305))
 	w.SetOnClosed(func() {
+		xlog.CleanXdagLog(xlog.StdXdagLog)
 		WalletApp.Quit()
 		os.Exit(0)
 	})
@@ -166,7 +168,7 @@ func (l *LogonWin) connectClick() {
 
 				} else {
 
-					pathDest := path.Join(pwd, "xdagj_test")
+					pathDest := path.Join(pwd, "xdagj_dat")
 					if err := os.RemoveAll(pathDest); err != nil {
 						dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 							i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
@@ -317,7 +319,7 @@ func checkOldWallet(walletDir string) bool {
 func copyOldWallet(walletDir string) error {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
-	pathDest := path.Join(pwd, "xdagj_test")
+	pathDest := path.Join(pwd, "xdagj_dat")
 	if err := os.RemoveAll(pathDest); err != nil {
 		return err
 	}

@@ -34,7 +34,7 @@ var regDone = make(chan int, 1)
 func Xdag_Wallet_fount() int {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
-	pathName := path.Join(pwd, "xdagj_test", "dnet_key.dat")
+	pathName := path.Join(pwd, "xdagj_dat", "dnet_key.dat")
 	// change current working directory
 	os.Chdir(pwd)
 
@@ -240,6 +240,7 @@ func NewWalletWindow() {
 	w.CenterOnScreen()
 	go checkBalance()
 	w.SetOnClosed(func() {
+		xlog.CleanXdagLog(xlog.StdXdagLog)
 		chanBalance <- 1
 		WalletApp.Quit()
 		os.Exit(0)

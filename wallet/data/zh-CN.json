@@ -3,7 +3,7 @@
   "LogonWindow_ConnectWallet": "连接",
   "LogonWindow_RegisterWallet": "新建或导入钱包",
   "LogonWindow_SearchingConnection": "正在查找网络连接...",
-  "LogonWindow_Title": "测试专用版(%s)",
+  "LogonWindow_Title": "欢迎使用XDAGJ钱包 (版本 %s)",
   "LogonWindow_AppearanceSetting": "外观设置",
   "Common_ConfirmTitle": "确认",
   "Common_MessageTitle": "提示",
