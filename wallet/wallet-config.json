@@ -8,11 +8,9 @@
     "pool_address": "xdagmine.com:13654",
     "testnet_api_url": ""
   },
-  "version": "0.4.1",
+  "version": "0.4.2",
   "culture_info": "en-US",
   "addresses": [
-    "5ylnDSBLeHnQGNWqLw94KVd7N2dNH9bD",
-    "OT34j2ltjZtTA1Ym+DqEWEWy+KdVYlF2"
   ],
   "query": {
     "amount_from": "",
