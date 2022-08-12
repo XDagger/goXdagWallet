@@ -108,7 +108,10 @@ static int can_send_share(time_t current_time, time_t task_time, time_t share_ti
 
 static int send_to_pool(struct xdag_field *fld, int nfld)
 {
-	struct xdag_field f[XDAG_BLOCK_FIELDS];
+    struct {
+        uint32_t header;
+        struct xdag_field field[XDAG_BLOCK_FIELDS];
+    }f;
 	xdag_hash_t h;
 	struct miner *m = &g_local_miner;
 	int todo = nfld * sizeof(struct xdag_field), done = 0;
@@ -117,22 +120,23 @@ static int send_to_pool(struct xdag_field *fld, int nfld)
 		return -1;
 	}
 
-	memcpy(f, fld, todo);
-
+	memcpy(f.field, fld, todo);
+    f.header =  todo;
+    todo += 4;
 	if(nfld == XDAG_BLOCK_FIELDS) {
-		f[0].transport_header = 0;
+		f.field[0].transport_header = 0;
 
-		xdag_hash(f, sizeof(struct xdag_block), h);
+		xdag_hash(f.field, sizeof(struct xdag_block), h);
 
-		f[0].transport_header = BLOCK_HEADER_WORD;
+		f.field[0].transport_header = BLOCK_HEADER_WORD;
 
-		uint32_t crc = crc_of_array((uint8_t*)f, sizeof(struct xdag_block));
+		uint32_t crc = crc_of_array((uint8_t*)f.field, sizeof(struct xdag_block));
 
-		f[0].transport_header |= (uint64_t)crc << 32;
+		f.field[0].transport_header |= (uint64_t)crc << 32;
 	}
 
 	for(int i = 0; i < nfld; ++i) {
-		dfslib_encrypt_array(g_crypt, (uint32_t*)(f + i), DATA_SIZE, m->nfield_out++);
+		dfslib_encrypt_array(g_crypt, (uint32_t*)(f.field + i), DATA_SIZE, m->nfield_out++);
 	}
 
 	while(todo) {
@@ -149,9 +153,9 @@ static int send_to_pool(struct xdag_field *fld, int nfld)
 
 		if(!(p.revents & POLLOUT)) continue;
 #if defined(_WIN32) || defined(_WIN64)
-        int res = (int)send(g_socket, (uint8_t*)f + done, todo, 0);
+        int res = (int)send(g_socket, (char*)(&f) + done, todo, 0);
 #else
-        int res = (int)write(g_socket, (uint8_t*)f + done, todo);
+        int res = (int)write(g_socket, (uint8_t*)(&f) + done, todo);
 #endif
 		if(res <= 0) {
 			return -1;
