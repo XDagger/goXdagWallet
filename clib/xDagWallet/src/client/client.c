@@ -108,35 +108,33 @@ static int can_send_share(time_t current_time, time_t task_time, time_t share_ti
 
 static int send_to_pool(struct xdag_field *fld, int nfld)
 {
-    struct {
-        uint32_t header;
-        struct xdag_field field[XDAG_BLOCK_FIELDS];
-    }f;
+	uint8_t to_send[sizeof(uint32_t) + sizeof(struct xdag_block)];
 	xdag_hash_t h;
 	struct miner *m = &g_local_miner;
-	int todo = nfld * sizeof(struct xdag_field), done = 0;
+	uint32_t todo = nfld * sizeof(struct xdag_field), done = 0;
 
 	if(g_socket < 0) {
 		return -1;
 	}
+	memcpy(to_send, &todo, sizeof(uint32_t));
+	memcpy(to_send + sizeof(uint32_t), fld, todo);	
+	todo += sizeof(uint32_t);
+	struct xdag_field* f = (struct xdag_field*) (to_send + sizeof(uint32_t));
 
-	memcpy(f.field, fld, todo);
-    f.header =  todo;
-    todo += 4;
 	if(nfld == XDAG_BLOCK_FIELDS) {
-		f.field[0].transport_header = 0;
+		f[0].transport_header = 0;
 
-		xdag_hash(f.field, sizeof(struct xdag_block), h);
+		xdag_hash(f, sizeof(struct xdag_block), h);
 
-		f.field[0].transport_header = BLOCK_HEADER_WORD;
+		f[0].transport_header = BLOCK_HEADER_WORD;
 
-		uint32_t crc = crc_of_array((uint8_t*)f.field, sizeof(struct xdag_block));
+		uint32_t crc = crc_of_array((uint8_t*)f, sizeof(struct xdag_block));
 
-		f.field[0].transport_header |= (uint64_t)crc << 32;
+		f[0].transport_header |= (uint64_t)crc << 32;
 	}
 
 	for(int i = 0; i < nfld; ++i) {
-		dfslib_encrypt_array(g_crypt, (uint32_t*)(f.field + i), DATA_SIZE, m->nfield_out++);
+		dfslib_encrypt_array(g_crypt, (uint32_t*)(f + i), DATA_SIZE, m->nfield_out++);
 	}
 
 	while(todo) {
@@ -153,9 +151,9 @@ static int send_to_pool(struct xdag_field *fld, int nfld)
 
 		if(!(p.revents & POLLOUT)) continue;
 #if defined(_WIN32) || defined(_WIN64)
-        int res = (int)send(g_socket, (uint8_t*)(&f) + done, todo, 0);
+        int res = (int)send(g_socket, to_send + done, todo, 0);
 #else
-        int res = (int)write(g_socket, (uint8_t*)(&f) + done, todo);
+        int res = (int)write(g_socket, to_send + done, todo);
 #endif
 		if(res <= 0) {
 			return -1;
