@@ -151,7 +151,7 @@ static int send_to_pool(struct xdag_field *fld, int nfld)
 
 		if(!(p.revents & POLLOUT)) continue;
 #if defined(_WIN32) || defined(_WIN64)
-        int res = (int)send(g_socket, to_send + done, todo, 0);
+        int res = (int)send(g_socket, (char *)to_send + done, (int)todo, 0);
 #else
         int res = (int)write(g_socket, to_send + done, todo);
 #endif
