@@ -199,9 +199,11 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 			Password[i] = 0
 		}
 		str := wgt.Text
-		if b && len(str) > 0 {
+		if b {
 			if l.HasAccount {
-				copy(Password[:], str)
+				if len(str) > 0 {
+					copy(Password[:], str)
+				}
 				l.StartConnect()
 				ConnectWallet()
 			} else {
@@ -223,9 +225,11 @@ func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.W
 			Password[i] = 0
 		}
 		str := wgt.Text
-		if b && len(str) > 0 {
+		if b {
 			if str == l.Password {
-				copy(Password[:], str)
+				if len(str) > 0 {
+					copy(Password[:], str)
+				}
 				l.StartRegister()
 				ConnectWallet()
 			} else {
