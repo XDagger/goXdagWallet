@@ -29,7 +29,7 @@ func AboutPage(w fyne.Window) *fyne.Container {
 	cnContainer := container.NewVBox(
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("XDAG钱包（0.4.1）"+testNet), layout.NewSpacer()),
+			widget.NewLabel("XDAG钱包（0.5.0）"+testNet), layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("XDAG是基于PoW共识算法和DAG技术的加密货币，解决了传统区块链技术"),
 			layout.NewSpacer()),
@@ -60,7 +60,7 @@ func AboutPage(w fyne.Window) *fyne.Container {
 	enContainer := container.NewVBox(
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("XDAG wallet(0.4.1) "+testNet), layout.NewSpacer()),
+			widget.NewLabel("XDAG wallet(0.5.0) "+testNet), layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("XDAG is a novel application of Directed Acyclic Graph (DAG) technology that"),
 			layout.NewSpacer()),
