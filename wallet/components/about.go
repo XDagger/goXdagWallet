@@ -90,8 +90,44 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			}),
 			layout.NewSpacer()),
 	)
+	frContainer := container.NewVBox(
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Portefeuille XDAG (0.5.0) "+testNet), layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("XDAG est une nouvelle application de la technologie des Graphes Acycliques Dirigés (DAG) qui"),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("résout les problèmes auxquels est actuellement confrontée la technologie blockchain."),
+			layout.NewSpacer()), container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Le premier DAG minable."),
+			layout.NewSpacer()),
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Site web："), widget.NewHyperlink("xdag.io", link),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Communauté XDAG："), widget.NewHyperlink("Discord", discord),
+			widget.NewHyperlink("Telegram", tele),
+			layout.NewSpacer()),
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Faire un don à l équipe communautaire XDAG:"),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel(address),
+			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
+				w.Clipboard().SetContent(address)
+				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+					i18n.GetString("WalletWindow_AddressCopied"), w)
+			}),
+			layout.NewSpacer()),
+	)
+	
 	if config.GetConfig().CultureInfo == "zh-CN" {
 		return cnContainer
+	} else if config.GetConfig().CultureInfo == "fr-FR" {
+		return frContainer
 	} else {
 		return enContainer
 	}
