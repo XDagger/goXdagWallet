@@ -14,7 +14,7 @@
 #include <unistd.h>
 #endif
 
-#define STORAGE_DIR0            "storage%s"
+#define STORAGE_DIR0            "xdagj_dat" DELIMITER "storage%s"
 #define STORAGE_DIR0_ARGS(t)    (g_xdag_testnet ? "-testnet" : "")
 #define STORAGE_DIR1            STORAGE_DIR0 DELIMITER "%02x"
 #define STORAGE_DIR1_ARGS(t)    STORAGE_DIR0_ARGS(t), (int)((t) >> 40)
