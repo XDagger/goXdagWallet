@@ -13,3 +13,4 @@ go_build_goXdagWallet
 *.log
 *.out
 ._*
+fyne.syso

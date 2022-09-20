@@ -78,6 +78,8 @@ static struct miner g_local_miner;
 
 static int g_socket = -1;
 
+static int is_crypto = 1; //switch for network data crypto
+
 static int crypt_start(void)
 {
 	struct dfslib_string str;
@@ -108,16 +110,18 @@ static int can_send_share(time_t current_time, time_t task_time, time_t share_ti
 
 static int send_to_pool(struct xdag_field *fld, int nfld)
 {
-	struct xdag_field f[XDAG_BLOCK_FIELDS];
+	uint8_t to_send[sizeof(uint32_t) + sizeof(struct xdag_block)];
 	xdag_hash_t h;
 	struct miner *m = &g_local_miner;
-	int todo = nfld * sizeof(struct xdag_field), done = 0;
+	uint32_t todo = nfld * sizeof(struct xdag_field), done = 0;
 
 	if(g_socket < 0) {
 		return -1;
 	}
-
-	memcpy(f, fld, todo);
+	memcpy(to_send, &todo, sizeof(uint32_t));
+	memcpy(to_send + sizeof(uint32_t), fld, todo);	
+	todo += sizeof(uint32_t);
+	struct xdag_field* f = (struct xdag_field*) (to_send + sizeof(uint32_t));
 
 	if(nfld == XDAG_BLOCK_FIELDS) {
 		f[0].transport_header = 0;
@@ -131,8 +135,10 @@ static int send_to_pool(struct xdag_field *fld, int nfld)
 		f[0].transport_header |= (uint64_t)crc << 32;
 	}
 
-	for(int i = 0; i < nfld; ++i) {
-		dfslib_encrypt_array(g_crypt, (uint32_t*)(f + i), DATA_SIZE, m->nfield_out++);
+	if (is_crypto == 1) {
+		for(int i = 0; i < nfld; ++i) {
+			dfslib_encrypt_array(g_crypt, (uint32_t*)(f + i), DATA_SIZE, m->nfield_out++);
+		}
 	}
 
 	while(todo) {
@@ -149,9 +155,9 @@ static int send_to_pool(struct xdag_field *fld, int nfld)
 
 		if(!(p.revents & POLLOUT)) continue;
 #if defined(_WIN32) || defined(_WIN64)
-        int res = (int)send(g_socket, (uint8_t*)f + done, todo, 0);
+        int res = (int)send(g_socket, (char *)to_send + done, (int)todo, 0);
 #else
-        int res = (int)write(g_socket, (uint8_t*)f + done, todo);
+        int res = (int)write(g_socket, to_send + done, todo);
 #endif
 		if(res <= 0) {
 			return -1;
@@ -471,8 +477,9 @@ begin:
 			ndata += res;
 			if(ndata == maxndata) {
 				struct xdag_field *last = data + (ndata / sizeof(struct xdag_field) - 1);
-
-				dfslib_uncrypt_array(g_crypt, (uint32_t*)last->data, DATA_SIZE, m->nfield_in++);
+				if (is_crypto == 1) {
+					dfslib_uncrypt_array(g_crypt, (uint32_t*)last->data, DATA_SIZE, m->nfield_in++);
+				}
 				xdag_info("My Hash  : %016llx%016llx%016llx%016llx", hash[3], hash[2], hash[1], hash[0]);
 				xdag_info("Received Hash  : %016llx%016llx%016llx%016llx", last->data[3], last->data[2], last->data[1], last->data[0]);
 

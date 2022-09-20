@@ -9,7 +9,7 @@
 #include "utils/log.h"
 #include "utils/utils.h"
 
-#define WALLET_FILE (g_xdag_testnet ? "wallet-testnet.dat" : "wallet.dat")
+#define WALLET_FILE (g_xdag_testnet ? "xdagj_dat" DELIMITER "wallet-testnet.dat" : "xdagj_dat" DELIMITER "wallet.dat")
 
 struct key_internal {
 	xdag_hash_t pub, priv;
