@@ -94,7 +94,7 @@ func AboutPage(w fyne.Window) *fyne.Container {
 	frContainer := container.NewVBox(
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel("Portefeuille XDAG (0.5.0) "+testNet), layout.NewSpacer()),
+			widget.NewLabel("Portefeuille XDAG ("+config.GetConfig().Version+") "+testNet), layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
 			widget.NewLabel("XDAG est une nouvelle application de la technologie des Graphes Acycliques Dirigés (DAG) qui"),
 			layout.NewSpacer()),
@@ -124,7 +124,7 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			}),
 			layout.NewSpacer()),
 	)
-	
+
 	if config.GetConfig().CultureInfo == "zh-CN" {
 		return cnContainer
 	} else if config.GetConfig().CultureInfo == "fr-FR" {

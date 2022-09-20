@@ -3,6 +3,15 @@ package components
 import (
 	"errors"
 	"fmt"
+	"goXdagWallet/config"
+	"goXdagWallet/i18n"
+	"goXdagWallet/xlog"
+	"image/color"
+	"io"
+	"os"
+	"path"
+	"time"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/cmd/fyne_settings/settings"
@@ -12,14 +21,6 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	cp "github.com/otiai10/copy"
-	"goXdagWallet/config"
-	"goXdagWallet/i18n"
-	"goXdagWallet/xlog"
-	"image/color"
-	"io"
-	"os"
-	"path"
-	"time"
 )
 
 type LogonWin struct {
@@ -247,8 +248,7 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 			lang = "en-US"
 		} else if value == "Français" {
 			lang = "fr-FR"
-		}
-		else {
+		} else {
 			lang = "zh-CN"
 		}
 	})
@@ -290,8 +290,7 @@ func getTestTitle() string {
 			testNet = "测试网"
 		} else if config.GetConfig().CultureInfo == "fr-FR" {
 			testNet = "Réseau Test"
-		}
-		else {
+		} else {
 			testNet = "Test Net"
 		}
 	}
