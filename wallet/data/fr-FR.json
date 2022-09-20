@@ -1,7 +1,7 @@
 {
   "LogonWindow_ConnectingAccount": "Connexion au compte...",
   "LogonWindow_ConnectWallet": "Portefeuille connecté",
-  "LogonWindow_RegisterWallet": "Créer un nouveau portefeuille",
+  "LogonWindow_RegisterWallet": "Création ou Importation du portefeuille",
   "LogonWindow_SearchingConnection": "Recherche de connexion...",
   "LogonWindow_Title": "Bienvenue sur le portefeuille XDAG (Ver %s)",
   "LogonWindow_AppearanceSetting": "Réglages apparence",
@@ -88,5 +88,11 @@
   "WalletWindow_Transfer_Remark": "Remarque:",
   "WalletWindow_HistoryColumns_Remark": "Remarque",
   "Dark": "Sombre",
-  "Light": "Clair"
+  "Light": "Clair",
+  "WalletImport_WalletNotExist": "Fichiers du portefeuille inexistants",
+  "WalletImport_FilesCopyFailed": "Echec importation des fichiers du wallet",
+  "Wallet_CreateOrImport": "Choisissez : créer ou importer un portefeuille ?",
+  "Wallet_Choice": "Choix",
+  "Wallet_Create": "Créer",
+  "Wallet_Import": "Importer"
 }
