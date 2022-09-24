@@ -9,7 +9,7 @@ goXdagWallet
 go_build_goXdagWallet
 goXdagWallet.exe
 goXdagWallet.exe~
-*.a
+libxdag_*.a
 *.exe
 *.apk
 *.app
