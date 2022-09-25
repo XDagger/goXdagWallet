@@ -22,6 +22,10 @@ func AboutPage(w fyne.Window) *fyne.Container {
 	if config.GetConfig().Option.IsTestNet {
 		if config.GetConfig().CultureInfo == "zh-CN" {
 			testNet = "测试网"
+		} else if config.GetConfig().CultureInfo == "fr-FR" {
+			testNet = "Réseau Test"
+		} else if config.GetConfig().CultureInfo == "ru-RU" {
+			testNet = "тестовая сеть"
 		} else {
 			testNet = "Test Net"
 		}
@@ -125,10 +129,46 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			layout.NewSpacer()),
 	)
 
+	ruContainer := container.NewVBox(
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("XDAG кошелек ("+config.GetConfig().Version+") "+testNet), layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("XDAG - новое применение технологии направленного ациклического графа (DAG),"),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("решающей проблемы, с которыми в настоящее время сталкивается технология блокчейн."),
+			layout.NewSpacer()), container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Первый DAG, который можно майнить."),
+			layout.NewSpacer()),
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Веб-сайт："), widget.NewHyperlink("xdag.io", link),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Присоединиться к XDAG："), widget.NewHyperlink("Discord", discord),
+			widget.NewHyperlink("Telegram", tele),
+			layout.NewSpacer()),
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Подарить XDAG команде сообщества:"),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel(address),
+			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
+				w.Clipboard().SetContent(address)
+				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+					i18n.GetString("WalletWindow_AddressCopied"), w)
+			}),
+			layout.NewSpacer()),
+	)
+
 	if config.GetConfig().CultureInfo == "zh-CN" {
 		return cnContainer
 	} else if config.GetConfig().CultureInfo == "fr-FR" {
 		return frContainer
+	} else if config.GetConfig().CultureInfo == "ru-RU" {
+		return ruContainer
 	} else {
 		return enContainer
 	}

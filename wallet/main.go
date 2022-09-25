@@ -2,14 +2,15 @@
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
 	"goXdagWallet/components"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"goXdagWallet/xlog"
 	"os"
 	"path"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
 )
 
 func init() {
@@ -27,12 +28,13 @@ func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
 }
 
 func main() {
+	xlog.SetLogFile("./", "go_wallet.log")
 	config.InitConfig()
-	if i18n.LoadI18nStrings() != nil {
+	if err := i18n.LoadI18nStrings(); err != nil {
+		xlog.Error(err)
 		return
 	}
 
-	xlog.SetLogFile("./", "go_wallet.log")
 	hasAccount := components.Xdag_Wallet_fount() // cgo call xdag_runtime C library
 	components.WalletApp = app.NewWithID("io.xdagj.wallet")
 	components.WalletApp.SetIcon(components.GetAppIcon())

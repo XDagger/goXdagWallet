@@ -13,10 +13,6 @@ package components
 import "C"
 import (
 	"fmt"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"goXdagWallet/wallet_state"
@@ -26,6 +22,11 @@ import (
 	"strings"
 	"time"
 	"unsafe"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 )
 
 var chanBalance = make(chan int, 1)
@@ -217,6 +218,7 @@ func NewWalletWindow() {
 		getTestTitle())
 	WalletWindow = w
 	w.SetMaster()
+	LogonWindow.Win.Content().Resize(fyne.NewSize(0, 0))
 	tabs := container.NewAppTabs(
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAccount"),
 			theme.HomeIcon(), AccountPage(Address, Balance, WalletWindow)),
