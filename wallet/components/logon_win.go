@@ -243,11 +243,13 @@ func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.W
 
 func showLanguageDialog(title, ok, dismiss string, callback func(string), parent fyne.Window) {
 	lang := "en-US"
-	radio := widget.NewRadioGroup([]string{"English", "中文", "Français"}, func(value string) {
+	radio := widget.NewRadioGroup([]string{"English", "中文", "Français", "Русский"}, func(value string) {
 		if value == "English" {
 			lang = "en-US"
 		} else if value == "Français" {
 			lang = "fr-FR"
+		} else if value == "Русский" {
+			lang = "ru-RU"
 		} else {
 			lang = "zh-CN"
 		}
@@ -290,6 +292,8 @@ func getTestTitle() string {
 			testNet = "测试网"
 		} else if config.GetConfig().CultureInfo == "fr-FR" {
 			testNet = "Réseau Test"
+		} else if config.GetConfig().CultureInfo == "ru-RU" {
+			testNet = "тестовая сеть"
 		} else {
 			testNet = "Test Net"
 		}
