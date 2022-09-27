@@ -1,6 +1,6 @@
 {
   "LogonWindow_ConnectingAccount": "Connexion au compte...",
-  "LogonWindow_ConnectWallet": "Se connecter au portefeuille",
+  "LogonWindow_ConnectWallet": "Déverouiller le portefeuille",
   "LogonWindow_RegisterWallet": "Créer ou importer le portefeuille",
   "LogonWindow_SearchingConnection": "Recherche de connexion...",
   "LogonWindow_Title": "Bienvenue sur le portefeuille XDAG (Ver %s)",
