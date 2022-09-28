@@ -5,7 +5,7 @@
     "specified_pool_address": null,
     "is_test_net": false,
     "disable_mining": true,
-    "pool_address": "xdagmine.com:13654",
+    "pool_address": "xdag.org:13656",
     "testnet_api_url": ""
   },
   "version": "0.5.3",
