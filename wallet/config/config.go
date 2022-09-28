@@ -40,7 +40,7 @@ type DefaultQuery struct {
 func InitConfig() {
 	newConf := false
 
-	conf.Version = config.GetConfig().Version
+	conf.Version = "0.5.3"
 	conf.CultureInfo = "en-US"
 	conf.Option.DisableMining = true
 	conf.Option.PoolAddress = "xdag.org:13656"
