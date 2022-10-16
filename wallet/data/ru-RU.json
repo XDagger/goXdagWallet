@@ -76,7 +76,7 @@
     "WalletWindow_Filter_DateTo": "Дата До",
     "WalletWindow_Filter_NoResult": "Транзакций нет.",
     "WalletWindow_Filter_AllDirect": "Все",
-    "WalletWindow_Filter_Week": "Последняя неделя",
+    "WalletWindow_Filter_Week": "неделя",
     "WalletWindow_Filter_Month": "Месяц",
     "WalletWindow_Filter_Year": "Год",
     "WalletWindow_Filter_Remember": "Запомнить:",
