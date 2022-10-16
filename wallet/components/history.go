@@ -3,14 +3,6 @@ package components
 import (
 	"compress/gzip"
 	"errors"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
-	"github.com/buger/jsonparser"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"io"
@@ -20,6 +12,15 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
+	"github.com/buger/jsonparser"
 )
 
 type HistoryItem struct {
@@ -385,12 +386,11 @@ func refreshTable(page int, query string) {
 	current, _ := jsonparser.GetInt(body, "addresses_pagination", "current_page")
 	prev, _ := jsonparser.GetString(body, "addresses_pagination", "links", "prev")
 	if len(prev) == 0 {
-		current = 0
 		prevBtn.Disable()
 	} else {
 		prevBtn.Enable()
 	}
-	curPage = int(current + 1)
+	curPage = int(current)
 
 	next, _ := jsonparser.GetString(body, "addresses_pagination", "links", "next")
 	if len(next) == 0 {
@@ -447,7 +447,12 @@ func refreshTable(page int, query string) {
 			}
 
 		})
-	historyTable.SetColumnWidth(0, 82)
+	if config.GetConfig().CultureInfo == "ru-RU" {
+		historyTable.SetColumnWidth(0, 122)
+	} else {
+		historyTable.SetColumnWidth(0, 82)
+	}
+
 	historyTable.SetColumnWidth(1, 178)
 	historyTable.SetColumnWidth(2, 372)
 	historyTable.SetColumnWidth(3, 222)
