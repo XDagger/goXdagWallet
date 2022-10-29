@@ -457,7 +457,7 @@ func refreshTable(page int, query string) {
 
 	historyTable.SetColumnWidth(1, 178)
 	historyTable.SetColumnWidth(2, 372)
-	historyTable.SetColumnWidth(3, 222)
+	historyTable.SetColumnWidth(3, 188)
 	historyTable.SetColumnWidth(4, 152)
 	historyTable.Refresh()
 	if total == 0 {
