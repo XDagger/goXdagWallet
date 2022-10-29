@@ -199,6 +199,7 @@ func setDefaultFilter(amountFrom, amountTo *numericalEntry, dateFrom, remark *wi
 }
 func HistoryPage(w fyne.Window) *fyne.Container {
 	defaultParam = loadQuery()
+	queryParam = defaultParam
 	refreshBtn := widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
 		historyProgressContainer.Show()
@@ -380,9 +381,8 @@ func refreshTable(page int, query string) {
 		return
 	}
 	total, _ := jsonparser.GetInt(body, "addresses_pagination", "total")
-	// lastPage, _ := jsonparser.GetInt(body, "addresses_pagination", "last_page")
-	// pageCount = int(lastPage)
-	pageCount = int((total + 9) / 10)
+	lastPage, _ := jsonparser.GetInt(body, "addresses_pagination", "last_page")
+	pageCount = int(lastPage)
 
 	current, _ := jsonparser.GetInt(body, "addresses_pagination", "current_page")
 	prev, _ := jsonparser.GetString(body, "addresses_pagination", "links", "prev")
