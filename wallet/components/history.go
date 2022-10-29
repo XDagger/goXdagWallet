@@ -448,17 +448,22 @@ func refreshTable(page int, query string) {
 			}
 
 		})
+	// Pagination for each language
 	if config.GetConfig().CultureInfo == "ru-RU" {
 		historyTable.SetColumnWidth(0, 122)
+	} else if config.GetConfig().CultureInfo == "fr-FR" {
+		historyTable.SetColumnWidth(0, 103)
+	} else if config.GetConfig().CultureInfo == "zh-CN" {
+		historyTable.SetColumnWidth(0, 82)
 	} else {
 		historyTable.SetColumnWidth(0, 82)
 	}
-
 	historyTable.SetColumnWidth(1, 178)
-	historyTable.SetColumnWidth(2, 372)
-	historyTable.SetColumnWidth(3, 222)
+	historyTable.SetColumnWidth(2, 310)
+	historyTable.SetColumnWidth(3, 188)
 	historyTable.SetColumnWidth(4, 152)
 	historyTable.Refresh()
+	
 	if total == 0 {
 		historyContainer.Add(historyNoResultContainer)
 	} else {
