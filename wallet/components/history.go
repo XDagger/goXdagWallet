@@ -380,8 +380,9 @@ func refreshTable(page int, query string) {
 		return
 	}
 	total, _ := jsonparser.GetInt(body, "addresses_pagination", "total")
-	lastPage, _ := jsonparser.GetInt(body, "addresses_pagination", "last_page")
-	pageCount = int(lastPage)
+	// lastPage, _ := jsonparser.GetInt(body, "addresses_pagination", "last_page")
+	// pageCount = int(lastPage)
+	pageCount = int((total + 9) / 10)
 
 	current, _ := jsonparser.GetInt(body, "addresses_pagination", "current_page")
 	prev, _ := jsonparser.GetString(body, "addresses_pagination", "links", "prev")
