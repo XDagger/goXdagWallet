@@ -448,7 +448,8 @@ func refreshTable(page int, query string) {
 			}
 
 		})
-	if config.GetConfig().CultureInfo == "ru-RU" {
+	if config.GetConfig().CultureInfo == "ru-RU" ||
+		config.GetConfig().CultureInfo == "fr-FR" {
 		historyTable.SetColumnWidth(0, 122)
 	} else {
 		historyTable.SetColumnWidth(0, 82)
