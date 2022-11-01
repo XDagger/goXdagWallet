@@ -1,6 +1,7 @@
 package components
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"goXdagWallet/config"
@@ -8,8 +9,10 @@ import (
 	"goXdagWallet/xlog"
 	"image/color"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -26,6 +29,7 @@ import (
 type LogonWin struct {
 	Win               fyne.Window
 	BtnContainer      *fyne.Container
+	LogonBtn          *widget.Button
 	ProgressContainer *fyne.Container
 	HasAccount        bool
 	Password          string
@@ -39,20 +43,19 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 		getTestTitle())
 	l.Win = w
 
-	var btn *widget.Button
 	l.HasAccount = hasAccount == 0
 	if hasAccount == 0 { // found wallet key file
-		btn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), l.connectClick)
+		l.LogonBtn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), l.connectClick)
 	} else if hasAccount == -1 { // not fount
-		btn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), l.connectClick)
+		l.LogonBtn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), l.connectClick)
 	}
-	btn.Importance = widget.HighImportance
+	l.LogonBtn.Importance = widget.HighImportance
 
 	//l.StatusInfo = canvas.NewText("", color.White)
 	StatusInfo.Alignment = fyne.TextAlignCenter
 	progress := widget.NewProgressBarInfinite()
 	progress.Hide() // for primary color changing
-	l.BtnContainer = container.New(layout.NewPaddedLayout(), btn)
+	l.BtnContainer = container.New(layout.NewPaddedLayout(), l.LogonBtn)
 	l.ProgressContainer = container.New(layout.NewPaddedLayout(), progress)
 
 	settingBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
@@ -64,9 +67,9 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 				l.Win.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
 					getTestTitle())
 				if hasAccount == 0 { // found wallet key file
-					btn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
+					l.LogonBtn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
 				} else if hasAccount == -1 { // not fount
-					btn.SetText(i18n.GetString("LogonWindow_RegisterWallet"))
+					l.LogonBtn.SetText(i18n.GetString("LogonWindow_RegisterWallet"))
 				}
 			}, l.Win)
 	})
@@ -127,10 +130,9 @@ func (l *LogonWin) connectClick() {
 	}
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
-	var title string
+
 	if l.HasAccount {
-		title = i18n.GetString("PasswordWindow_InputPassword")
-		l.showPasswordDialog(title,
+		l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
 			i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
 	} else {
 
@@ -152,14 +154,13 @@ func (l *LogonWin) connectClick() {
 									i18n.GetString("WalletImport_WalletNotExist"), l.Win)
 								return
 							}
-							if copyOldWallet(uri.Path()) != nil {
+							if l.copyOldWallet(uri.Path()) != nil {
 								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 									i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
 								return
 							}
 							l.HasAccount = true
-							title = i18n.GetString("PasswordWindow_InputPassword")
-							l.showPasswordDialog(title,
+							l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
 								i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
 
 						}, l.Win)
@@ -180,8 +181,7 @@ func (l *LogonWin) connectClick() {
 							i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
 						return
 					}
-					title = i18n.GetString("PasswordWindow_SetPassword")
-					l.showPasswordDialog(title,
+					l.showPasswordDialog(i18n.GetString("PasswordWindow_SetPassword"),
 						i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
 				}
 			}, l.Win)
@@ -192,6 +192,7 @@ func (l *LogonWin) connectClick() {
 }
 
 func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
+	l.LogonBtn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
 	wgt := widget.NewEntry()
 	wgt.Password = true
 
@@ -271,7 +272,7 @@ func registerTimer() {
 	for {
 		select {
 		case <-timer.C:
-			span := time.Now().Sub(start)
+			span := time.Since(start)
 			z := time.Unix(0, 0).UTC()
 			StatusInfo.Text = fmt.Sprintf(i18n.GetString("LogonWindow_InitializingElapsedTime"),
 				z.Add(span).Format("04:05"))
@@ -322,14 +323,12 @@ func checkOldWallet(walletDir string) bool {
 	}
 
 	pathName = path.Join(walletDir, "storage")
-	fi, err = os.Stat(pathName)
-	if err != nil {
-		return false
-	}
-	return true
+	_, err = os.Stat(pathName)
+
+	return err == nil
 }
 
-func copyOldWallet(walletDir string) error {
+func (l *LogonWin) copyOldWallet(walletDir string) error {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
 	pathDest := path.Join(pwd, "xdagj_dat")
@@ -348,6 +347,9 @@ func copyOldWallet(walletDir string) error {
 	if err := cp.Copy(path.Join(walletDir, "storage"), path.Join(pathDest, "storage")); err != nil {
 		return err
 	}
+
+	l.importConfig(walletDir)
+
 	return nil
 }
 
@@ -373,4 +375,51 @@ func copyFile(walletDir, pathDest, fileName string, n int64) error {
 		return errors.New(fileName + " copy  failed")
 	}
 	return nil
+}
+
+func (l *LogonWin) importConfig(walletDir string) {
+
+	configName := path.Join(walletDir, "wallet-config.json")
+	_, err := os.Stat(configName)
+	if err != nil {
+		walletDir = strings.TrimSuffix(walletDir, `\`)
+		walletDir = strings.TrimSuffix(walletDir, `/`)
+		configName = path.Join(path.Dir(walletDir), "wallet-config.json")
+		_, err = os.Stat(configName)
+		if err != nil {
+			return
+		}
+	}
+	var oldConf config.Config
+	data, err := ioutil.ReadFile(configName)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(data, &oldConf)
+	if err != nil {
+		return
+	}
+
+	if config.GetConfig().CultureInfo == "en-US" && oldConf.CultureInfo != "en-US" {
+
+		config.GetConfig().CultureInfo = oldConf.CultureInfo
+
+		i18n.LoadI18nStrings()
+
+		l.Win.Resize(fyne.NewSize(410, 305))
+
+		l.Win.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
+			getTestTitle())
+
+		l.LogonBtn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
+
+		l.Win.Resize(fyne.NewSize(410, 305))
+	}
+
+	config.GetConfig().Query = oldConf.Query
+
+	for _, a := range oldConf.Addresses {
+		config.InsertAddress(a)
+	}
 }
