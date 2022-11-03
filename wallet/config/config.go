@@ -43,7 +43,7 @@ func InitConfig() {
 	conf.Version = "0.5.5"
 	conf.CultureInfo = "en-US"
 	conf.Option.DisableMining = true
-	conf.Option.PoolAddress = "xdag.org:13656"
+	conf.Option.PoolAddress = "pool.xdag.org:13656"
 
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
