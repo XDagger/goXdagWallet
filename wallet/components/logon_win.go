@@ -9,7 +9,6 @@ import (
 	"goXdagWallet/xlog"
 	"image/color"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -391,7 +390,7 @@ func (l *LogonWin) importConfig(walletDir string) {
 		}
 	}
 	var oldConf config.Config
-	data, err := ioutil.ReadFile(configName)
+	data, err := os.ReadFile(configName)
 	if err != nil {
 		return
 	}
