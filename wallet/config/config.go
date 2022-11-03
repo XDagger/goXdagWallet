@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -47,7 +46,7 @@ func InitConfig() {
 
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
-	data, err := ioutil.ReadFile(path.Join(pwd, configFile))
+	data, err := os.ReadFile(path.Join(pwd, configFile))
 	if err == nil {
 		err = json.Unmarshal(data, &conf)
 		if err != nil {
@@ -62,7 +61,7 @@ func InitConfig() {
 	}
 	if newConf {
 		data, _ = json.MarshalIndent(conf, "", "  ")
-		ioutil.WriteFile(configFile, data, 666)
+		os.WriteFile(configFile, data, 666)
 	}
 }
 func DeleteAddress(id int) {
@@ -97,7 +96,7 @@ func InsertAddress(address string) {
 
 func SaveConfig() error {
 	data, _ := json.MarshalIndent(conf, "", "  ")
-	ioutil.WriteFile(configFile, data, 666)
+	os.WriteFile(configFile, data, 666)
 	return nil
 }
 
