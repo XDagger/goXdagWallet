@@ -3,15 +3,16 @@ package components
 import (
 	"errors"
 	"fmt"
+	"goXdagWallet/config"
+	"goXdagWallet/i18n"
+	"strconv"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"goXdagWallet/config"
-	"goXdagWallet/i18n"
-	"strconv"
 )
 
 var TransStatus = widget.NewLabel("")
@@ -65,7 +66,10 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 					if b {
 						TransProgressContainer.Show()
 						TransBtnContainer.Hide()
+						DonaTransProgressContainer.Show()
+						DonaTransBtnContainer.Hide()
 						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
+						DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
 						transWrap(AddressEntry.Text, amount.Text, remark.Text)
 					}
 				}, w)
@@ -161,6 +165,8 @@ func makeAddrList() {
 func setTransferDone() {
 	TransProgressContainer.Hide()
 	TransBtnContainer.Show()
+	DonaTransProgressContainer.Hide()
+	DonaTransBtnContainer.Show()
 	dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 		i18n.GetString("TransferWindow_CommitSuccess"), WalletWindow)
 	makeAddrList()
@@ -169,6 +175,8 @@ func setTransferDone() {
 func setTransferError(e string) {
 	TransProgressContainer.Hide()
 	TransBtnContainer.Show()
+	DonaTransProgressContainer.Hide()
+	DonaTransBtnContainer.Show()
 	dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 		i18n.GetString("TransferWindow_CommitFailed")+e, WalletWindow)
 }

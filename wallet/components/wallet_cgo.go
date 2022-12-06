@@ -104,6 +104,7 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 			canvas.Refresh(StatusInfo)
 		} else if ok && state == wallet_state.TransferPending {
 			TransStatus.Text = wallet_state.Localize(state)
+			DonaTransStatus.Text = wallet_state.Localize(state)
 		}
 		xlog.Info(eventData)
 		if (!config.GetConfig().Option.IsTestNet && strings.Contains(eventData, "Connected to the mainnet pool")) ||
@@ -126,6 +127,7 @@ func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
 			Balance = eventData
 			AccountBalance.Set(Balance)
 			TransStatus.Text = ""
+			DonaTransStatus.Text = ""
 		}
 		NewWalletWindow()
 		xlog.Info(eventData)
@@ -178,7 +180,7 @@ func TransferWrap(address, amount, remark string) int {
 
 	result := C.xdag_transfer_wrap(csAddress, csAmount, csRemark)
 	fmt.Println(int(result))
-	if int(result) == 0 {
+	if int(result) == 0 && address != CommunityAddress {
 		config.InsertAddress(address)
 	}
 	return int(result)
@@ -226,6 +228,8 @@ func NewWalletWindow() {
 			theme.MailSendIcon(), TransferPage(WalletWindow, TransferWrap)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabHistory"),
 			theme.ContentPasteIcon(), HistoryPage(WalletWindow)),
+		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabDonate"),
+			theme.NewThemedResource(donateIconRes), DonatePage(WalletWindow, TransferWrap)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAbout"),
 			theme.InfoIcon(), AboutPage(WalletWindow)),
 		//container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabSettings"),

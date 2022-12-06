@@ -56,6 +56,7 @@
     "WalletWindow_TabAccount": "Аккаунт",
     "WalletWindow_TabHistory": "Транзакции",
     "WalletWindow_TabTransfer": "Отправить",
+    "WalletWindow_TabDonate": "дарить",
     "WalletWindow_TabSettings": "Настройки",
     "WalletWindow_TabAbout": "Инфо",
     "LogonWindow_NoPoolAddress": "\nНе удалось найти адрес пула в конфиг-файле. \nПожалуйста, проверьте wallet-config.json \nв строке pool_address нужно указать пул.\n",

@@ -13,11 +13,13 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+const CommunityAddress = "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
+
 func AboutPage(w fyne.Window) *fyne.Container {
 	link, _ := url.Parse("https://xdag.io/")
 	tele, _ := url.Parse("https://t.me/dagger_cryptocurrency")
 	discord, _ := url.Parse("https://discord.gg/YxXUVQJ")
-	address := "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
+
 	var testNet string
 	if config.GetConfig().Option.IsTestNet {
 		if config.GetConfig().CultureInfo == "zh-CN" {
@@ -54,9 +56,9 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			widget.NewLabel("为社区团队捐赠XDAG:"),
 			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel(address),
+			widget.NewLabel(CommunityAddress),
 			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-				w.Clipboard().SetContent(address)
+				w.Clipboard().SetContent(CommunityAddress)
 				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 					i18n.GetString("WalletWindow_AddressCopied"), w)
 			}),
@@ -87,9 +89,9 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			widget.NewLabel("Donate XDAG to Community Team:"),
 			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel(address),
+			widget.NewLabel(CommunityAddress),
 			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-				w.Clipboard().SetContent(address)
+				w.Clipboard().SetContent(CommunityAddress)
 				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 					i18n.GetString("WalletWindow_AddressCopied"), w)
 			}),
@@ -120,9 +122,9 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			widget.NewLabel("Faire un don à l équipe communautaire XDAG:"),
 			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel(address),
+			widget.NewLabel(CommunityAddress),
 			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-				w.Clipboard().SetContent(address)
+				w.Clipboard().SetContent(CommunityAddress)
 				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 					i18n.GetString("WalletWindow_AddressCopied"), w)
 			}),
@@ -154,9 +156,9 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			widget.NewLabel("Подарить XDAG команде сообщества:"),
 			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel(address),
+			widget.NewLabel(CommunityAddress),
 			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-				w.Clipboard().SetContent(address)
+				w.Clipboard().SetContent(CommunityAddress)
 				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 					i18n.GetString("WalletWindow_AddressCopied"), w)
 			}),
