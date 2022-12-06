@@ -44,7 +44,7 @@ var prevBtn *widget.Button
 var pageLabel = binding.NewString()
 var queryParam string
 var defaultParam string
-var re = regexp.MustCompile(`^((19|20|21)\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$`)
+var re = regexp.MustCompile(`^((19|20|21)[0-9][0-9])-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$`)
 
 func dateValidator() fyne.StringValidator {
 	return func(text string) error {

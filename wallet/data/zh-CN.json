@@ -55,6 +55,7 @@
   "SettingsWindow_Title": "系统设置",
   "WalletWindow_TabAccount": "账户信息",
   "WalletWindow_TabHistory": "历史记录",
+  "WalletWindow_TabDonate": "捐赠",
   "WalletWindow_TabTransfer": "转账",
   "WalletWindow_TabSettings": "设置",
   "WalletWindow_TabAbout": "关于",
