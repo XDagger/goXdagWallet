@@ -56,6 +56,7 @@
   "WalletWindow_TabAccount": "Compte",
   "WalletWindow_TabHistory": "Transactions",
   "WalletWindow_TabTransfer": "Transfert",
+  "WalletWindow_TabDonate": "Faire don de",
   "WalletWindow_TabSettings": "Réglages",
   "WalletWindow_TabAbout": "A propos",
   "LogonWindow_NoPoolAddress": "\nEchec de lecture de l'adresse du pool à partir du fichier de configuration. \nVérifier le fichier wallet-config.json \npour vous assurer que l'adresse du pool est correcte dans Options.\n",

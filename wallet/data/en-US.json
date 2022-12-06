@@ -55,6 +55,7 @@
   "SettingsWindow_Title": "Settings",
   "WalletWindow_TabAccount": "Account",
   "WalletWindow_TabHistory": "Transactions",
+  "WalletWindow_TabDonate": "Donate",
   "WalletWindow_TabTransfer": "Transfer",
   "WalletWindow_TabSettings": "Settings",
   "WalletWindow_TabAbout": "About",
