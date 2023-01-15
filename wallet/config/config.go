@@ -12,11 +12,12 @@ const configFile = "wallet-config.json"
 var conf Config
 
 type Config struct {
-	Option      WalletOption `json:"wallet_option"`
-	Version     string       `json:"version"`
-	CultureInfo string       `json:"culture_info"`
-	Addresses   []string     `json:"addresses"`
-	Query       DefaultQuery `json:"query"`
+	Option         WalletOption `json:"wallet_option"`
+	Version        string       `json:"version"`
+	CultureInfo    string       `json:"culture_info"`
+	Addresses      []string     `json:"addresses"`
+	Query          DefaultQuery `json:"query"`
+	WalletFilePath string       `json:"wallet_file_path"`
 }
 
 type WalletOption struct {
@@ -43,6 +44,7 @@ func InitConfig() {
 	conf.CultureInfo = "en-US"
 	conf.Option.DisableMining = true
 	conf.Option.PoolAddress = "xdag.org:13656"
+	conf.WalletFilePath = "./"
 
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
