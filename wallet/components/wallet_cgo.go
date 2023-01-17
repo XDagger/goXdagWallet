@@ -12,6 +12,7 @@ package components
 */
 import "C"
 import (
+	"encoding/hex"
 	"fmt"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
@@ -214,7 +215,10 @@ func NewWalletWindow() {
 	if WalletWindow != nil {
 		return
 	}
-
+	k := getDefaultPubKey()
+	if k == nil {
+		fmt.Println("get default key failed.")
+	}
 	LogonWindow.Win.Hide()
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
 		getTestTitle())
@@ -263,4 +267,16 @@ func checkBalance() {
 			C.xdag_get_balance_wrap()
 		}
 	}
+}
+
+// get xdag wallet private key
+func getDefaultPubKey() []byte {
+	p := C.xdag_get_default_key()
+	if uintptr(p) > 0 {
+		key := C.GoBytes(p, 32)
+		fmt.Println(hex.EncodeToString(key[:]))
+		xlog.Info("default private key:", hex.EncodeToString(key[:]))
+		return key
+	}
+	return nil
 }

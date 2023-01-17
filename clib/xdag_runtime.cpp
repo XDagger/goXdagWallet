@@ -13,7 +13,7 @@
 extern pthread_t g_client_thread;
 static int g_client_init_done = 0;
 ////---- Exporting functions wrapping functions ----
-int xdag_init_wrap(int argc, char **argv, const char* pool_address, int testnet)
+int xdag_init_wrap(int argc, char **argv, const char *pool_address, int testnet)
 {
     xdag_init_path(argv[0]);
 
@@ -25,12 +25,14 @@ int xdag_init_wrap(int argc, char **argv, const char* pool_address, int testnet)
     strncpy(param.pool_arg, pool_address, 255);
     param.testnet = testnet;
 
-    int err = pthread_create(&g_client_thread, 0, xdag_client_thread, (void*)&param);
-    if (err != 0) {
+    int err = pthread_create(&g_client_thread, 0, xdag_client_thread, (void *)&param);
+    if (err != 0)
+    {
         printf("create client_thread failed, error : %s\n", strerror(err));
         return -1;
     }
-    while (!g_client_init_done) {
+    while (!g_client_init_done)
+    {
         sleep(1);
     }
 
@@ -66,119 +68,119 @@ int xdag_exit_wrap(void)
     return pthread_cancel(g_client_thread);
 }
 
-//int xdag_event_callback(void* thisObj, xdag_event *event)
+// int xdag_event_callback(void* thisObj, xdag_event *event)
 //{
-//    if (!event) {
-//        return -1;
-//    }
+//     if (!event) {
+//         return -1;
+//     }
 //
-//    switch (event->event_id) {
-//        case event_id_init_done:
-//        {
-//            g_client_init_done = 1;
-//            break;
-//        }
-//        case event_id_log:
-//        {
+//     switch (event->event_id) {
+//         case event_id_init_done:
+//         {
+//             g_client_init_done = 1;
+//             break;
+//         }
+//         case event_id_log:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_interact:
-//        {
+//         case event_id_interact:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//            //		case event_id_err:
-//            //		{
-//            //			fprintf(stdout, "error : %x, msg : %s\n", event->error_no, event->event_data);
-//            //			fflush(stdout);
-//            //			break;
-//            //		}
+//             //		case event_id_err:
+//             //		{
+//             //			fprintf(stdout, "error : %x, msg : %s\n", event->error_no, event->event_data);
+//             //			fflush(stdout);
+//             //			break;
+//             //		}
 //
-//        case event_id_err_exit:
-//        {
+//         case event_id_err_exit:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_account_done:
-//        {
+//         case event_id_account_done:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_address_done:
-//        {
+//         case event_id_address_done:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_balance_done:
-//        {
+//         case event_id_balance_done:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_xfer_done:
-//        {
+//         case event_id_xfer_done:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_level_done:
-//        {
+//         case event_id_level_done:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_state_done:
-//        {
+//         case event_id_state_done:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_exit_done:
-//        {
+//         case event_id_exit_done:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        case event_id_passwd:
-//        {
-//            break;
-//        }
+//         case event_id_passwd:
+//         {
+//             break;
+//         }
 //
-//        case event_id_set_passwd:
-//        {
-//            break;
-//        }
+//         case event_id_set_passwd:
+//         {
+//             break;
+//         }
 //
-//        case event_id_set_passwd_again:
-//        {
-//            break;
-//        }
+//         case event_id_set_passwd_again:
+//         {
+//             break;
+//         }
 //
-//        case event_id_random_key:
-//        {
-//            break;
-//        }
+//         case event_id_random_key:
+//         {
+//             break;
+//         }
 //
-//        case event_id_state_change:
-//        {
+//         case event_id_state_change:
+//         {
 //
-//            break;
-//        }
+//             break;
+//         }
 //
-//        default:
-//        {
+//         default:
+//         {
 //
-//            break;
-//        }
-//    }
-//    return 0;
-//}
+//             break;
+//         }
+//     }
+//     return 0;
+// }
 
 int xdag_set_password_callback_wrap(password_callback callback)
 {
@@ -186,11 +188,11 @@ int xdag_set_password_callback_wrap(password_callback callback)
     return xdag_user_crypt_action((uint32_t *)(callback), 0, 0, 6);
 }
 
-int xdag_transfer_wrap(const char* toAddress, const char* amountString, const char* remarkString)
+int xdag_transfer_wrap(const char *toAddress, const char *amountString, const char *remarkString)
 {
-    char* address = (char *)malloc(strlen(toAddress) + 1);
-    char* amount = (char *)malloc(strlen(amountString) + 1);
-    char* remark = (char *)malloc(strlen(remarkString) + 1);
+    char *address = (char *)malloc(strlen(toAddress) + 1);
+    char *amount = (char *)malloc(strlen(amountString) + 1);
+    char *remark = (char *)malloc(strlen(remarkString) + 1);
 
     strcpy(address, toAddress);
     address[strlen(toAddress)] = 0;
@@ -202,10 +204,12 @@ int xdag_transfer_wrap(const char* toAddress, const char* amountString, const ch
     char *result = NULL;
     int err = processXferCommand(amount, address, remark, &result);
 
-    if (err != error_none) {
+    if (err != error_none)
+    {
         xdag_wrapper_event(event_id_log, (xdag_error_no)err, result);
     }
-    else {
+    else
+    {
         xdag_wrapper_event(event_id_xfer_done, (xdag_error_no)0, result);
     }
 
@@ -216,7 +220,7 @@ int xdag_transfer_wrap(const char* toAddress, const char* amountString, const ch
     return err;
 }
 
-int xdag_is_valid_wallet_address(const char* address)
+int xdag_is_valid_wallet_address(const char *address)
 {
     struct xfer_callback_data xfer;
     if (xdag_address2hash(address, xfer.fields[XFER_MAX_IN].hash) == 0)
@@ -232,7 +236,7 @@ int xdag_is_valid_wallet_address(const char* address)
 int xdag_dnet_crpt_found()
 {
     FILE *f = NULL;
-    struct dnet_keys *keys = (struct dnet_keys*)malloc(sizeof(struct dnet_keys));
+    struct dnet_keys *keys = (struct dnet_keys *)malloc(sizeof(struct dnet_keys));
 
     int is_found = -1;
     f = xdag_open_file(KEYFILE, "rb");
@@ -250,7 +254,7 @@ int xdag_dnet_crpt_found()
     return is_found;
 }
 
-int xdag_is_valid_remark(const char* remark)
+int xdag_is_valid_remark(const char *remark)
 {
     size_t s = validate_remark(remark);
     if (s < 1 || s > 33)
@@ -261,4 +265,9 @@ int xdag_is_valid_remark(const char* remark)
     {
         return 0;
     }
+}
+
+void *xdag_get_default_key()
+{
+    return xdag_default_key();
 }

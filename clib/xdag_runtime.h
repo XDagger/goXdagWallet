@@ -15,6 +15,7 @@
 #include "xDagWallet/src/client/utils/utils.h"
 #include "xDagWallet/src/client/address.h"
 #include "xDagWallet/src/client/dnet_crypt.h"
+#include "xDagWallet/src/client/wallet.h"
 #include "xDagWallet/src/client/xdag_wrapper.h"
 
 ////---- Duplicated from dnet_crypt.c ----
@@ -56,7 +57,7 @@ extern int xdag_get_state_wrap(void);
 extern int xdag_get_balance_wrap(void);
 extern int xdag_get_address_wrap(void);
 extern int xdag_exit_wrap(void);
-
+extern void* xdag_get_default_key(void);
 
 extern int xdag_transfer_wrap(const char* toAddress, const char* amountString, const char* remarkString);
 extern int xdag_is_valid_wallet_address(const char* address);
