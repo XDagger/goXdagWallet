@@ -67,3 +67,12 @@ func ChkDec(input string) (result []byte, version byte, err error) {
 	result = append(result, payload...)
 	return
 }
+
+// ChkEnc  appends a four byte checksum.
+func ChkEnc(input []byte) string {
+	b := make([]byte, 0, len(input)+4)
+	b = append(b, input...)
+	cksum := checksum(b)
+	b = append(b, cksum[:]...)
+	return Encode(b)
+}

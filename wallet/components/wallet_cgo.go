@@ -12,13 +12,22 @@ package components
 */
 import "C"
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"goXdagWallet/wallet_state"
+	"goXdagWallet/xdago/base58"
+	"goXdagWallet/xdago/common"
+	"goXdagWallet/xdago/cryptography"
+	"goXdagWallet/xdago/secp256k1"
+	xdagoUtils "goXdagWallet/xdago/utils"
 	"goXdagWallet/xlog"
 	"os"
+
 	"path"
 	"strings"
 	"time"
@@ -32,6 +41,7 @@ import (
 
 var chanBalance = make(chan int, 1)
 var regDone = make(chan int, 1)
+var defaultKey *secp256k1.PrivateKey
 
 func Xdag_Wallet_fount() int {
 	pwd, _ := os.Executable()
@@ -215,9 +225,13 @@ func NewWalletWindow() {
 	if WalletWindow != nil {
 		return
 	}
-	k := getDefaultPubKey()
+	k := getDefaultKey()
 	if k == nil {
 		fmt.Println("get default key failed.")
+	} else {
+		defaultKey = secp256k1.PrivKeyFromBytes(k)
+		block := transactionBlock("mO88ml4B++TmUVMicswt4pmFWIHZeDQ9", "4smXToYpMy1648T3PXpBRZ8zSey5c6Sy7", "test", 100.5, defaultKey)
+		xlog.Info(block)
 	}
 	LogonWindow.Win.Hide()
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
@@ -270,13 +284,162 @@ func checkBalance() {
 }
 
 // get xdag wallet private key
-func getDefaultPubKey() []byte {
+func getDefaultKey() []byte {
 	p := C.xdag_get_default_key()
 	if uintptr(p) > 0 {
 		key := C.GoBytes(p, 32)
-		fmt.Println(hex.EncodeToString(key[:]))
-		xlog.Info("default private key:", hex.EncodeToString(key[:]))
+		//fmt.Println(hex.EncodeToString(key[:]))
+		//xlog.Info("default private key:", hex.EncodeToString(key[:]))
 		return key
 	}
 	return nil
+}
+
+func transactionBlock(from, to, remark string, value float64, key *secp256k1.PrivateKey) string {
+	if key == nil {
+		xlog.Error("transaction default key error")
+		return ""
+	}
+	var inAddress string
+	var err error
+	if len(from) == common.XDAG_ADDRESS_SIZE { // old xdag address
+		if !ValidateAddress(from) {
+			xlog.Error("transaction send address length error")
+			return ""
+		}
+		hash, err := xdagoUtils.Address2hash(from)
+		if err != nil {
+			xlog.Error(err)
+			return ""
+		}
+		inAddress = hex.EncodeToString(hash[:24])
+	} else { // new base58 address
+		inAddress, err = checkBase58Address(from)
+		if err != nil {
+			xlog.Error(err)
+			return ""
+		}
+	}
+
+	outAddress, err := checkBase58Address(to)
+	if err != nil {
+		xlog.Error(err)
+		return ""
+	}
+	var remarkBytes [common.XDAG_FIELD_SIZE]byte
+	if len(remark) > 0 {
+		if ValidateRemark(remark) {
+			copy(remarkBytes[:], remark)
+		} else {
+			xlog.Error("remark error")
+			return ""
+		}
+	}
+
+	var valBytes [8]byte
+	if value > 0.0 {
+		transVal := xdagoUtils.Xdag2Amount(value)
+		binary.LittleEndian.PutUint64(valBytes[:], transVal)
+	} else {
+		xlog.Error("transaction value is zero")
+		return ""
+	}
+
+	t := xdagoUtils.GetCurrentTimestamp()
+	var timeBytes [8]byte
+	binary.LittleEndian.PutUint64(timeBytes[:], t)
+
+	var sb strings.Builder
+	// header: transport
+	sb.WriteString("0000000000000000")
+
+	// header: field types 8--2--3--[9]--6/7--5--5 other--input--output--[remark]--pubKey(even/odd)--sign_r--sign_s
+	compKey := key.PubKey().SerializeCompressed()
+	if len(remark) > 0 { // with remark
+		if compKey[0] == secp256k1.PubKeyFormatCompressedEven {
+			sb.WriteString("2893560500000000") // even public key
+		} else {
+			sb.WriteString("2893570500000000") // odd public key
+		}
+	} else { // without remark
+		if compKey[0] == secp256k1.PubKeyFormatCompressedEven {
+			sb.WriteString("2863550000000000") // even public key
+		} else {
+			sb.WriteString("2873550000000000") // odd public key
+		}
+	}
+	// header: timestamp
+	sb.WriteString(hex.EncodeToString(timeBytes[:]))
+	// header: fee
+	sb.WriteString("0000000000000000")
+
+	// input field: input address
+	sb.WriteString(inAddress)
+	// input field: input value
+	sb.WriteString(hex.EncodeToString(valBytes[:]))
+	// output field: output address
+	sb.WriteString(outAddress)
+	// output field: out value
+	sb.WriteString(hex.EncodeToString(valBytes[:]))
+	// remark field
+	if len(remark) > 0 {
+		sb.WriteString(hex.EncodeToString(remarkBytes[:]))
+	}
+	// public key field
+	sb.WriteString(hex.EncodeToString(compKey[1:33]))
+
+	r, s := transactionSign(sb.String(), key, len(remark) > 0)
+	// sign field: sign_r
+	sb.WriteString(r)
+	// sign field: sign_s
+	sb.WriteString(s)
+	// zero fields
+	if len(remark) > 0 {
+		for i := 0; i < 18; i++ {
+			sb.WriteString("00000000000000000000000000000000")
+		}
+	} else {
+		for i := 0; i < 20; i++ {
+			sb.WriteString("00000000000000000000000000000000")
+		}
+	}
+	return sb.String()
+}
+
+func checkBase58Address(address string) (string, error) {
+	addrBytes, _, err := base58.ChkDec(address)
+	if err != nil {
+		xlog.Error(err)
+		return "", err
+	}
+	if len(addrBytes) != 24 {
+		xlog.Error("transaction receive address length error")
+		return "", errors.New("transaction receive address length error")
+	}
+	return hex.EncodeToString(addrBytes[:]), nil
+}
+
+func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (string, string) {
+	var sb strings.Builder
+	sb.WriteString(block)
+	if hasRemark {
+		for i := 0; i < 18; i++ {
+			sb.WriteString("00000000000000000000000000000000")
+		}
+	} else {
+		for i := 0; i < 20; i++ {
+			sb.WriteString("00000000000000000000000000000000")
+		}
+	}
+	pubKey := key.PubKey().SerializeCompressed()
+	sb.WriteString(hex.EncodeToString(pubKey[:]))
+
+	b, _ := hex.DecodeString(sb.String())
+
+	hash := sha256.Sum256(b)
+	hash = sha256.Sum256(hash[:])
+
+	r, s := cryptography.EcdsaSign(key, hash[:])
+
+	return hex.EncodeToString(r[:]), hex.EncodeToString(s[:])
 }

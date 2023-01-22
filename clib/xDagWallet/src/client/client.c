@@ -78,7 +78,7 @@ static struct miner g_local_miner;
 
 static int g_socket = -1;
 
-static int is_crypto = 0; //switch for network data crypto
+static int is_crypto = 1; //switch for network data crypto
 
 static int crypt_start(void)
 {

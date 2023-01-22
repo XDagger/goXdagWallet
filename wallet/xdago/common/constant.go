@@ -9,6 +9,7 @@ const (
 	XDAG_BLOCK_SIZE   = 512
 	XDAG_FIELD_SIZE   = 32
 	XDAG_HASH_SIZE    = 32
+	XDAG_ADDRESS_SIZE = 32
 )
 
 type Hash [XDAG_HASH_SIZE]byte
