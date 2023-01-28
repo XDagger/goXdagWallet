@@ -38,7 +38,7 @@ type Wallet struct {
 
 func NewWallet(config *config.Config) Wallet {
 	return Wallet{
-		file:         config.WalletFilePath,
+		file:         path.Join("xdagj_wallet", "xdagj_wallet.dat"),
 		config:       config,
 		accountsHash: make([]common.Hash160, 0),
 		accountsKey:  make([]*secp256k1.PrivateKey, 0),

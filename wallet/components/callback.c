@@ -1,9 +1,5 @@
 #include "callback.h"
 #include "../../clib/xdag_runtime.h"
-void init_event_callback() {
-    xdag_set_event_callback_wrap(goEventCallback);
-}
-
-void init_password_callback() {
-    xdag_set_password_callback_wrap(goPasswordCallback);
+int init_password_callback(int is_testnet) {
+    return xdag_set_password_callback_wrap(goPasswordCallback, is_testnet);
 }

@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+const (
+	XDAG_TEST_ERA = 0x16900000000
+	XDAG_MAIN_ERA = 0x16940000000
+)
+
 // GetEndOfEpoch 获取时间戳所属epoch的最后一个时间戳 主要用于mainblock
 func GetEndOfEpoch(t uint64) uint64 {
 	return t | 0xffff

@@ -10,7 +10,6 @@
   },
   "version": "0.5.6",
   "culture_info": "en-US",
-  "wallet_file_path": "./",
   "addresses": [],
   "query": {
     "amount_from": "",

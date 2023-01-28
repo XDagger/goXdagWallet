@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"crypto/sha256"
-	"encoding/binary"
 	"errors"
 	"goXdagWallet/xdago/common"
 	"math"
@@ -30,8 +28,8 @@ func init() {
 	}
 }
 
-// Hash2address converts hash to address
-func Hash2address(h common.Hash) string {
+// Hash2Address converts hash to address
+func Hash2Address(h common.Hash) string {
 	address := make([]byte, common.XDAG_ADDRESS_SIZE)
 	var c, d, j uint
 	// every 3 bytes(24 bits) hashs convert to 4 chars(6 bit each)
@@ -49,18 +47,21 @@ func Hash2address(h common.Hash) string {
 	return bytes2str(address)
 }
 
-// Address2hash converts address to hash
-func Address2hash(addr string) (common.Hash, error) {
+// Address2Hash converts address to hash
+func Address2Hash(addr string) (common.Hash, error) {
 	var hash common.Hash
 	var i, e, n, j uint
 	var c, d uint8
+	if len(addr) != 32 {
+		return hash, errors.New("address length error")
+	}
 	// convert 32 byte address to 24 bytes hash
 	// each byte (8 bits) address to 6 bits hash
 	for i = 0; i < common.XDAG_ADDRESS_SIZE; i++ {
 		for {
 			c = addr[i]
 			if c == 0 {
-				return hash, errors.New("Address string error")
+				return hash, errors.New("address string error")
 			}
 			d = mime2bits[c]
 			if d&0xC0 == 0 {
@@ -89,33 +90,33 @@ func Xdag2Amount(value float64) uint64 {
 	return res + amount
 }
 
-// RawBlock contains raw XDAG block bytes
-type RawBlock struct {
-	Hash      [32]byte
-	Address   string
-	Timestamp uint64
-	RawBytes  []byte
-}
-
-// NewRawBlock builds new raw block from bytes
-func NewRawBlock(b []byte) RawBlock {
-
-	header := make([]byte, 8)
-	copy(header, b[:8])     // backup block transport header
-	copy(b[:8], Zero8bytes) // clear block transport header
-
-	hash := sha256.Sum256(b)
-	copy(b[:8], header) // restore block transport header
-	r := RawBlock{
-		Hash:     sha256.Sum256(hash[:]),
-		RawBytes: b,
-	}
-	// get time from block header
-	r.Timestamp = binary.LittleEndian.Uint64(b[16:24])
-
-	r.Address = Hash2address(r.Hash)
-	return r
-}
+//// RawBlock contains raw XDAG block bytes
+//type RawBlock struct {
+//	Hash      [32]byte
+//	Address   string
+//	Timestamp uint64
+//	RawBytes  []byte
+//}
+//
+//// NewRawBlock builds new raw block from bytes
+//func NewRawBlock(b []byte) RawBlock {
+//
+//	header := make([]byte, 8)
+//	copy(header, b[:8])     // backup block transport header
+//	copy(b[:8], Zero8bytes) // clear block transport header
+//
+//	hash := sha256.Sum256(b)
+//	copy(b[:8], header) // restore block transport header
+//	r := RawBlock{
+//		Hash:     sha256.Sum256(hash[:]),
+//		RawBytes: b,
+//	}
+//	// get time from block header
+//	r.Timestamp = binary.LittleEndian.Uint64(b[16:24])
+//
+//	r.Address = Hash2Address(r.Hash)
+//	return r
+//}
 
 // unsafe and fast convert string to bytes slice
 func str2bytes(s string) []byte {

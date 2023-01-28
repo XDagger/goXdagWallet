@@ -17,26 +17,23 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
-	"goXdagWallet/wallet_state"
 	"goXdagWallet/xdago/base58"
 	"goXdagWallet/xdago/common"
 	"goXdagWallet/xdago/cryptography"
 	"goXdagWallet/xdago/secp256k1"
 	xdagoUtils "goXdagWallet/xdago/utils"
 	"goXdagWallet/xlog"
+	"golang.org/x/exp/utf8string"
 	"os"
-
 	"path"
 	"strings"
 	"time"
 	"unsafe"
-
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
 )
 
 var chanBalance = make(chan int, 1)
@@ -59,116 +56,17 @@ func Xdag_Wallet_fount() int {
 	}
 	return 0
 
-	//res := C.xdag_dnet_crpt_found()
-	//return int(res)
 }
 func ConnectWallet() {
-	C.init_event_callback()
-	C.init_password_callback()
 
-	pa := C.CString(config.GetConfig().Option.PoolAddress)
-	defer C.free(unsafe.Pointer(pa))
 	var testnet int
 	if config.GetConfig().Option.IsTestNet {
 		testnet = 1
 	}
-
-	argv := make([]*C.char, 1)
-
-	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
-	cs := C.CString(path.Join(pwd, "xdag.exe"))
-
-	defer C.free(unsafe.Pointer(cs))
-
-	argv[0] = cs
-	result := C.xdag_init_wrap(C.int(1), (**C.char)(unsafe.Pointer(&argv[0])), pa, C.int(testnet))
+	result := C.init_password_callback(C.int(testnet))
 	fmt.Println((int32)(result))
 
-}
-
-//export goEventCallback
-func goEventCallback(obj unsafe.Pointer, xdagEvent *C.xdag_event) C.int {
-	eventId := xdagEvent.event_id
-	errCode := xdagEvent.error_no
-	eventData := C.GoString(xdagEvent.event_data)
-	fmt.Println(int(eventId))
-	fmt.Println(eventData)
-
-	switch eventId {
-	case C.event_id_log:
-		//fmt.Println("event_id_log")
-		if int(errCode) > 0x3000 && int(errCode) < 0x4000 {
-			setTransferError(eventData)
-		}
-		xlog.Trace(eventData)
-		break
-	case C.event_id_state_change:
-		//fmt.Println("event_id_state_change")
-		state, ok := wallet_state.MessageToState(eventData)
-		if ok && state == wallet_state.LoadingBlocks {
-			regDone <- 1
-			StatusInfo.Text = wallet_state.Localize(state)
-			canvas.Refresh(StatusInfo)
-		} else if ok && state != wallet_state.TransferPending {
-			StatusInfo.Text = wallet_state.Localize(state)
-			canvas.Refresh(StatusInfo)
-		} else if ok && state == wallet_state.TransferPending {
-			TransStatus.Text = wallet_state.Localize(state)
-			DonaTransStatus.Text = wallet_state.Localize(state)
-		}
-		xlog.Info(eventData)
-		if (!config.GetConfig().Option.IsTestNet && strings.Contains(eventData, "Connected to the mainnet pool")) ||
-			(config.GetConfig().Option.IsTestNet && strings.Contains(eventData, "Connected to the testnet pool")) {
-			C.xdag_get_address_wrap()
-			C.xdag_get_balance_wrap()
-		}
-		break
-	case C.event_id_state_done:
-		xlog.Info(eventData)
-		//fmt.Println("event_id_state_done")
-		break
-	case C.event_id_address_done:
-		Address = eventData
-		xlog.Info(eventData)
-		//fmt.Println("event_id_address_done")
-		break
-	case C.event_id_balance_done:
-		if Balance != eventData {
-			Balance = eventData
-			AccountBalance.Set(Balance)
-			TransStatus.Text = ""
-			DonaTransStatus.Text = ""
-		}
-		NewWalletWindow()
-		xlog.Info(eventData)
-		//fmt.Println("event_id_balance_done")
-		break
-	case C.event_id_xfer_done:
-		fmt.Println("event_id_xfer_done")
-		setTransferDone()
-		xlog.Info(eventData)
-		break
-	case C.event_id_err_exit:
-		//fmt.Println("event_id_err_exit")
-		xlog.Error(eventData)
-
-		if int(errCode) == 0x1002 { // password incorrect
-			StatusInfo.Text = i18n.GetString("Message_PasswordIncorrect")
-			canvas.Refresh(StatusInfo)
-			//WalletApp.SendNotification(&fyne.Notification{
-			//	Title:   i18n.GetString("WalletWindow_Title"),
-			//	Content: i18n.GetString("Message_PasswordIncorrect"),
-			//})
-			time.Sleep(time.Second * 2)
-		}
-		C.xdag_exit_wrap()
-		os.Exit(1)
-	default:
-		break
-	}
-
-	return C.int(0)
+	NewWalletWindow()
 }
 
 //export goPasswordCallback
@@ -180,45 +78,16 @@ func goPasswordCallback(prompt *C.cchar_t, buf *C.char, size C.uint) C.int {
 func TransferWrap(address, amount, remark string) int {
 	// TODO: validate address, amount, remark
 
-	csAddress := C.CString(address)
-	defer C.free(unsafe.Pointer(csAddress))
-
-	csAmount := C.CString(amount)
-	defer C.free(unsafe.Pointer(csAmount))
-
-	csRemark := C.CString(remark)
-	defer C.free(unsafe.Pointer(csRemark))
-
-	result := C.xdag_transfer_wrap(csAddress, csAmount, csRemark)
-	fmt.Println(int(result))
-	if int(result) == 0 && address != CommunityAddress {
-		config.InsertAddress(address)
-	}
-	return int(result)
+	return int(0)
 }
 
 func ValidateAddress(address string) bool {
-	csAddress := C.CString(address)
-	defer C.free(unsafe.Pointer(csAddress))
-
-	res := C.xdag_is_valid_wallet_address(csAddress)
-	if res == C.int(0) {
-		return true
-	} else {
-		return false
-	}
+	_, err := xdagoUtils.Address2Hash(address)
+	return err == nil
 }
 
 func ValidateRemark(remark string) bool {
-	csRemark := C.CString(remark)
-	defer C.free(unsafe.Pointer(csRemark))
-
-	res := C.xdag_is_valid_remark(csRemark)
-	if res == C.int(0) {
-		return true
-	} else {
-		return false
-	}
+	return utf8string.NewString(remark).IsASCII()
 }
 
 func NewWalletWindow() {
@@ -230,8 +99,15 @@ func NewWalletWindow() {
 		fmt.Println("get default key failed.")
 	} else {
 		defaultKey = secp256k1.PrivKeyFromBytes(k)
-		block := transactionBlock("mO88ml4B++TmUVMicswt4pmFWIHZeDQ9", "4smXToYpMy1648T3PXpBRZ8zSey5c6Sy7", "test", 100.5, defaultKey)
-		xlog.Info(block)
+		addr, err := xdagoUtils.AddressFromStorage()
+		if err != nil {
+			xlog.Info(err)
+		} else {
+			xlog.Info(addr)
+			block := transactionBlock(addr, "4smXToYpMy1648T3PXpBRZ8zSey5c6Sy7", "test", 100.5, defaultKey)
+			xlog.Info(block)
+		}
+
 	}
 	LogonWindow.Win.Hide()
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
@@ -278,7 +154,7 @@ func checkBalance() {
 		case <-chanBalance:
 			return
 		case <-time.After(time.Second * 130):
-			C.xdag_get_balance_wrap()
+			//C.xdag_get_balance_wrap()
 		}
 	}
 }
@@ -307,7 +183,7 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 			xlog.Error("transaction send address length error")
 			return ""
 		}
-		hash, err := xdagoUtils.Address2hash(from)
+		hash, err := xdagoUtils.Address2Hash(from)
 		if err != nil {
 			xlog.Error(err)
 			return ""
@@ -353,21 +229,11 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	// header: transport
 	sb.WriteString("0000000000000000")
 
-	// header: field types 8--2--3--[9]--6/7--5--5 other--input--output--[remark]--pubKey(even/odd)--sign_r--sign_s
+	// header: field types
 	compKey := key.PubKey().SerializeCompressed()
-	if len(remark) > 0 { // with remark
-		if compKey[0] == secp256k1.PubKeyFormatCompressedEven {
-			sb.WriteString("2893560500000000") // even public key
-		} else {
-			sb.WriteString("2893570500000000") // odd public key
-		}
-	} else { // without remark
-		if compKey[0] == secp256k1.PubKeyFormatCompressedEven {
-			sb.WriteString("2863550000000000") // even public key
-		} else {
-			sb.WriteString("2873550000000000") // odd public key
-		}
-	}
+	sb.WriteString(fieldTypes(config.GetConfig().Option.IsTestNet,
+		len(remark) > 0, compKey[0] == secp256k1.PubKeyFormatCompressedEven))
+
 	// header: timestamp
 	sb.WriteString(hex.EncodeToString(timeBytes[:]))
 	// header: fee
@@ -442,4 +308,31 @@ func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (s
 	r, s := cryptography.EcdsaSign(key, hash[:])
 
 	return hex.EncodeToString(r[:]), hex.EncodeToString(s[:])
+}
+
+func fieldTypes(isTest, hasRemark, isPubKeyEven bool) string {
+	// 1/8--2--3--[9]--6/7--5--5
+	// header(main/test)--input--output--[remark]--pubKey(even/odd)--sign_r--sign_s
+	var sb strings.Builder
+	if isTest {
+		sb.WriteString("28") // test net
+	} else {
+		sb.WriteString("21") // main net
+	}
+
+	if hasRemark { // with remark
+		if isPubKeyEven {
+			sb.WriteString("93560500000000") // even public key
+		} else {
+			sb.WriteString("93570500000000") // odd public key
+		}
+	} else { // without remark
+		if isPubKeyEven {
+			sb.WriteString("63550000000000") // even public key
+		} else {
+			sb.WriteString("73550000000000") // odd public key
+		}
+	}
+
+	return sb.String()
 }
