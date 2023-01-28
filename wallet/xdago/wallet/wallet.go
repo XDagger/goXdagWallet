@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
-	"goXdagWallet/config"
 	"goXdagWallet/xdago/common"
 	"goXdagWallet/xdago/cryptography"
 	"goXdagWallet/xdago/secp256k1"
@@ -28,7 +27,6 @@ const (
 type Wallet struct {
 	sync.RWMutex
 	file             string
-	config           *config.Config
 	accountsHash     []common.Hash160
 	accountsKey      []*secp256k1.PrivateKey
 	password         string
@@ -36,10 +34,9 @@ type Wallet struct {
 	nextAccountIndex uint32
 }
 
-func NewWallet(config *config.Config) Wallet {
+func NewWallet() Wallet {
 	return Wallet{
 		file:         path.Join("xdagj_wallet", "xdagj_wallet.dat"),
-		config:       config,
 		accountsHash: make([]common.Hash160, 0),
 		accountsKey:  make([]*secp256k1.PrivateKey, 0),
 	}

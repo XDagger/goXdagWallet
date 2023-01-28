@@ -1,8 +1,3 @@
-//go:build pebble && !rocksdb
-
-////go:build rocksdb && !pebble
-//conditional build switch for KV store
-
 package wallet
 
 import (
@@ -12,9 +7,8 @@ import (
 	"path"
 	"runtime"
 	"testing"
-	"xdago/config"
-	"xdago/log"
-	"xdago/secp256k1"
+
+	"goXdagWallet/xdago/secp256k1"
 )
 
 const (
@@ -28,29 +22,26 @@ const (
 		" vivid movie bicycle absent weather inspire carry"
 )
 
-func setup() (*config.Config, string, *Wallet) {
+func setup() (string, *Wallet) {
 	_, filename, _, _ := runtime.Caller(0)
 	dir := path.Join(path.Dir(filename), "..")
 	err := os.Chdir(dir)
 	if err != nil {
 		panic(err)
 	}
-	c := config.DevNetConfig()
-	h := log.CallerFileHandler(log.StdoutHandler)
-	log.Root().SetHandler(h)
 	pwd := "password"
-	wallet := NewWallet(c)
+	wallet := NewWallet()
 	wallet.UnlockWallet(pwd)
 	keyBytes, _ := hex.DecodeString(PRIVATE_KEY_STRING)
 	privKey := secp256k1.PrivKeyFromBytes(keyBytes)
 	wallet.SetAccounts([]*secp256k1.PrivateKey{privKey})
 	wallet.Flush()
 	wallet.LockWallet()
-	return c, pwd, &wallet
+	return pwd, &wallet
 }
 
 func TestGetPassword(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
@@ -58,7 +49,7 @@ func TestGetPassword(t *testing.T) {
 }
 
 func TestUnlock(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	assert.Equal(t, w.IsUnLocked(), false)
@@ -70,7 +61,7 @@ func TestUnlock(t *testing.T) {
 }
 
 func TestLock(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
@@ -79,7 +70,7 @@ func TestLock(t *testing.T) {
 }
 
 func TestAddAccounts(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
@@ -94,7 +85,7 @@ func TestAddAccounts(t *testing.T) {
 }
 
 func TestFlush(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 	info, _ := os.Stat(w.GetFile())
 	size := info.Size()
@@ -113,7 +104,7 @@ func TestFlush(t *testing.T) {
 
 func TestFChangePassword(t *testing.T) {
 	pwd2 := "passw0rd2"
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
@@ -126,7 +117,7 @@ func TestFChangePassword(t *testing.T) {
 }
 
 func TestAccountRandom(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
@@ -136,7 +127,7 @@ func TestAccountRandom(t *testing.T) {
 }
 
 func TestRemoveAccount(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
@@ -157,7 +148,7 @@ func TestRemoveAccount(t *testing.T) {
 }
 
 func TestAddAccountWithNextHdKey(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
@@ -173,7 +164,7 @@ func TestAddAccountWithNextHdKey(t *testing.T) {
 }
 
 func TestHDKeyRecover(t *testing.T) {
-	_, p, w := setup()
+	p, w := setup()
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
@@ -188,7 +179,7 @@ func TestHDKeyRecover(t *testing.T) {
 		keys1[i] = key.Key.String()
 	}
 
-	w2 := NewWallet(config.DevNetConfig())
+	w2 := NewWallet()
 	w2.UnlockWallet(p + p)
 	w2.InitializeHdWallet(MNEMONIC)
 	for i := 0; i < 5; i++ {
