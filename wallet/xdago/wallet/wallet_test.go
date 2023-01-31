@@ -2,11 +2,14 @@ package wallet
 
 import (
 	"encoding/hex"
-	"github.com/magiconair/properties/assert"
+	"fmt"
+	"goXdagWallet/xdago/common"
 	"os"
 	"path"
 	"runtime"
 	"testing"
+
+	"github.com/magiconair/properties/assert"
 
 	"goXdagWallet/xdago/secp256k1"
 )
@@ -24,13 +27,13 @@ const (
 
 func setup() (string, *Wallet) {
 	_, filename, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(filename), "..")
+	dir := path.Join(path.Dir(filename), "../..")
 	err := os.Chdir(dir)
 	if err != nil {
 		panic(err)
 	}
 	pwd := "password"
-	wallet := NewWallet()
+	wallet := NewWallet(path.Join(common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 	wallet.UnlockWallet(pwd)
 	keyBytes, _ := hex.DecodeString(PRIVATE_KEY_STRING)
 	privKey := secp256k1.PrivKeyFromBytes(keyBytes)
@@ -42,7 +45,7 @@ func setup() (string, *Wallet) {
 
 func TestGetPassword(t *testing.T) {
 	p, w := setup()
-	defer tearDown(w)
+	defer tearDown(w) //
 
 	w.UnlockWallet(p)
 	assert.Equal(t, w.GetPassword(), "password")
@@ -65,6 +68,7 @@ func TestLock(t *testing.T) {
 	defer tearDown(w)
 
 	w.UnlockWallet(p)
+	assert.Equal(t, w.mnemonicPhrase, "")
 	w.LockWallet()
 	assert.Equal(t, w.IsUnLocked(), false)
 }
@@ -89,6 +93,7 @@ func TestFlush(t *testing.T) {
 	defer tearDown(w)
 	info, _ := os.Stat(w.GetFile())
 	size := info.Size()
+	fmt.Println(size)
 	w.UnlockWallet(p)
 	w.SetAccounts([]*secp256k1.PrivateKey{})
 
@@ -163,6 +168,30 @@ func TestAddAccountWithNextHdKey(t *testing.T) {
 	assert.Equal(t, len(w.GetAccounts()), oldSize+5)
 }
 
+func TestOnlyHdKey(t *testing.T) {
+	p, w := setup()
+	//defer tearDown(w)
+
+	w.UnlockWallet(p)
+
+	w.InitializeHdWallet(MNEMONIC)
+
+	assert.Equal(t, len(w.GetAccounts()), 1)
+
+	key := w.GetDefKey()
+	w.RemoveAccountByKey(key)
+	assert.Equal(t, len(w.GetAccounts()), 0)
+
+	w.AddAccountWithNextHdKey()
+	assert.Equal(t, len(w.GetAccounts()), 1)
+
+	//w.InitializeHdWallet("")  // remove mnemonic and test wallet file size is 125 bytes
+
+	w.Flush()
+	w.LockWallet()
+
+}
+
 func TestHDKeyRecover(t *testing.T) {
 	p, w := setup()
 	defer tearDown(w)
@@ -179,7 +208,7 @@ func TestHDKeyRecover(t *testing.T) {
 		keys1[i] = key.Key.String()
 	}
 
-	w2 := NewWallet()
+	w2 := NewWallet(path.Join(common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 	w2.UnlockWallet(p + p)
 	w2.InitializeHdWallet(MNEMONIC)
 	for i := 0; i < 5; i++ {
@@ -191,4 +220,27 @@ func TestHDKeyRecover(t *testing.T) {
 
 func tearDown(w *Wallet) {
 	w.Delete()
+}
+
+func TestNewMnemonic(t *testing.T) {
+	mnemonic := NewMnemonic()
+	fmt.Println(mnemonic)
+
+}
+
+func TestNewBipWallet(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Join(path.Dir(filename), "../..")
+	err := os.Chdir(dir)
+	if err != nil {
+		panic(err)
+	}
+	w := NewWallet(path.Join(common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+	w.UnlockWallet("password")
+	w.InitializeHdWallet(NewMnemonic())
+	w.AddAccountWithNextHdKey()
+	res := w.Flush()
+
+	assert.Equal(t, res, true)
+	assert.Equal(t, len(w.GetAccounts()), 1)
 }

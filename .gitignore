@@ -4,6 +4,7 @@
 storage/
 storage-testnet/
 *.dat
+*.bin
 main
 goXdagWallet
 go_build_goXdagWallet

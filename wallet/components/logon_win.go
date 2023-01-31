@@ -32,6 +32,7 @@ type LogonWin struct {
 	ProgressContainer *fyne.Container
 	HasAccount        bool
 	Password          string
+	WalletExists      int
 }
 
 var StatusInfo = canvas.NewText("", color.White)
@@ -42,8 +43,10 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 		getTestTitle())
 	l.Win = w
 
-	l.HasAccount = hasAccount == 0
-	if hasAccount == 0 { // found wallet key file
+	l.HasAccount = hasAccount >= 0
+	l.WalletExists = hasAccount
+
+	if hasAccount >= 0 { // found wallet key file
 		l.LogonBtn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), l.connectClick)
 	} else if hasAccount == -1 { // not fount
 		l.LogonBtn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), l.connectClick)
@@ -65,7 +68,7 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 				i18n.LoadI18nStrings()
 				l.Win.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
 					getTestTitle())
-				if hasAccount == 0 { // found wallet key file
+				if hasAccount >= 0 { // found wallet key file
 					l.LogonBtn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
 				} else if hasAccount == -1 { // not fount
 					l.LogonBtn.SetText(i18n.GetString("LogonWindow_RegisterWallet"))
@@ -113,12 +116,16 @@ func (l *LogonWin) StartConnect() {
 	StatusInfo.Text = i18n.GetString("LogonWindow_ConnectingAccount")
 	canvas.Refresh(StatusInfo)
 }
-func (l *LogonWin) StartRegister() {
+func (l *LogonWin) StartRegister() bool {
 	l.BtnContainer.Hide()
 	l.ProgressContainer.Objects[0].Show() // for primary color changing
 	StatusInfo.Text = i18n.GetString("WalletState_Registering")
 	canvas.Refresh(StatusInfo)
-	go registerTimer()
+
+	w, b := NewBipWallet(string(Password[:]))
+	BipWallet = w
+	return b
+
 }
 
 func (l *LogonWin) connectClick() {
@@ -206,7 +213,30 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 					copy(Password[:], str)
 				}
 				l.StartConnect()
-				ConnectWallet()
+				if l.WalletExists == HAS_ONLY_XDAG {
+					res := ConnectXdagWallet()
+					if res == 0 {
+						NewWalletWindow()
+					} else {
+						l.passwordIncorrect()
+					}
+				} else if l.WalletExists == HAS_ONLY_BIP {
+					res := ConnectBipWallet()
+					if res {
+						NewWalletWindow()
+					} else {
+						l.passwordIncorrect()
+					}
+
+				} else { //l.WalletExists == HAS_BOTH
+					resX := ConnectXdagWallet()
+					resB := ConnectBipWallet()
+					if resB && resX == 0 {
+						NewWalletWindow()
+					} else {
+						l.passwordIncorrect()
+					}
+				}
 			} else {
 				l.Password = str
 				l.ReShowPasswordDialog(i18n.GetString("PasswordWindow_RetypePassword"),
@@ -215,6 +245,13 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 		}
 
 	}, parent)
+}
+
+func (l *LogonWin) passwordIncorrect() {
+	StatusInfo.Text = i18n.GetString("Message_PasswordIncorrect")
+	canvas.Refresh(StatusInfo)
+	time.Sleep(time.Second * 5)
+	l.Win.Close()
 }
 
 func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
@@ -231,8 +268,15 @@ func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.W
 				if len(str) > 0 {
 					copy(Password[:], str)
 				}
-				l.StartRegister()
-				ConnectWallet()
+				if l.StartRegister() {
+					NewWalletWindow()
+				} else {
+					StatusInfo.Text = i18n.GetString("WalletState_Register_failed")
+					canvas.Refresh(StatusInfo)
+					time.Sleep(time.Second * 5)
+					l.Win.Close()
+				}
+
 			} else {
 				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 					i18n.GetString("PasswordWindow_PasswordMismatch"), l.Win)
@@ -265,25 +309,25 @@ func GetAppIcon() fyne.Resource {
 	return resourceIconPng
 }
 
-func registerTimer() {
-	start := time.Now()
-	timer := time.NewTicker(1 * time.Second)
-	for {
-		select {
-		case <-timer.C:
-			span := time.Since(start)
-			z := time.Unix(0, 0).UTC()
-			StatusInfo.Text = fmt.Sprintf(i18n.GetString("LogonWindow_InitializingElapsedTime"),
-				z.Add(span).Format("04:05"))
-			canvas.Refresh(StatusInfo)
-			break
-		case <-regDone:
-			return
-		default:
+// func registerTimer() {
+// 	start := time.Now()
+// 	timer := time.NewTicker(1 * time.Second)
+// 	for {
+// 		select {
+// 		case <-timer.C:
+// 			span := time.Since(start)
+// 			z := time.Unix(0, 0).UTC()
+// 			StatusInfo.Text = fmt.Sprintf(i18n.GetString("LogonWindow_InitializingElapsedTime"),
+// 				z.Add(span).Format("04:05"))
+// 			canvas.Refresh(StatusInfo)
+// 			break
+// 		case <-regDone:
+// 			return
+// 		default:
 
-		}
-	}
-}
+// 		}
+// 	}
+// }
 
 func getTestTitle() string {
 	var testNet string

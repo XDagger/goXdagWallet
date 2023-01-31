@@ -34,9 +34,9 @@ type Wallet struct {
 	nextAccountIndex uint32
 }
 
-func NewWallet() Wallet {
+func NewWallet(filePath string) Wallet {
 	return Wallet{
-		file:         path.Join("xdagj_wallet", "xdagj_wallet.dat"),
+		file:         filePath,
 		accountsHash: make([]common.Hash160, 0),
 		accountsKey:  make([]*secp256k1.PrivateKey, 0),
 	}
@@ -455,4 +455,10 @@ func generateBip44Key(masterKey *bip32.Key, index uint32) *bip32.Key {
 		masterKey, _ = masterKey.NewChildKey(child)
 	}
 	return masterKey
+}
+
+func NewMnemonic() string {
+	entropy, _ := bip39.NewEntropy(160)
+	mnemonic, _ := bip39.NewMnemonic(entropy)
+	return mnemonic
 }

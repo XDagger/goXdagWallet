@@ -21,6 +21,7 @@
   "WalletState_LoadingBlocks": "读取区块中...",
   "WalletState_None": "无",
   "WalletState_Registering": "正在注册中...",
+  "WalletState_Register_failed": "注册新钱包失败...",
   "WalletState_ResettingEngine": "重新启动引擎中...",
   "WalletState_Stopped": "已停止",
   "WalletState_Synchronized": "同步完成",

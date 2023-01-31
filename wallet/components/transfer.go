@@ -26,7 +26,7 @@ func addressValidator() fyne.StringValidator {
 		if text == "" {
 			return nil
 		}
-		if ValidateAddress(text) {
+		if ValidateXdagAddress(text) {
 			return nil
 		}
 		return errors.New(i18n.GetString("TransferWindow_AccountFormatError"))
@@ -103,7 +103,7 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 }
 
 func checkInput(addr, amount, remark string, window fyne.Window) bool {
-	if len(addr) == 0 || !ValidateAddress(addr) {
+	if len(addr) == 0 || !ValidateXdagAddress(addr) {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_AccountFormatError"), window)
 		return false
@@ -116,7 +116,7 @@ func checkInput(addr, amount, remark string, window fyne.Window) bool {
 		return false
 	}
 
-	balance, _ := strconv.ParseFloat(Balance, 64)
+	balance, _ := strconv.ParseFloat(XdagBalance, 64)
 	if balance < value {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_InsufficientAmount"), window)

@@ -28,13 +28,13 @@ int client_init(int is_testnet)
     printf("Initializing cryptography...\n");
     if (xdag_crypt_init(1)) {
         printf("Init crypto failed.\n");
-        return -1;
+        return -2;
     }
 
     printf("Reading wallet...\n");
     if (xdag_wallet_init()) {
         printf("Init wallet failed.\n");
-        return -2;
+        return -3;
     }
 
     return 0;

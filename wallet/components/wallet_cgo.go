@@ -17,9 +17,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"goXdagWallet/xdago/base58"
@@ -27,20 +24,27 @@ import (
 	"goXdagWallet/xdago/cryptography"
 	"goXdagWallet/xdago/secp256k1"
 	xdagoUtils "goXdagWallet/xdago/utils"
+	bip "goXdagWallet/xdago/wallet"
 	"goXdagWallet/xlog"
-	"golang.org/x/exp/utf8string"
 	"os"
 	"path"
 	"strings"
 	"time"
 	"unsafe"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
+	"golang.org/x/exp/utf8string"
 )
 
 var chanBalance = make(chan int, 1)
-var regDone = make(chan int, 1)
-var defaultKey *secp256k1.PrivateKey
+
+// var regDone = make(chan int, 1)
 
 func Xdag_Wallet_fount() int {
+	hasXdagWallet := 0
+	hasBip32Wallet := 0
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
 	pathName := path.Join(pwd, "xdagj_dat", "dnet_key.dat")
@@ -49,24 +53,83 @@ func Xdag_Wallet_fount() int {
 
 	fi, err := os.Stat(pathName)
 	if err != nil {
-		return -1
+		hasXdagWallet = -1
 	}
 	if fi.Size() != 2048 {
-		return -1
+		hasXdagWallet = -1
 	}
-	return 0
+	pathName = path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME)
+	//os.Chdir(pwd)
 
+	fi, err = os.Stat(pathName)
+	if err != nil {
+		hasBip32Wallet = -1
+	}
+	if fi.Size() < 125 {
+		hasBip32Wallet = -1
+	}
+	if hasXdagWallet == -1 && hasBip32Wallet == -1 {
+		return -1 // no wallet
+	}
+	if hasXdagWallet == 0 && hasBip32Wallet == 0 { // has both wallets
+		return 0
+	} else if hasXdagWallet == 0 { // only has xdag wallet
+		return 1
+	} else {
+		return 2 // only has bip32 or bip44 wallet
+	}
 }
-func ConnectWallet() {
-
+func ConnectXdagWallet() int32 {
 	var testnet int
 	if config.GetConfig().Option.IsTestNet {
 		testnet = 1
 	}
-	result := C.init_password_callback(C.int(testnet))
-	fmt.Println((int32)(result))
+	res := C.init_password_callback(C.int(testnet))
+	result := int32(res)
+	fmt.Println(result)
+	if result == 0 {
+		k := getDefaultKey()
+		if k == nil {
+			xlog.Error("get default key failed.")
+			fmt.Println("get default key failed.")
+			return -4
+		} else {
+			XdagKey = secp256k1.PrivKeyFromBytes(k)
+			addr, err := xdagoUtils.AddressFromStorage()
+			if err != nil {
+				xlog.Error(err)
+				return -5
+			} else {
+				XdagAddress = addr
+				xlog.Info(addr)
+				//block := transactionBlock(addr, "4smXToYpMy1648T3PXpBRZ8zSey5c6Sy7", "test", 100.5, XdagKey)
+				//xlog.Info(block)
+			}
+		}
+	}
+	return result
+}
 
-	NewWalletWindow()
+func ConnectBipWallet() bool {
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+	wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+	res := wallet.UnlockWallet(string(Password[:]))
+	if res {
+		BipWallet = &wallet
+	}
+	return res
+}
+func NewBipWallet(password string) (*bip.Wallet, bool) {
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+	wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+	wallet.UnlockWallet(password)
+	wallet.InitializeHdWallet(bip.NewMnemonic())
+	wallet.AddAccountWithNextHdKey()
+	res := wallet.Flush()
+
+	return &wallet, res
 }
 
 //export goPasswordCallback
@@ -81,7 +144,7 @@ func TransferWrap(address, amount, remark string) int {
 	return int(0)
 }
 
-func ValidateAddress(address string) bool {
+func ValidateXdagAddress(address string) bool {
 	_, err := xdagoUtils.Address2Hash(address)
 	return err == nil
 }
@@ -94,21 +157,7 @@ func NewWalletWindow() {
 	if WalletWindow != nil {
 		return
 	}
-	k := getDefaultKey()
-	if k == nil {
-		fmt.Println("get default key failed.")
-	} else {
-		defaultKey = secp256k1.PrivKeyFromBytes(k)
-		addr, err := xdagoUtils.AddressFromStorage()
-		if err != nil {
-			xlog.Info(err)
-		} else {
-			xlog.Info(addr)
-			block := transactionBlock(addr, "4smXToYpMy1648T3PXpBRZ8zSey5c6Sy7", "test", 100.5, defaultKey)
-			xlog.Info(block)
-		}
 
-	}
 	LogonWindow.Win.Hide()
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
 		getTestTitle())
@@ -117,7 +166,7 @@ func NewWalletWindow() {
 	LogonWindow.Win.Content().Resize(fyne.NewSize(0, 0))
 	tabs := container.NewAppTabs(
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAccount"),
-			theme.HomeIcon(), AccountPage(Address, Balance, WalletWindow)),
+			theme.HomeIcon(), AccountPage(XdagAddress, XdagBalance, WalletWindow)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabTransfer"),
 			theme.MailSendIcon(), TransferPage(WalletWindow, TransferWrap)),
 		container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabHistory"),
@@ -179,7 +228,7 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	var inAddress string
 	var err error
 	if len(from) == common.XDAG_ADDRESS_SIZE { // old xdag address
-		if !ValidateAddress(from) {
+		if !ValidateXdagAddress(from) {
 			xlog.Error("transaction send address length error")
 			return ""
 		}

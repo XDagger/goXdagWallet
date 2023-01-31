@@ -351,7 +351,7 @@ func refreshTable(page int, query string) {
 	if getApiUrl() == "" {
 		return
 	}
-	err := getUrl(getApiUrl(), Address, query, page, &body)
+	err := getUrl(getApiUrl(), XdagAddress, query, page, &body)
 	if err != nil {
 		historyProgressContainer.Hide()
 		historyRefreshContainer.Show()
@@ -400,7 +400,7 @@ func refreshTable(page int, query string) {
 	}
 	pageLabel.Set(strconv.Itoa(curPage) + "/" + strconv.Itoa(pageCount))
 
-	historyStatus.Set(i18n.GetString("WalletWindow_HistoryColumns_BlockAddress") + " : " + Address)
+	historyStatus.Set(i18n.GetString("WalletWindow_HistoryColumns_BlockAddress") + " : " + XdagAddress)
 
 	historyTable = widget.NewTable(
 		func() (int, int) { return len(historyData) + 1, 5 },

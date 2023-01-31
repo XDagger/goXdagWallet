@@ -21,6 +21,7 @@
   "WalletState_LoadingBlocks": "Chargement des blocs...",
   "WalletState_None": "Inexistant",
   "WalletState_Registering": "Enregistrement...",
+  "WalletState_Register_failed": "Register wallet failed...",
   "WalletState_ResettingEngine": "Réinitialisation du moteur...",
   "WalletState_Stopped": "Arrêté",
   "WalletState_Synchronized": "Synchronisé",

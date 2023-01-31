@@ -10,6 +10,9 @@ const (
 	XDAG_FIELD_SIZE   = 32
 	XDAG_HASH_SIZE    = 32
 	XDAG_ADDRESS_SIZE = 32
+
+	BIP32_WALLET_FOLDER    = "xdagj_wallet"
+	BIP32_WALLET_FILE_NAME = "xdagj_wallet.bin"
 )
 
 type Hash [XDAG_HASH_SIZE]byte

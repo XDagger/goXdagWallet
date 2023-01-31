@@ -21,6 +21,7 @@
     "WalletState_LoadingBlocks": "Загрузка блоков...",
     "WalletState_None": "Нет кошелька",
     "WalletState_Registering": "Регистрация...",
+    "WalletState_Register_failed": "Register wallet failed...",
     "WalletState_ResettingEngine": "Перезапуск...",
     "WalletState_Stopped": "Остановлен",
     "WalletState_Synchronized": "Синхронизирован",
