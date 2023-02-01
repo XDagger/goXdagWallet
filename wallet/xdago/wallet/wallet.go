@@ -11,6 +11,7 @@ import (
 	"goXdagWallet/xlog"
 	"os"
 	"path"
+	"strings"
 	"sync"
 
 	"github.com/tyler-smith/go-bip32"
@@ -461,4 +462,66 @@ func NewMnemonic() string {
 	entropy, _ := bip39.NewEntropy(160)
 	mnemonic, _ := bip39.NewMnemonic(entropy)
 	return mnemonic
+}
+
+func (w *Wallet) ExportDefKey(path string) error {
+	w.Lock()
+	defer w.Unlock()
+	w.requireUnlocked()
+	if len(w.accountsKey) == 0 {
+		return errors.New("wallet is empty")
+	}
+	key := w.accountsKey[0]
+	if key == nil {
+		return errors.New("no key to export")
+	}
+	b := key.Key.Bytes()
+	return os.WriteFile(path, b[:], 0666)
+
+}
+
+func (w *Wallet) ExportMnemonic(path string) error {
+	w.Lock()
+	defer w.Unlock()
+	w.requireUnlocked()
+	if w.mnemonicPhrase == "" {
+		return errors.New("no mnemonic to export")
+	}
+	return os.WriteFile(path, []byte(w.mnemonicPhrase), 0666)
+}
+
+func ImportWalletFromDefKey(pathSrc, dirDest, pwd string) (*Wallet, error) {
+	key, err := os.ReadFile(pathSrc)
+	if err != nil {
+		return nil, err
+	}
+	if len(key) != 32 {
+		return nil, errors.New("imported key is not 32 bytes")
+	}
+	w := NewWallet(path.Join(dirDest, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+	w.password = pwd
+	w.AddAccounts([]*secp256k1.PrivateKey{secp256k1.PrivKeyFromBytes(key)})
+	w.Flush()
+	return &w, nil
+}
+
+func ImportWalletFromMnemonicFile(pathSrc, dirDest, pwd string) (*Wallet, error) {
+	phrases, err := os.ReadFile(pathSrc)
+	if err != nil {
+		return nil, err
+	}
+	return ImportWalletFromMnemonicStr(string(phrases), dirDest, pwd)
+}
+
+func ImportWalletFromMnemonicStr(mnemonic, dirDest, pwd string) (*Wallet, error) {
+	words := strings.Fields(mnemonic)
+	if len(words) != 15 {
+		return nil, errors.New("mnemonic words count is not 15")
+	}
+	w := NewWallet(path.Join(dirDest, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+	w.password = pwd
+	w.InitializeHdWallet(mnemonic)
+	w.AddAccountWithNextHdKey()
+	w.Flush()
+	return &w, nil
 }

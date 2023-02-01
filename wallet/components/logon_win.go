@@ -122,7 +122,7 @@ func (l *LogonWin) StartRegister() bool {
 	StatusInfo.Text = i18n.GetString("WalletState_Registering")
 	canvas.Refresh(StatusInfo)
 
-	w, b := NewBipWallet(string(Password[:]))
+	w, b := NewBipWallet(PwdStr)
 	BipWallet = w
 	return b
 
@@ -211,19 +211,20 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 			if l.HasAccount {
 				if len(str) > 0 {
 					copy(Password[:], str)
+					PwdStr = str
 				}
 				l.StartConnect()
 				if l.WalletExists == HAS_ONLY_XDAG {
 					res := ConnectXdagWallet()
 					if res == 0 {
-						NewWalletWindow()
+						NewWalletWindow(l.WalletExists)
 					} else {
 						l.passwordIncorrect()
 					}
 				} else if l.WalletExists == HAS_ONLY_BIP {
 					res := ConnectBipWallet()
 					if res {
-						NewWalletWindow()
+						NewWalletWindow(l.WalletExists)
 					} else {
 						l.passwordIncorrect()
 					}
@@ -232,7 +233,7 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 					resX := ConnectXdagWallet()
 					resB := ConnectBipWallet()
 					if resB && resX == 0 {
-						NewWalletWindow()
+						NewWalletWindow(l.WalletExists)
 					} else {
 						l.passwordIncorrect()
 					}
@@ -267,9 +268,10 @@ func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.W
 			if str == l.Password {
 				if len(str) > 0 {
 					copy(Password[:], str)
+					PwdStr = str
 				}
 				if l.StartRegister() {
-					NewWalletWindow()
+					NewWalletWindow(HAS_ONLY_BIP)
 				} else {
 					StatusInfo.Text = i18n.GetString("WalletState_Register_failed")
 					canvas.Refresh(StatusInfo)
@@ -308,26 +310,6 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 func GetAppIcon() fyne.Resource {
 	return resourceIconPng
 }
-
-// func registerTimer() {
-// 	start := time.Now()
-// 	timer := time.NewTicker(1 * time.Second)
-// 	for {
-// 		select {
-// 		case <-timer.C:
-// 			span := time.Since(start)
-// 			z := time.Unix(0, 0).UTC()
-// 			StatusInfo.Text = fmt.Sprintf(i18n.GetString("LogonWindow_InitializingElapsedTime"),
-// 				z.Add(span).Format("04:05"))
-// 			canvas.Refresh(StatusInfo)
-// 			break
-// 		case <-regDone:
-// 			return
-// 		default:
-
-// 		}
-// 	}
-// }
 
 func getTestTitle() string {
 	var testNet string

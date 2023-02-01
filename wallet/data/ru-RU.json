@@ -33,6 +33,7 @@
     "LogonWindow_InitializingElapsedTime": "Осталось времени:[%s](Нужно около 5-10 минут)",
     "PasswordWindow_PasswordMismatch": "Пароли не совпадают.",
     "TransferWindow_AccountFormatError": "Неверный формат адреса.",
+    "TransferWindow_FromAddress": "From address:",
     "TransferWindow_AddressTitle": "На адрес:",
     "TransferWindow_AmountFormatError": "Число должно быть положительным.",
     "TransferWindow_CommitFailed": "Ошибка транзакции:",

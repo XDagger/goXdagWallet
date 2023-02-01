@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
+	"goXdagWallet/xdago/secp256k1"
+	"goXdagWallet/xlog"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -20,13 +22,14 @@ var TransBtnContainer *fyne.Container
 var TransProgressContainer *fyne.Container
 var AddressList *widget.List
 var AddressEntry = widget.NewEntry()
+var SelectedAddress *widget.RadioGroup
 
 func addressValidator() fyne.StringValidator {
 	return func(text string) error {
 		if text == "" {
 			return nil
 		}
-		if ValidateXdagAddress(text) {
+		if ValidateBipAddress(text) {
 			return nil
 		}
 		return errors.New(i18n.GetString("TransferWindow_AccountFormatError"))
@@ -45,7 +48,7 @@ func remarkValidator() fyne.StringValidator {
 	}
 }
 
-func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fyne.Container {
+func TransferPage(w fyne.Window) *fyne.Container {
 	amount := newNumericalEntry()
 	remark := widget.NewEntry()
 	AddressEntry.Validator = addressValidator()
@@ -54,11 +57,24 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 	TransProgressContainer = container.New(layout.NewPaddedLayout(), widget.NewProgressBarInfinite())
 	TransProgressContainer.Hide()
 
+	if LogonWindow.WalletExists == HAS_BOTH {
+		SelectedAddress = widget.NewRadioGroup([]string{
+			XdagAddress,
+			BipAddress}, func(selected string) {
+		})
+		SelectedAddress.Selected = XdagAddress
+		//SelectedAddress.Horizontal = true
+		SelectedAddress.Required = true
+
+	}
 	btn := widget.NewButtonWithIcon(i18n.GetString("TransferWindow_TransferTitle"), theme.ConfirmIcon(),
 		func() {
+			fromAccountPrivKey, fromAddress := SelTransFromAddr()
+
 			if !checkInput(AddressEntry.Text, amount.Text, remark.Text, w) {
 				return
 			}
+
 			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, AddressEntry.Text)
 			//fmt.Println(message)
 			dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
@@ -70,7 +86,14 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 						DonaTransBtnContainer.Hide()
 						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
 						DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						transWrap(AddressEntry.Text, amount.Text, remark.Text)
+						err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
+						if err == nil {
+							config.InsertAddress(AddressEntry.Text)
+							setTransferDone()
+						} else {
+							xlog.Error(err)
+							setTransferError(err.Error())
+						}
 					}
 				}, w)
 
@@ -78,9 +101,11 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 	btn.Importance = widget.HighImportance
 	TransBtnContainer = container.New(layout.NewPaddedLayout(), btn)
 	makeAddrList()
+
 	top := container.NewVBox(
-		container.NewHBox(
-			layout.NewSpacer(), TransStatus, layout.NewSpacer()),
+		//container.NewHBox(
+		//	layout.NewSpacer(), TransStatus, layout.NewSpacer()),
+		makeTopBar(),
 		container.New(layout.NewMaxLayout(), &widget.Form{
 			Items: []*widget.FormItem{ // we can specify items in the constructor
 				{Text: i18n.GetString("WalletWindow_Transfer_ToAddress"), Widget: AddressEntry},
@@ -91,7 +116,7 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 		container.NewVBox(
 			TransProgressContainer,
 			TransBtnContainer),
-		widget.NewLabel(""),
+		//widget.NewLabel(""),
 		widget.NewLabel(i18n.GetString("TransferWindow_MostRecently")),
 	)
 
@@ -102,8 +127,8 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 	)
 }
 
-func checkInput(addr, amount, remark string, window fyne.Window) bool {
-	if len(addr) == 0 || !ValidateXdagAddress(addr) {
+func checkInput(toAddr, amount, remark string, window fyne.Window) bool {
+	if len(toAddr) == 0 || !ValidateBipAddress(toAddr) {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_AccountFormatError"), window)
 		return false
@@ -179,4 +204,30 @@ func setTransferError(e string) {
 	DonaTransBtnContainer.Show()
 	dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 		i18n.GetString("TransferWindow_CommitFailed")+e, WalletWindow)
+}
+
+func SelTransFromAddr() (*secp256k1.PrivateKey, string) {
+	if LogonWindow.WalletExists == HAS_ONLY_XDAG {
+		return XdagKey, XdagAddress
+	} else if LogonWindow.WalletExists == HAS_ONLY_BIP {
+		return BipWallet.GetDefKey(), BipAddress
+	} else { // WalletExists == HAS_BOTH
+		if SelectedAddress.Selected == XdagAddress {
+			return XdagKey, XdagAddress
+		} else {
+			return BipWallet.GetDefKey(), BipAddress
+		}
+	}
+}
+
+func makeTopBar() fyne.CanvasObject {
+	if LogonWindow.WalletExists == HAS_BOTH {
+		return container.NewVBox(
+			container.NewHBox(layout.NewSpacer(), TransStatus, layout.NewSpacer()),
+			container.NewHBox(widget.NewLabel(i18n.GetString("TransferWindow_FromAddress")),
+				SelectedAddress))
+	} else {
+		return container.NewHBox(
+			layout.NewSpacer(), TransStatus, layout.NewSpacer())
+	}
 }

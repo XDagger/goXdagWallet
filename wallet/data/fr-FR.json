@@ -33,6 +33,7 @@
   "LogonWindow_InitializingElapsedTime": "Temps écoulé: [%s] (environ 5 à 10 minutes)",
   "PasswordWindow_PasswordMismatch": "Le mot de passe ne correspond pas au\n précédent que vous avez saisi.",
   "TransferWindow_AccountFormatError": "Le format de l'adresse du portefeuille est incorrect.",
+  "TransferWindow_FromAddress": "From address:",
   "TransferWindow_AddressTitle": "Vers adresse:",
   "TransferWindow_AmountFormatError": "Le montant doit être un nombre positif.",
   "TransferWindow_CommitFailed": "Echec envoi de la transaction:",

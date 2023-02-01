@@ -37,7 +37,7 @@ func setup() (string, *Wallet) {
 	wallet.UnlockWallet(pwd)
 	keyBytes, _ := hex.DecodeString(PRIVATE_KEY_STRING)
 	privKey := secp256k1.PrivKeyFromBytes(keyBytes)
-	wallet.SetAccounts([]*secp256k1.PrivateKey{privKey})
+	wallet.AddAccount(privKey)
 	wallet.Flush()
 	wallet.LockWallet()
 	return pwd, &wallet
@@ -236,11 +236,86 @@ func TestNewBipWallet(t *testing.T) {
 		panic(err)
 	}
 	w := NewWallet(path.Join(common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
-	w.UnlockWallet("password")
-	w.InitializeHdWallet(NewMnemonic())
+	w.UnlockWallet("ljr20040224")
+	mnemonic := NewMnemonic()
+	w.InitializeHdWallet(mnemonic)
 	w.AddAccountWithNextHdKey()
+	fmt.Println(w.mnemonicPhrase)
 	res := w.Flush()
 
 	assert.Equal(t, res, true)
 	assert.Equal(t, len(w.GetAccounts()), 1)
+
+	w2 := NewWallet(path.Join(common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+	w2.UnlockWallet("ljr20040224")
+	assert.Equal(t, len(w2.GetAccounts()), 1)
+	assert.Equal(t, w.mnemonicPhrase, mnemonic)
+	//w.Delete()
+}
+
+func TestExportDefKey(t *testing.T) {
+	p, w := setup()
+	defer tearDown(w)
+
+	w.UnlockWallet(p)
+
+	err := w.ExportDefKey("priv.key")
+
+	assert.Equal(t, err, nil)
+}
+
+func TestExportMnemonic(t *testing.T) {
+	p, w := setup()
+	defer tearDown(w)
+
+	w.UnlockWallet(p)
+
+	w.InitializeHdWallet(MNEMONIC)
+
+	err := w.ExportMnemonic("mnemonic.txt")
+
+	assert.Equal(t, err, nil)
+}
+
+func TestImportFromKey(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Join(path.Dir(filename), "../..")
+	err := os.Chdir(dir)
+	if err != nil {
+		panic(err)
+	}
+	pwd := "password"
+	w, err := ImportWalletFromDefKey("priv.key", ".", pwd)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(w.GetAccounts()), 1)
+
+	w2 := NewWallet(path.Join(common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+	w2.UnlockWallet("password")
+	assert.Equal(t, len(w2.GetAccounts()), 1)
+
+	assert.Equal(t, w2.GetDefKey().Key.String(), PRIVATE_KEY_STRING)
+	w.Delete()
+
+}
+
+func TestImportFromMnemonic(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Join(path.Dir(filename), "../..")
+	err := os.Chdir(dir)
+	if err != nil {
+		panic(err)
+	}
+	pwd := "password"
+	w, err := ImportWalletFromMnemonicFile("mnemonic.txt", ".", pwd)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(w.GetAccounts()), 1)
+
+	w2 := NewWallet(path.Join(common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+	w2.UnlockWallet("password")
+	assert.Equal(t, len(w2.GetAccounts()), 1)
+	assert.Equal(t, w.mnemonicPhrase, MNEMONIC)
+	w.Delete()
+
 }

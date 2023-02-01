@@ -33,6 +33,7 @@
   "LogonWindow_InitializingElapsedTime": "Elapsed Time:[%s](Need about 5-10 minutes)",
   "PasswordWindow_PasswordMismatch": "Password is not matched with\n previous you entered.",
   "TransferWindow_AccountFormatError": "Wallet Address format is incorrect.",
+  "TransferWindow_FromAddress": "From address:",
   "TransferWindow_AddressTitle": "To address:",
   "TransferWindow_AmountFormatError": "Amount should be a positive number.",
   "TransferWindow_CommitFailed": "Commit Transaction Failed:",

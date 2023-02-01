@@ -3,6 +3,8 @@ package components
 import (
 	"fmt"
 	"goXdagWallet/i18n"
+	"goXdagWallet/xdago/secp256k1"
+	"goXdagWallet/xlog"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -26,7 +28,7 @@ var coinImages = map[int]*canvas.Image{
 	100: canvas.NewImageFromResource(resourceCoin100Png),
 }
 
-func DonatePage(w fyne.Window, transWrap func(string, string, string) int) *fyne.Container {
+func DonatePage(w fyne.Window) *fyne.Container {
 	amount := newNumericalEntry()
 	remark := widget.NewEntry()
 	DonaAddressEntry.Validator = addressValidator()
@@ -37,9 +39,12 @@ func DonatePage(w fyne.Window, transWrap func(string, string, string) int) *fyne
 
 	btn := widget.NewButtonWithIcon(i18n.GetString("WalletWindow_TabDonate"), theme.ConfirmIcon(),
 		func() {
+			var fromAccoountPrivKey *secp256k1.PrivateKey
+			var fromAddress string
 			if !checkInput(DonaAddressEntry.Text, amount.Text, remark.Text, w) {
 				return
 			}
+
 			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, DonaAddressEntry.Text)
 			//fmt.Println(message)
 			dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
@@ -51,7 +56,13 @@ func DonatePage(w fyne.Window, transWrap func(string, string, string) int) *fyne
 						TransBtnContainer.Hide()
 						DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
 						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						transWrap(DonaAddressEntry.Text, amount.Text, remark.Text)
+						err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccoountPrivKey)
+						if err == nil {
+							setTransferDone()
+						} else {
+							xlog.Error(err)
+							setTransferError(err.Error())
+						}
 					}
 				}, w)
 

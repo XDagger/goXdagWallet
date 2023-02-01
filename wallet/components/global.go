@@ -17,7 +17,10 @@ var LogonWindow LogonWin
 var WalletWindow fyne.Window
 var WalletApp fyne.App
 var Password [256]byte
+var PwdStr string
 var XdagAddress string
 var XdagBalance string
 var XdagKey *secp256k1.PrivateKey
 var BipWallet *bip.Wallet
+var BipAddress string
+var BipBalance string
