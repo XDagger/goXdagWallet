@@ -34,8 +34,7 @@ func Xdag_Wallet_fount() int {
 	fi, err := os.Stat(pathName)
 	if err != nil {
 		hasXdagWallet = -1
-	}
-	if fi.Size() != 2048 {
+	} else if fi.Size() != 2048 {
 		hasXdagWallet = -1
 	}
 	pathName = path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME)
