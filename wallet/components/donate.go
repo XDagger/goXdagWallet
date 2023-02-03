@@ -41,7 +41,7 @@ func DonatePage(w fyne.Window) *fyne.Container {
 		func() {
 			var fromAccoountPrivKey *secp256k1.PrivateKey
 			var fromAddress string
-			if !checkInput(DonaAddressEntry.Text, amount.Text, remark.Text, w) {
+			if !checkInput("0.0", DonaAddressEntry.Text, amount.Text, remark.Text, w) {
 				return
 			}
 
