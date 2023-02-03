@@ -2,16 +2,17 @@
 package main
 
 import (
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
 	"goXdagWallet/components"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"goXdagWallet/xlog"
 	"os"
 	"path"
-
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
 )
+
+var splashDone = make(chan struct{})
 
 func init() {
 	pwd, _ := os.Executable()
@@ -38,7 +39,18 @@ func main() {
 	hasAccount := components.Xdag_Wallet_fount() // cgo call xdag_runtime C library
 	components.WalletApp = app.NewWithID("io.xdagj.wallet")
 	components.WalletApp.SetIcon(components.GetAppIcon())
-	components.LogonWindow.NewLogonWindow(hasAccount)
-	components.LogonWindow.Win.ShowAndRun()
+	if components.ShowSplashWindow(splashDone) {
+		go func() {
+			for range splashDone {
+				components.LogonWindow.NewLogonWindow(hasAccount)
+				components.LogonWindow.Win.Show()
+				splashDone <- struct{}{}
+			}
+		}()
+	} else {
+		components.LogonWindow.NewLogonWindow(hasAccount)
+		components.LogonWindow.Win.Show()
+	}
+	components.WalletApp.Run()
 	os.Unsetenv("FYNE_FONT")
 }
