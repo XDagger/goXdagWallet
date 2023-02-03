@@ -69,9 +69,9 @@ func TransferPage(w fyne.Window) *fyne.Container {
 	}
 	btn := widget.NewButtonWithIcon(i18n.GetString("TransferWindow_TransferTitle"), theme.ConfirmIcon(),
 		func() {
-			fromAccountPrivKey, fromAddress := SelTransFromAddr()
+			fromAccountPrivKey, fromAddress, fromValue := SelTransFromAddr()
 
-			if !checkInput(AddressEntry.Text, amount.Text, remark.Text, w) {
+			if !checkInput(fromValue, AddressEntry.Text, amount.Text, remark.Text, w) {
 				return
 			}
 
@@ -127,7 +127,7 @@ func TransferPage(w fyne.Window) *fyne.Container {
 	)
 }
 
-func checkInput(toAddr, amount, remark string, window fyne.Window) bool {
+func checkInput(fromValue, toAddr, amount, remark string, window fyne.Window) bool {
 	if len(toAddr) == 0 || !ValidateBipAddress(toAddr) {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_AccountFormatError"), window)
@@ -141,7 +141,7 @@ func checkInput(toAddr, amount, remark string, window fyne.Window) bool {
 		return false
 	}
 
-	balance, _ := strconv.ParseFloat(XdagBalance, 64)
+	balance, _ := strconv.ParseFloat(fromValue, 64)
 	if balance < value {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_InsufficientAmount"), window)
@@ -206,16 +206,16 @@ func setTransferError(e string) {
 		i18n.GetString("TransferWindow_CommitFailed")+e, WalletWindow)
 }
 
-func SelTransFromAddr() (*secp256k1.PrivateKey, string) {
+func SelTransFromAddr() (*secp256k1.PrivateKey, string, string) {
 	if LogonWindow.WalletExists == HAS_ONLY_XDAG {
-		return XdagKey, XdagAddress
+		return XdagKey, XdagAddress, XdagBalance
 	} else if LogonWindow.WalletExists == HAS_ONLY_BIP {
-		return BipWallet.GetDefKey(), BipAddress
+		return BipWallet.GetDefKey(), BipAddress, BipBalance
 	} else { // WalletExists == HAS_BOTH
 		if SelectedAddress.Selected == XdagAddress {
-			return XdagKey, XdagAddress
+			return XdagKey, XdagAddress, XdagBalance
 		} else {
-			return BipWallet.GetDefKey(), BipAddress
+			return BipWallet.GetDefKey(), BipAddress, BipBalance
 		}
 	}
 }

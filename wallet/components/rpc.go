@@ -224,15 +224,17 @@ func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (s
 }
 
 func fieldTypes(isTest, isFromOld, hasRemark, isPubKeyEven bool) string {
+
 	// 1/8--2/C--D--[9]--6/7--5--5
 	// header(main/test)--input(old/new)--output--[remark]--pubKey(even/odd)--sign_r--sign_s
 	var sb strings.Builder
+
 	if isFromOld {
 		sb.WriteString("2") // old address
 	} else {
-
 		sb.WriteString("C") // new address
 	}
+
 	if isTest {
 		sb.WriteString("8") // test net
 	} else {
