@@ -2,7 +2,6 @@ package components
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -90,7 +89,9 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	}
 	var inAddress string
 	var err error
-	if len(from) == common.XDAG_ADDRESS_SIZE { // old xdag address
+	isFromOld := len(from) == common.XDAG_ADDRESS_SIZE
+
+	if isFromOld { // old xdag address
 		if !ValidateXdagAddress(from) {
 			xlog.Error("transaction send address length error")
 			return ""
@@ -141,9 +142,10 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	// header: transport
 	sb.WriteString("0000000000000000")
 
-	// header: field types
 	compKey := key.PubKey().SerializeCompressed()
-	sb.WriteString(fieldTypes(config.GetConfig().Option.IsTestNet,
+
+	// header: field types
+	sb.WriteString(fieldTypes(config.GetConfig().Option.IsTestNet, isFromOld,
 		len(remark) > 0, compKey[0] == secp256k1.PubKeyFormatCompressedEven))
 
 	// header: timestamp
@@ -194,7 +196,7 @@ func checkBase58Address(address string) (string, error) {
 		xlog.Error("transaction receive address length error")
 		return "", errors.New("transaction receive address length error")
 	}
-	return hex.EncodeToString(addrBytes[:]), nil
+	return "00000000" + hex.EncodeToString(addrBytes[:20]), nil
 }
 
 func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (string, string) {
@@ -214,35 +216,41 @@ func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (s
 
 	b, _ := hex.DecodeString(sb.String())
 
-	hash := sha256.Sum256(b)
-	hash = sha256.Sum256(hash[:])
+	hash := cryptography.HashTwice(b)
 
 	r, s := cryptography.EcdsaSign(key, hash[:])
 
 	return hex.EncodeToString(r[:]), hex.EncodeToString(s[:])
 }
 
-func fieldTypes(isTest, hasRemark, isPubKeyEven bool) string {
-	// 1/8--2--3--[9]--6/7--5--5
-	// header(main/test)--input--output--[remark]--pubKey(even/odd)--sign_r--sign_s
+func fieldTypes(isTest, isFromOld, hasRemark, isPubKeyEven bool) string {
+	// 1/8--2/C--D--[9]--6/7--5--5
+	// header(main/test)--input(old/new)--output--[remark]--pubKey(even/odd)--sign_r--sign_s
 	var sb strings.Builder
-	if isTest {
-		sb.WriteString("28") // test net
+	if isFromOld {
+		sb.WriteString("2") // old address
 	} else {
-		sb.WriteString("21") // main net
+
+		sb.WriteString("C") // new address
+	}
+	if isTest {
+		sb.WriteString("8") // test net
+	} else {
+		sb.WriteString("1") // main net
+
 	}
 
 	if hasRemark { // with remark
 		if isPubKeyEven {
-			sb.WriteString("93560500000000") // even public key
+			sb.WriteString("9D560500000000") // even public key
 		} else {
-			sb.WriteString("93570500000000") // odd public key
+			sb.WriteString("9D570500000000") // odd public key
 		}
 	} else { // without remark
 		if isPubKeyEven {
-			sb.WriteString("63550000000000") // even public key
+			sb.WriteString("6D550000000000") // even public key
 		} else {
-			sb.WriteString("73550000000000") // odd public key
+			sb.WriteString("7D550000000000") // odd public key
 		}
 	}
 
@@ -251,7 +259,6 @@ func fieldTypes(isTest, hasRemark, isPubKeyEven bool) string {
 
 func blockHash(block string) string {
 	b, _ := hex.DecodeString(block)
-	hash := sha256.Sum256(b)
-	hash = sha256.Sum256(hash[:])
+	hash := cryptography.HashTwice(b)
 	return xdagoUtils.Hash2Address(hash)
 }

@@ -2,12 +2,12 @@ package utils
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"goXdagWallet/config"
 	"goXdagWallet/xdago/common"
+	"goXdagWallet/xdago/cryptography"
 	"io"
 	"os"
 	"path"
@@ -126,7 +126,6 @@ func AddressFromStorage() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	hash := sha256.Sum256(block)
-	hash = sha256.Sum256(hash[:])
+	hash := cryptography.HashTwice(block)
 	return Hash2Address(hash), nil
 }
