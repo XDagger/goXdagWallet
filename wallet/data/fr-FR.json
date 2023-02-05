@@ -5,6 +5,13 @@
   "LogonWindow_SearchingConnection": "Recherche de connexion...",
   "LogonWindow_Title": "Bienvenue sur le portefeuille XDAG (Ver %s)",
   "LogonWindow_AppearanceSetting": "Réglages d'apparence",
+  "LogonWindow_SelectWalletTitle": "Select Wallet Type",
+  "LogonWindow_SelectWalletType": "Wallet Type",
+  "LogonWindow_WalletType_NonMnemonic": "Non Mnemonic",
+  "LogonWindow_WalletType_Mnemonic": "Mnemonic",
+  "LogonWindow_Import_NonMnemonic": "Import Non Mnemonic",
+  "LogonWindow_Import_Mnemonic": "Import Mnemonic",
+  "LogonWindow_Create_Mnemonic": "Create Mnemonic",
   "Common_ConfirmTitle": "Confirmer",
   "Common_MessageTitle": "Information",
   "Message_PasswordIncorrect": "Le mot de passe est incorrect",
@@ -94,8 +101,11 @@
   "Light": "Clair",
   "WalletImport_WalletNotExist": "Fichiers du portefeuille inexistants",
   "WalletImport_FilesCopyFailed": "Echec de l'importation des fichiers du wallet",
+  "WalletCreate_FilesFailed": "Create Wallet Files Failed",
   "Wallet_CreateOrImport": "Choisissez : créer ou importer le portefeuille ?",
   "Wallet_Choice": "Choix",
   "Wallet_Create": "Créer",
-  "Wallet_Import": "Importer"
+  "Wallet_Import": "Importer",
+  "Wallet_Export": "Export Mnemonic",
+  "Rpc_Get_Amount_fail": "Get account amount failed"
 }

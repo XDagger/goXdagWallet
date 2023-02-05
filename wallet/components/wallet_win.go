@@ -43,41 +43,58 @@ func Xdag_Wallet_fount() int {
 	fi, err = os.Stat(pathName)
 	if err != nil {
 		hasBip32Wallet = -1
-	} else if fi.Size() < 125 {
+	} else if fi.Size() < 126 { // file is 125 bytes when wallet data without Mnemonic
 		hasBip32Wallet = -1
 	}
 	if hasXdagWallet == -1 && hasBip32Wallet == -1 {
-		return -1 // no wallet
+		return WALLET_NOT_FOUND // no wallet
 	}
 	if hasXdagWallet == 0 && hasBip32Wallet == 0 { // has both wallets
-		return 0
+		return HAS_BOTH
 	} else if hasXdagWallet == 0 { // only has xdag wallet
-		return 1
+		return HAS_ONLY_XDAG
 	} else {
-		return 2 // only has bip32_bip44 wallet
+		return HAS_ONLY_BIP // only has bip32_bip44 wallet
 	}
 }
 
 func ConnectBipWallet() bool {
+	xlog.Info("Initializing cryptography...")
+	xlog.Info("Reading wallet...")
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
 	wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 	res := wallet.UnlockWallet(PwdStr)
-	if res {
-		BipWallet = &wallet
+	if wallet.IsHdWalletInitialized() {
+		xlog.Info("Reading Mnemonic...")
 	}
-	return res
+	if res && wallet.IsHdWalletInitialized() {
+		BipWallet = &wallet
+		return true
+	}
+	return false
+
 }
 func NewBipWallet(password string) (*bip.Wallet, bool) {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
-	wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
-	wallet.UnlockWallet(password)
-	wallet.InitializeHdWallet(bip.NewMnemonic())
-	wallet.AddAccountWithNextHdKey()
-	res := wallet.Flush()
-
-	return &wallet, res
+	if len(LogonWindow.MnemonicBytes) > 0 {
+		xlog.Info("import Mnemonic...")
+		wallet, err := bip.ImportWalletFromMnemonicStr(string(LogonWindow.MnemonicBytes), pwd, PwdStr)
+		if err != nil {
+			xlog.Error(err)
+			return nil, false
+		} else {
+			return wallet, true
+		}
+	} else {
+		wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
+		wallet.UnlockWallet(password)
+		wallet.InitializeHdWallet(bip.NewMnemonic())
+		wallet.AddAccountWithNextHdKey()
+		res := wallet.Flush()
+		return &wallet, res
+	}
 }
 
 func ValidateXdagAddress(address string) bool {
@@ -104,7 +121,7 @@ func NewWalletWindow(walletExists int) {
 		BipAddress = base58.ChkEnc(b[:])
 	}
 
-	getBalance()
+	address, balance := getBalance()
 	LogonWindow.Win.Hide()
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
 		getTestTitle())
@@ -112,12 +129,8 @@ func NewWalletWindow(walletExists int) {
 	w.SetMaster()
 	LogonWindow.Win.Content().Resize(fyne.NewSize(0, 0))
 	tabs := container.NewAppTabs()
-	if walletExists != HAS_ONLY_BIP {
-		tabs.Append(container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAccount")+"-0",
-			theme.HomeIcon(), AccountPage(XdagAddress, XdagBalance, WalletWindow)))
-	}
-	tabs.Append(container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAccount")+"-1",
-		theme.FolderOpenIcon(), BipPage(BipAddress, BipBalance, WalletWindow)))
+	tabs.Append(container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabAccount"),
+		theme.HomeIcon(), AccountPage(address, balance, WalletWindow)))
 	tabs.Append(container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabTransfer"),
 		theme.MailSendIcon(), TransferPage(WalletWindow)))
 	tabs.Append(container.NewTabItemWithIcon(i18n.GetString("WalletWindow_TabHistory"),
@@ -157,31 +170,36 @@ func checkBalance() {
 	}
 }
 
-func getBalance() {
-	if LogonWindow.WalletExists == HAS_ONLY_BIP || LogonWindow.WalletExists == HAS_BOTH {
+func getBalance() (string, string) {
+	if LogonWindow.WalletType == HAS_ONLY_BIP {
 		balance, err := BalanceRpc(BipAddress)
 		if err == nil {
 			if balance != "" {
 				BipBalance = balance
-				BipAccountBalance.Set(balance)
+				AccountBalance.Set(balance)
+				return BipAddress, BipBalance
 			} else {
 				xlog.Error("get bip32 account balance error.")
+				return BipAddress, ""
 			}
 		} else {
 			xlog.Error(err)
+			return BipAddress, ""
 		}
-	}
-	if LogonWindow.WalletExists == HAS_ONLY_XDAG || LogonWindow.WalletExists == HAS_BOTH {
+	} else { // LogonWindow.WalletType == HAS_ONLY_XDAG
 		balance, err := BalanceRpc(XdagAddress)
 		if err == nil {
 			if balance != "" {
 				XdagBalance = balance
 				AccountBalance.Set(balance)
+				return XdagAddress, XdagBalance
 			} else {
 				xlog.Error("get xdag account balance error.")
+				return XdagAddress, ""
 			}
 		} else {
 			xlog.Error(err)
+			return XdagAddress, ""
 		}
 	}
 }

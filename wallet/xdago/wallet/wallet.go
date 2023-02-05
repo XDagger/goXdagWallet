@@ -176,10 +176,15 @@ func (w *Wallet) readHdSeed(key []byte, r *utils.SimpleReader) bool {
 
 	r2 := utils.NewSimpleReader(decryptBites)
 	size := bytes2Size(r2)
+	if int(size) > len(decryptBites) {
+		xlog.Error("parse wallet mnemonic failed, bytes length error")
+		return false
+	}
 	w.mnemonicPhrase = string(r2.ReadCString(int(size)))
 	r2.ReadInt(binary.BigEndian, &w.nextAccountIndex)
 	if r2.Error() != nil {
-		xlog.Fatal("parse wallet mnemonic failed," + r2.Error().Error())
+		xlog.Error("parse wallet mnemonic failed," + r2.Error().Error())
+		return false
 	}
 	return true
 }

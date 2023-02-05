@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	HAS_BOTH      = 0
-	HAS_ONLY_XDAG = 1
-	HAS_ONLY_BIP  = 2
+	WALLET_NOT_FOUND = -1
+	HAS_BOTH         = 0
+	HAS_ONLY_XDAG    = 1
+	HAS_ONLY_BIP     = 2
 )
 
 var LogonWindow LogonWin

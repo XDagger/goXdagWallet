@@ -3,7 +3,6 @@ package components
 import (
 	"fmt"
 	"goXdagWallet/i18n"
-	"goXdagWallet/xdago/secp256k1"
 	"goXdagWallet/xlog"
 
 	"fyne.io/fyne/v2"
@@ -39,9 +38,8 @@ func DonatePage(w fyne.Window) *fyne.Container {
 
 	btn := widget.NewButtonWithIcon(i18n.GetString("WalletWindow_TabDonate"), theme.ConfirmIcon(),
 		func() {
-			var fromAccoountPrivKey *secp256k1.PrivateKey
-			var fromAddress string
-			if !checkInput("0.0", DonaAddressEntry.Text, amount.Text, remark.Text, w) {
+			fromAccountPrivKey, fromAddress, fromValue := SelTransFromAddr()
+			if !checkInput(fromValue, DonaAddressEntry.Text, amount.Text, remark.Text, w) {
 				return
 			}
 
@@ -56,7 +54,7 @@ func DonatePage(w fyne.Window) *fyne.Container {
 						TransBtnContainer.Hide()
 						DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
 						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccoountPrivKey)
+						err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
 						if err == nil {
 							setTransferDone()
 						} else {

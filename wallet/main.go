@@ -36,19 +36,19 @@ func main() {
 		return
 	}
 
-	hasAccount := components.Xdag_Wallet_fount() // cgo call xdag_runtime C library
+	accountStatus := components.Xdag_Wallet_fount() // search wallet data files
 	components.WalletApp = app.NewWithID("io.xdagj.wallet")
 	components.WalletApp.SetIcon(components.GetAppIcon())
 	if components.ShowSplashWindow(splashDone) {
 		go func() {
 			for range splashDone {
-				components.LogonWindow.NewLogonWindow(hasAccount)
+				components.LogonWindow.NewLogonWindow(accountStatus)
 				components.LogonWindow.Win.Show()
 				splashDone <- struct{}{}
 			}
 		}()
 	} else {
-		components.LogonWindow.NewLogonWindow(hasAccount)
+		components.LogonWindow.NewLogonWindow(accountStatus)
 		components.LogonWindow.Win.Show()
 	}
 	components.WalletApp.Run()

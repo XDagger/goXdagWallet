@@ -20,7 +20,7 @@ func ShowSplashWindow(done chan struct{}) bool {
 		w.CenterOnScreen()
 		w.Show()
 		go func() {
-			<-time.After(time.Second * 3)
+			<-time.After(time.Second * 2)
 			done <- struct{}{}
 			<-done
 			w.Close()

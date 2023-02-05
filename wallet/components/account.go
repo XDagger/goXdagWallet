@@ -46,13 +46,23 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 			i18n.GetString("WalletWindow_AddressCopied"), w)
 	})
 
+	exportBtn := widget.NewButtonWithIcon(i18n.GetString("Wallet_Export"), theme.FileIcon(),
+		func() {
+
+		})
+	exportBtn.Importance = widget.HighImportance
+
 	addr := newMyEntry()
 	addr.Text = address
 	addr.ActionItem = btn
 
 	bala := newMyEntryWithData(AccountBalance)
 	AccountBalance.Set(balance)
-
+	if balance == "" {
+		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+			i18n.GetString("Rpc_Get_Amount_fail"), WalletWindow)
+	}
+	exportBtnContainer := container.New(layout.NewPaddedLayout(), exportBtn)
 	var png []byte
 	png, _ = qrcode.Encode("xdag:"+address, qrcode.Medium, 256)
 
@@ -62,7 +72,7 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 	})
 	image.SetMinSize(fyne.NewSize(256, 256))
 
-	return container.NewVBox(
+	c := container.NewVBox(
 		widget.NewLabel(""),
 		container.New(layout.NewMaxLayout(), &widget.Form{
 			Items: []*widget.FormItem{
@@ -72,6 +82,11 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 					Widget: bala},
 			},
 		}),
+		exportBtnContainer,
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(), image, layout.NewSpacer()))
+	if LogonWindow.WalletType == HAS_ONLY_XDAG {
+		c.Remove(exportBtnContainer)
+	}
+	return c
 }

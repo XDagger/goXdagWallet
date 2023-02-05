@@ -27,8 +27,9 @@ func ConnectXdagWallet() int32 {
 	}
 	res := C.init_password_callback(C.int(testnet))
 	result := int32(res)
-	fmt.Println(result)
 	if result == 0 {
+		xlog.Info("Initializing cryptography...")
+		xlog.Info("Reading wallet...")
 		k := getDefaultKey()
 		if k == nil {
 			xlog.Error("get default key failed.")
@@ -46,6 +47,7 @@ func ConnectXdagWallet() int32 {
 			}
 		}
 	}
+	fmt.Println(result)
 	return result
 }
 

@@ -5,6 +5,13 @@
   "LogonWindow_SearchingConnection": "正在查找网络连接...",
   "LogonWindow_Title": "欢迎使用XDAGJ钱包 (版本 %s)",
   "LogonWindow_AppearanceSetting": "外观设置",
+  "LogonWindow_SelectWalletTitle": "选择钱包类型",
+  "LogonWindow_SelectWalletType": "钱包类型",
+  "LogonWindow_WalletType_NonMnemonic": "非助记词钱包",
+  "LogonWindow_WalletType_Mnemonic": "助记词钱包",
+  "LogonWindow_Import_NonMnemonic": "导入非助记词钱包",
+  "LogonWindow_Import_Mnemonic": "导入助记词钱包",
+  "LogonWindow_Create_Mnemonic": "新建助记词钱包",
   "Common_ConfirmTitle": "确认",
   "Common_MessageTitle": "提示",
   "Message_PasswordIncorrect": "密码不正确",
@@ -94,8 +101,11 @@
   "Light": "白天",
   "WalletImport_WalletNotExist": "钱包文件不存在",
   "WalletImport_FilesCopyFailed": "复制钱包文件失败",
+  "WalletCreate_FilesFailed": "新建钱包文件失败",
   "Wallet_CreateOrImport": "请选择新建还是导入钱包？",
   "Wallet_Choice": "选择",
   "Wallet_Create": "新建",
-  "Wallet_Import": "导入"
+  "Wallet_Import": "导入",
+  "Wallet_Export": "导出助记词",
+  "Rpc_Get_Amount_fail": "获取账户余额失败"
 }

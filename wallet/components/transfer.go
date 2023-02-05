@@ -22,7 +22,8 @@ var TransBtnContainer *fyne.Container
 var TransProgressContainer *fyne.Container
 var AddressList *widget.List
 var AddressEntry = widget.NewEntry()
-var SelectedAddress *widget.RadioGroup
+
+//var SelectedAddress *widget.RadioGroup
 
 func addressValidator() fyne.StringValidator {
 	return func(text string) error {
@@ -57,16 +58,16 @@ func TransferPage(w fyne.Window) *fyne.Container {
 	TransProgressContainer = container.New(layout.NewPaddedLayout(), widget.NewProgressBarInfinite())
 	TransProgressContainer.Hide()
 
-	if LogonWindow.WalletExists == HAS_BOTH {
-		SelectedAddress = widget.NewRadioGroup([]string{
-			XdagAddress,
-			BipAddress}, func(selected string) {
-		})
-		SelectedAddress.Selected = XdagAddress
-		//SelectedAddress.Horizontal = true
-		SelectedAddress.Required = true
-
-	}
+	//if LogonWindow.WalletType == HAS_BOTH {
+	//	SelectedAddress = widget.NewRadioGroup([]string{
+	//		XdagAddress,
+	//		BipAddress}, func(selected string) {
+	//	})
+	//	SelectedAddress.Selected = XdagAddress
+	//	//SelectedAddress.Horizontal = true
+	//	SelectedAddress.Required = true
+	//
+	//}
 	btn := widget.NewButtonWithIcon(i18n.GetString("TransferWindow_TransferTitle"), theme.ConfirmIcon(),
 		func() {
 			fromAccountPrivKey, fromAddress, fromValue := SelTransFromAddr()
@@ -103,9 +104,9 @@ func TransferPage(w fyne.Window) *fyne.Container {
 	makeAddrList()
 
 	top := container.NewVBox(
-		//container.NewHBox(
-		//	layout.NewSpacer(), TransStatus, layout.NewSpacer()),
-		makeTopBar(),
+		container.NewHBox(
+			layout.NewSpacer(), TransStatus, layout.NewSpacer()),
+		//makeTopBar(),
 		container.New(layout.NewMaxLayout(), &widget.Form{
 			Items: []*widget.FormItem{ // we can specify items in the constructor
 				{Text: i18n.GetString("WalletWindow_Transfer_ToAddress"), Widget: AddressEntry},
@@ -116,7 +117,7 @@ func TransferPage(w fyne.Window) *fyne.Container {
 		container.NewVBox(
 			TransProgressContainer,
 			TransBtnContainer),
-		//widget.NewLabel(""),
+		widget.NewLabel(""),
 		widget.NewLabel(i18n.GetString("TransferWindow_MostRecently")),
 	)
 
@@ -207,27 +208,29 @@ func setTransferError(e string) {
 }
 
 func SelTransFromAddr() (*secp256k1.PrivateKey, string, string) {
-	if LogonWindow.WalletExists == HAS_ONLY_XDAG {
+	if LogonWindow.WalletType == HAS_ONLY_XDAG {
 		return XdagKey, XdagAddress, XdagBalance
-	} else if LogonWindow.WalletExists == HAS_ONLY_BIP {
+	} else { //  LogonWindow.WalletType == HAS_ONLY_BIP
 		return BipWallet.GetDefKey(), BipAddress, BipBalance
-	} else { // WalletExists == HAS_BOTH
-		if SelectedAddress.Selected == XdagAddress {
-			return XdagKey, XdagAddress, XdagBalance
-		} else {
-			return BipWallet.GetDefKey(), BipAddress, BipBalance
-		}
 	}
+	//else { // WalletType == HAS_BOTH
+	//	if SelectedAddress.Selected == XdagAddress {
+	//		return XdagKey, XdagAddress, XdagBalance
+	//	} else {
+	//		return BipWallet.GetDefKey(), BipAddress, BipBalance
+	//	}
+	//}
 }
 
-func makeTopBar() fyne.CanvasObject {
-	if LogonWindow.WalletExists == HAS_BOTH {
-		return container.NewVBox(
-			container.NewHBox(layout.NewSpacer(), TransStatus, layout.NewSpacer()),
-			container.NewHBox(widget.NewLabel(i18n.GetString("TransferWindow_FromAddress")),
-				SelectedAddress))
-	} else {
-		return container.NewHBox(
-			layout.NewSpacer(), TransStatus, layout.NewSpacer())
-	}
-}
+//
+//func makeTopBar() fyne.CanvasObject {
+//	if LogonWindow.WalletType == HAS_BOTH {
+//		return container.NewVBox(
+//			container.NewHBox(layout.NewSpacer(), TransStatus, layout.NewSpacer()),
+//			container.NewHBox(widget.NewLabel(i18n.GetString("TransferWindow_FromAddress")),
+//				SelectedAddress))
+//	} else {
+//		return container.NewHBox(
+//			layout.NewSpacer(), TransStatus, layout.NewSpacer())
+//	}
+//}
