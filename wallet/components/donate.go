@@ -54,7 +54,7 @@ func DonatePage(w fyne.Window) *fyne.Container {
 						TransBtnContainer.Hide()
 						DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
 						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
+						err := TransferRpc(fromAddress, DonaAddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
 						if err == nil {
 							setTransferDone()
 						} else {

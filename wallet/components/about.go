@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// TODO: change community address to BIP32
 const CommunityAddress = "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
 
 func AboutPage(w fyne.Window) *fyne.Container {

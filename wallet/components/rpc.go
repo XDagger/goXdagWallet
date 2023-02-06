@@ -64,6 +64,9 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) err
 	value, _ := strconv.ParseFloat(amount, 64)
 	blockHexStr := transactionBlock(from, to, remark, value, key)
 	xlog.Info(blockHexStr)
+	if blockHexStr == "" {
+		return errors.New("create transaction block error")
+	}
 	hash, err := xdagjRpc("xdag_sendRawTransaction", blockHexStr)
 	//hash, err := xdagjRpc("Xdag.SendRawTransaction", blockHexStr)
 	if err != nil {
