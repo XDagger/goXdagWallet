@@ -91,7 +91,7 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 	AccountBalance.Set(balance)
 	if balance == "" {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-			i18n.GetString("Rpc_Get_Amount_fail"), WalletWindow)
+			i18n.GetString("Rpc_Get_Balance_fail"), WalletWindow)
 	}
 	exportBtnContainer := container.New(layout.NewPaddedLayout(), exportBtn)
 	var png []byte
