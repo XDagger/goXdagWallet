@@ -101,6 +101,8 @@
   "Light": "白天",
   "WalletImport_WalletNotExist": "钱包文件不存在",
   "WalletImport_FilesCopyFailed": "复制钱包文件失败",
+  "WalletExport_File_Failed": "导出助记词失败",
+  "WalletExport_File_Success": "导出助记词成功",
   "WalletCreate_FilesFailed": "新建钱包文件失败",
   "Wallet_CreateOrImport": "请选择新建还是导入钱包？",
   "Wallet_Choice": "选择",

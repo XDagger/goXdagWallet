@@ -485,6 +485,10 @@ func (w *Wallet) ExportDefKey(path string) error {
 
 }
 
+func (w *Wallet) GetMnemonic() string {
+	return w.mnemonicPhrase
+}
+
 func (w *Wallet) ExportMnemonic(path string) error {
 	w.Lock()
 	defer w.Unlock()

@@ -101,6 +101,8 @@
   "Light": "Clair",
   "WalletImport_WalletNotExist": "Fichiers du portefeuille inexistants",
   "WalletImport_FilesCopyFailed": "Echec de l'importation des fichiers du wallet",
+  "WalletExport_File_Failed": "Export Mnemonic Failed",
+  "WalletExport_File_Success": "Export Mnemonic Success",
   "WalletCreate_FilesFailed": "Create Wallet Files Failed",
   "Wallet_CreateOrImport": "Choisissez : créer ou importer le portefeuille ?",
   "Wallet_Choice": "Choix",

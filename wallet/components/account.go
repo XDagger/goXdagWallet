@@ -12,6 +12,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 	qrcode "github.com/skip2/go-qrcode"
 	"goXdagWallet/i18n"
+	"goXdagWallet/xlog"
+	"io"
 )
 
 type myEntry struct {
@@ -48,7 +50,36 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 
 	exportBtn := widget.NewButtonWithIcon(i18n.GetString("Wallet_Export"), theme.FileIcon(),
 		func() {
-
+			dlgSave := dialog.NewFileSave(
+				func(uri fyne.URIWriteCloser, err error) {
+					defer func() {
+						w.Resize(fyne.NewSize(640, 480))
+					}()
+					if uri == nil || err != nil {
+						return
+					}
+					defer uri.Close()
+					if BipWallet.GetMnemonic() != "" {
+						_, err = io.WriteString(uri, BipWallet.GetMnemonic())
+						if err != nil {
+							xlog.Error(err)
+							dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+								i18n.GetString("WalletExport_File_Failed"), w)
+							return
+						}
+					} else {
+						xlog.Error("mnemonic is empty")
+						dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+							i18n.GetString("WalletExport_File_Failed"), w)
+						return
+					}
+					dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+						i18n.GetString("WalletExport_File_Success"), w)
+				}, w)
+			w.Resize(fyne.NewSize(800, 500))
+			dlgSave.Resize(fyne.NewSize(800, 500))
+			dlgSave.SetFileName("mnemonic-" + address[:6] + ".txt")
+			dlgSave.Show()
 		})
 	exportBtn.Importance = widget.HighImportance
 

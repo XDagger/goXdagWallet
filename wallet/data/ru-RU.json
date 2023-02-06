@@ -101,6 +101,8 @@
     "Light": "Светлая",
     "WalletImport_WalletNotExist": "Файл кошелька отсутствует",
     "WalletImport_FilesCopyFailed": "Ошибка копирования файла кошелька",
+    "WalletExport_File_Failed": "Export Mnemonic Failed",
+    "WalletExport_File_Success": "Export Mnemonic Success",
     "WalletCreate_FilesFailed": "Create Wallet Files Failed",
     "Wallet_CreateOrImport": "Создать или импортировать кошелек?",
     "Wallet_Choice": "Выберите",

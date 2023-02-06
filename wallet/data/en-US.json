@@ -101,6 +101,8 @@
   "Light": "Light",
   "WalletImport_WalletNotExist": "Wallet Files not Exist",
   "WalletImport_FilesCopyFailed": "Copy Wallet Files Failed",
+  "WalletExport_File_Failed": "Export Mnemonic Failed",
+  "WalletExport_File_Success": "Export Mnemonic Success",
   "WalletCreate_FilesFailed": "Create Wallet Files Failed",
   "Wallet_CreateOrImport": "Please make a choice, create or import a wallet?",
   "Wallet_Choice": "Choice",
