@@ -5,7 +5,7 @@
     "specified_pool_address": null,
     "is_test_net": false,
     "disable_mining": true,
-    "pool_address": "http://127.0.0.1:10001",
+    "pool_address": "http://43.156.157.212:10001",
     "testnet_api_url": ""
   },
   "version": "0.6.0",

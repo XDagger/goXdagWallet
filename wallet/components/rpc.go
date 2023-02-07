@@ -68,7 +68,6 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) err
 		return errors.New("create transaction block error")
 	}
 	hash, err := xdagjRpc("xdag_sendRawTransaction", blockHexStr)
-	//hash, err := xdagjRpc("Xdag.SendRawTransaction", blockHexStr)
 	if err != nil {
 		return err
 	}
@@ -82,7 +81,6 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) err
 func BalanceRpc(address string) (string, error) {
 
 	return xdagjRpc("xdag_getBalance", address)
-	//return xdagjRpc("Xdag.GetBalance", address)
 }
 
 func transactionBlock(from, to, remark string, value float64, key *secp256k1.PrivateKey) string {

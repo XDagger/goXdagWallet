@@ -6,7 +6,6 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/layout"
-	"path"
 	"time"
 )
 
@@ -14,7 +13,7 @@ func ShowSplashWindow(done chan struct{}) bool {
 	drv := fyne.CurrentApp().Driver()
 	if drv, ok := drv.(desktop.Driver); ok {
 		w := drv.CreateSplashWindow()
-		img := canvas.NewImageFromFile(path.Join("images", "splash.png"))
+		img := canvas.NewImageFromResource(resourceSplashPng)
 		w.SetContent(container.New(layout.NewMaxLayout(), img))
 		w.Resize(fyne.NewSize(570, 380))
 		w.CenterOnScreen()
