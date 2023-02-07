@@ -262,7 +262,7 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 }
 
 func GetAppIcon() fyne.Resource {
-	return resourceIconPng
+	return resourceWalletPng
 }
 
 func getTestTitle() string {
