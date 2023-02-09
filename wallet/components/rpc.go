@@ -216,14 +216,15 @@ func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (s
 	var sb strings.Builder
 	sb.WriteString(block)
 	if hasRemark {
-		for i := 0; i < 18; i++ {
+		for i := 0; i < 22; i++ {
 			sb.WriteString("00000000000000000000000000000000")
 		}
 	} else {
-		for i := 0; i < 20; i++ {
+		for i := 0; i < 24; i++ {
 			sb.WriteString("00000000000000000000000000000000")
 		}
 	}
+
 	pubKey := key.PubKey().SerializeCompressed()
 	sb.WriteString(hex.EncodeToString(pubKey[:]))
 
