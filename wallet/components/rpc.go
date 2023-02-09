@@ -197,7 +197,19 @@ func checkBase58Address(address string) (string, error) {
 		xlog.Error("transaction receive address length error")
 		return "", errors.New("transaction receive address length error")
 	}
+	reverse(addrBytes[:20])
 	return "00000000" + hex.EncodeToString(addrBytes[:20]), nil
+}
+
+func reverse(input []byte) {
+	inputLen := len(input)
+	inputMid := inputLen / 2
+
+	for i := 0; i < inputMid; i++ {
+		j := inputLen - i - 1
+
+		input[i], input[j] = input[j], input[i]
+	}
 }
 
 func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (string, string) {
