@@ -4,8 +4,21 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"os"
 	"unicode"
 )
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil && os.IsNotExist(err) {
+		return false
+	}
+	if err != nil {
+		return false
+	}
+
+	return true
+}
 
 func Amount2xdag(amount uint64) float64 {
 	integer := amount >> 32

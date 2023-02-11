@@ -27,15 +27,18 @@ import (
 	cp "github.com/otiai10/copy"
 )
 
+type WalletState struct {
+	HasAccount    bool
+	Password      string
+	WalletType    int // XDAG: 1, BIP32: 2
+	MnemonicBytes []byte
+}
 type LogonWin struct {
 	Win               fyne.Window
 	BtnContainer      *fyne.Container
 	LogonBtn          *widget.Button
 	ProgressContainer *fyne.Container
-	HasAccount        bool
-	Password          string
-	WalletType        int // XDAG: 1, BIP32: 2
-	MnemonicBytes     []byte
+	WalletState
 }
 
 var StatusInfo = canvas.NewText("", color.White)

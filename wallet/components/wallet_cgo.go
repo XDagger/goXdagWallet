@@ -47,7 +47,7 @@ func ConnectXdagWallet() int32 {
 			}
 		}
 	}
-	fmt.Println(result)
+	//fmt.Println(result)
 	return result
 }
 

@@ -56,18 +56,6 @@ func makeFile(t uint64) string {
 	return path.Join(dir, subdir) + storeFileExt
 }
 
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil && os.IsNotExist(err) {
-		return false
-	}
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
 // LoadBlock loads first wallet block from XDAG storage, ignore check sum
 func LoadBlock(startTime, endTime uint64) ([]byte, error) {
 	var mask uint64
@@ -100,11 +88,11 @@ func LoadBlock(startTime, endTime uint64) ([]byte, error) {
 			} else {
 				return nil, errors.New("block type error")
 			}
-		} else if fileExists(makeDir3(startTime)) {
+		} else if FileExists(makeDir3(startTime)) {
 			mask = (uint64(1) << 16) - 1
-		} else if fileExists(makeDir2(startTime)) {
+		} else if FileExists(makeDir2(startTime)) {
 			mask = (uint64(1) << 24) - 1
-		} else if fileExists(makeDir1(startTime)) {
+		} else if FileExists(makeDir1(startTime)) {
 			mask = (uint64(1) << 32) - 1
 		} else {
 			mask = (uint64(1) << 40) - 1
