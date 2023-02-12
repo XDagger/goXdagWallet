@@ -58,13 +58,13 @@ func Xdag_Wallet_fount() int {
 	}
 }
 
-func ConnectBipWallet() bool {
+func ConnectBipWallet(password string) bool {
 	xlog.Info("Initializing cryptography...")
 	xlog.Info("Reading wallet...")
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
 	wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
-	res := wallet.UnlockWallet(PwdStr)
+	res := wallet.UnlockWallet(password)
 	if wallet.IsHdWalletInitialized() {
 		xlog.Info("Reading Mnemonic...")
 	}
@@ -89,6 +89,7 @@ func NewBipWallet(password string, bitSize int) (*bip.Wallet, bool) {
 			return wallet, true
 		}
 	} else {
+		xlog.Info("creating Mnemonic...")
 		fmt.Printf("Creating Mnemonic...")
 		wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 		wallet.UnlockWallet(password)

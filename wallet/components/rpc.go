@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"goXdagWallet/config"
 	"goXdagWallet/xdago/base58"
 	"goXdagWallet/xdago/common"
@@ -24,7 +23,7 @@ import (
 
 func xdagjRpc(method string, params string) (string, error) {
 	url := config.GetConfig().Option.PoolAddress
-	fmt.Println(url)
+	//fmt.Println(url)
 	var sb strings.Builder
 	sb.WriteString(`{"jsonrpc":"2.0","id":1,"method":"`)
 	sb.WriteString(method)
@@ -32,7 +31,7 @@ func xdagjRpc(method string, params string) (string, error) {
 	sb.WriteString(params)
 	sb.WriteString(`"]}`)
 
-	fmt.Println(sb.String())
+	//fmt.Println(sb.String())
 	jsonData := []byte(sb.String())
 	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -51,7 +50,7 @@ func xdagjRpc(method string, params string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 	errMsg, err := jsonparser.GetString(body, "error", "message")
 	if err == nil {
 		return "", errors.New(errMsg)

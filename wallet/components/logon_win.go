@@ -188,7 +188,7 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 						l.passwordIncorrect()
 					}
 				} else if l.WalletType == HAS_ONLY_BIP {
-					res := ConnectBipWallet()
+					res := ConnectBipWallet(PwdStr)
 					if res {
 						NewWalletWindow(l.WalletType)
 					} else {
