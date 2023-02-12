@@ -38,6 +38,7 @@ func connectWallet() {
 		selectWallet()
 	} else {
 		WalletAccount.Password = showPassword()
+		copy(components.Password[:], WalletAccount.Password)
 	}
 }
 func selectWallet() {
@@ -59,6 +60,7 @@ func selectWallet() {
 		WalletAccount.WalletType = components.HAS_ONLY_XDAG
 	}
 	WalletAccount.Password = showPassword()
+	copy(components.Password[:], WalletAccount.Password)
 }
 func registerWallet() {
 	fmt.Println("Registering wallet....")
