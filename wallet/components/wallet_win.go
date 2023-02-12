@@ -75,11 +75,12 @@ func ConnectBipWallet() bool {
 	return false
 
 }
-func NewBipWallet(password string) (*bip.Wallet, bool) {
+func NewBipWallet(password string, bitSize int) (*bip.Wallet, bool) {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
 	if len(LogonWindow.MnemonicBytes) > 0 {
 		xlog.Info("import Mnemonic...")
+		fmt.Println("Importing Mnemonic...")
 		wallet, err := bip.ImportWalletFromMnemonicStr(string(LogonWindow.MnemonicBytes), pwd, PwdStr)
 		if err != nil {
 			xlog.Error(err)
@@ -88,9 +89,10 @@ func NewBipWallet(password string) (*bip.Wallet, bool) {
 			return wallet, true
 		}
 	} else {
+		fmt.Printf("Creating Mnemonic...")
 		wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 		wallet.UnlockWallet(password)
-		wallet.InitializeHdWallet(bip.NewMnemonic())
+		wallet.InitializeHdWallet(bip.NewMnemonic(bitSize))
 		wallet.AddAccountWithNextHdKey()
 		res := wallet.Flush()
 		return &wallet, res

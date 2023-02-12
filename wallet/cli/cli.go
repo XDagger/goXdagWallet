@@ -74,6 +74,8 @@ func registerWallet() {
 		if result == "Create Mnemonic" {
 			pwd := showPassword()
 			reshowPassword(pwd)
+			w, b := components.NewBipWallet(pwd, 128)
+
 		} else { // Import Mnemonic
 			inputFilePath()
 			WalletAccount.Password = showPassword()
@@ -88,14 +90,15 @@ func OpenAndRunWallet() {
 	s.Start()
 	if WalletAccount.WalletType == components.HAS_ONLY_XDAG {
 		res := components.ConnectXdagWallet()
+		s.Stop()
 		if res == 0 {
 			RunWallet(WalletAccount.WalletType)
 		} else {
 			fmt.Println("Password incorrect")
-			return
 		}
 	} else if WalletAccount.WalletType == components.HAS_ONLY_BIP {
 		res := components.ConnectBipWallet()
+		s.Stop()
 		if res {
 			RunWallet(WalletAccount.WalletType)
 		} else {

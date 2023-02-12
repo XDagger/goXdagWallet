@@ -133,7 +133,7 @@ func (l *LogonWin) StartRegister() bool {
 	StatusInfo.Text = i18n.GetString("WalletState_Registering")
 	canvas.Refresh(StatusInfo)
 
-	w, b := NewBipWallet(PwdStr)
+	w, b := NewBipWallet(PwdStr, 128)
 	BipWallet = w
 	return b
 
@@ -346,7 +346,7 @@ func (l *LogonWin) ImportMnemonic(data []byte) error {
 		return err
 	}
 
-	if len(data) < 15 {
+	if len(data) < 12 || len(data) > 24 || len(data)%3 != 0 {
 		xlog.Error("mnemonic file length error")
 		return errors.New("mnemonic file length error")
 	}

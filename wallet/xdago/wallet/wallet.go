@@ -463,8 +463,8 @@ func generateBip44Key(masterKey *bip32.Key, index uint32) *bip32.Key {
 	return masterKey
 }
 
-func NewMnemonic() string {
-	entropy, _ := bip39.NewEntropy(160)
+func NewMnemonic(bitSize int) string {
+	entropy, _ := bip39.NewEntropy(bitSize)
 	mnemonic, _ := bip39.NewMnemonic(entropy)
 	return mnemonic
 }
@@ -524,7 +524,7 @@ func ImportWalletFromMnemonicFile(pathSrc, dirDest, pwd string) (*Wallet, error)
 
 func ImportWalletFromMnemonicStr(mnemonic, dirDest, pwd string) (*Wallet, error) {
 	words := strings.Fields(mnemonic)
-	if len(words) != 15 {
+	if len(words) < 12 || len(words) > 24 || len(words)%3 != 0 {
 		return nil, errors.New("mnemonic words count is not 15")
 	}
 	w := NewWallet(path.Join(dirDest, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
