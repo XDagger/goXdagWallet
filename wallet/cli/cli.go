@@ -3,17 +3,21 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"github.com/briandowns/spinner"
-	"github.com/manifoldco/promptui"
 	"goXdagWallet/components"
 	"goXdagWallet/config"
 	"goXdagWallet/xdago/base58"
+	"goXdagWallet/xdago/common"
 	"goXdagWallet/xdago/cryptography"
 	"goXdagWallet/xdago/secp256k1"
+	bip "goXdagWallet/xdago/wallet"
 	"goXdagWallet/xlog"
 	"os"
+	"path"
 	"strings"
 	"time"
+
+	"github.com/briandowns/spinner"
+	"github.com/manifoldco/promptui"
 )
 
 var WalletAccount components.WalletState
@@ -63,6 +67,8 @@ func selectWallet() {
 	copy(components.Password[:], WalletAccount.Password)
 }
 func registerWallet() {
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
 	fmt.Println("Registering wallet....")
 	prompt := promptui.Select{
 		Label: "Select Wallet Type",
@@ -83,19 +89,45 @@ func registerWallet() {
 	} else {
 		WalletAccount.WalletType = components.HAS_ONLY_BIP
 		if result == "Create Mnemonic" {
-			pwd := showPassword()
-			reshowPassword(pwd)
-			w, res := components.NewBipWallet(pwd, 128)
+			var psDone bool
+			var passwd string
+			for !psDone {
+				passwd = showPassword()
+				psDone = reshowPassword(passwd)
+			}
+
+			w, res := components.NewBipWallet(passwd, 128)
 			if res {
 				components.BipWallet = w
+				b := cryptography.ToBytesAddress(components.BipWallet.GetDefKey())
+				components.BipAddress = base58.ChkEnc(b[:])
+				components.PwdStr = passwd
+				WalletAccount.Password = passwd
+				OpenAndRunWallet()
+			}
+
+		} else { // Import Mnemonic
+			filePath := inputFilePath()
+			WalletAccount.Password = showPassword()
+
+			pathDest := path.Join(pwd, common.BIP32_WALLET_FOLDER)
+			if err := os.RemoveAll(pathDest); err != nil {
+				fmt.Println("Clear dir failed", err)
+			}
+			if err := os.MkdirAll(pathDest, 0666); err != nil {
+				fmt.Println("Make dir failed", err)
+			}
+			dirDest := path.Join(pathDest, common.BIP32_WALLET_FILE_NAME)
+			components.PwdStr = WalletAccount.Password
+			components.BipWallet, err = bip.ImportWalletFromMnemonicFile(filePath, dirDest, WalletAccount.Password)
+			if err != nil {
+				fmt.Println("Import mnemonic failed", err)
+			} else {
 				b := cryptography.ToBytesAddress(components.BipWallet.GetDefKey())
 				components.BipAddress = base58.ChkEnc(b[:])
 				OpenAndRunWallet()
 			}
 
-		} else { // Import Mnemonic
-			inputFilePath()
-			WalletAccount.Password = showPassword()
 		}
 	}
 }
@@ -127,13 +159,22 @@ func OpenAndRunWallet() {
 
 var validateCmd = func(input string) error {
 	if input != "help" && input != "exit" && input != "account" &&
-		input != "balance" && !strings.HasPrefix(input, "xfer ") {
+		input != "balance" && !strings.HasPrefix(input, "xfer ") &&
+		!strings.HasPrefix(input, "export ") {
 		return errors.New("unknown command, input 'help' to list available commands")
 	}
 	if strings.HasSuffix(input, "xfer ") {
 		items := strings.Fields(input)
 		if len(items) != 4 {
 			return errors.New("transfer command parameters error")
+		}
+
+	}
+
+	if strings.HasSuffix(input, "export ") {
+		items := strings.Fields(input)
+		if len(items) != 2 {
+			return errors.New("export command parameters error")
 		}
 
 	}
@@ -161,8 +202,10 @@ func RunWallet(walletExists int) {
 			fmt.Println("   account -- display address of wallet account")
 			fmt.Println("   balance -- display balance of wallet account")
 			fmt.Println("xfer V A R -- transfer V coins to address A with remark R")
+			if walletExists == components.HAS_ONLY_BIP {
+				fmt.Println("  export P -- export mnemonic to file P")
+			}
 			fmt.Println("---------------------------------------------------------")
-			break
 		case "exit":
 			os.Exit(0)
 		case "account":
@@ -171,7 +214,6 @@ func RunWallet(walletExists int) {
 			} else if walletExists == components.HAS_ONLY_XDAG {
 				fmt.Println(components.XdagAddress)
 			}
-			break
 		case "balance":
 			var balance string
 			var err error
@@ -187,7 +229,6 @@ func RunWallet(walletExists int) {
 			} else {
 				fmt.Println(balance)
 			}
-			break
 		}
 
 		if strings.HasPrefix(result, "xfer ") {
@@ -208,6 +249,16 @@ func RunWallet(walletExists int) {
 				fmt.Println("Transfer failed", err)
 			} else {
 				fmt.Println("Transfer has been committed. Please wait for a while to get it done")
+			}
+		}
+
+		if strings.HasPrefix(result, "export ") {
+			items := strings.Fields(result)
+			err := components.BipWallet.ExportMnemonic(items[1])
+			if err != nil {
+				fmt.Println("Export mnemonic failed", err)
+			} else {
+				fmt.Println("Export mnemonic success")
 			}
 		}
 	}

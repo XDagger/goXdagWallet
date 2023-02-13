@@ -3,8 +3,9 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"github.com/manifoldco/promptui"
 	xdagoUtils "goXdagWallet/xdago/utils"
+
+	"github.com/manifoldco/promptui"
 )
 
 var validate = func(input string) error {
@@ -14,7 +15,7 @@ var validate = func(input string) error {
 	return nil
 }
 
-func inputFilePath() {
+func inputFilePath() string {
 	prompt := promptui.Prompt{
 		Label:    "Path to Mnemonic text file",
 		Validate: validate,
@@ -26,7 +27,7 @@ func inputFilePath() {
 		fmt.Printf("Input path failed %v\n", err)
 		result, err = prompt.Run()
 	}
-	fmt.Println(result)
+	return result
 
 }
 
