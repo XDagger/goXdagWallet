@@ -284,7 +284,7 @@ func getTestTitle() string {
 	return testNet
 }
 
-func checkOldWallet(walletDir string) bool {
+func CheckOldWallet(walletDir string) bool {
 
 	pathName := path.Join(walletDir, "dnet_key.dat")
 	fi, err := os.Stat(pathName)
@@ -310,7 +310,7 @@ func checkOldWallet(walletDir string) bool {
 	return err == nil
 }
 
-func (l *LogonWin) copyOldWallet(walletDir string) error {
+func CopyOldWallet(walletDir string) error {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
 	pathDest := path.Join(pwd, "xdagj_dat")
@@ -330,7 +330,7 @@ func (l *LogonWin) copyOldWallet(walletDir string) error {
 		return err
 	}
 
-	l.importConfig(walletDir)
+	//l.importConfig(walletDir)
 
 	return nil
 }
@@ -471,16 +471,17 @@ func (l *LogonWin) CreateOrImport(pwd string) {
 							if uri == nil || err != nil {
 								return
 							}
-							if !checkOldWallet(uri.Path()) {
+							if !CheckOldWallet(uri.Path()) {
 								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 									i18n.GetString("WalletImport_WalletNotExist"), l.Win)
 								return
 							}
-							if l.copyOldWallet(uri.Path()) != nil {
+							if CopyOldWallet(uri.Path()) != nil {
 								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 									i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
 								return
 							}
+							l.importConfig(uri.Path())
 							l.HasAccount = true
 							l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
 								i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
