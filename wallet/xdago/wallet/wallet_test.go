@@ -223,7 +223,7 @@ func tearDown(w *Wallet) {
 }
 
 func TestNewMnemonic(t *testing.T) {
-	mnemonic := NewMnemonic()
+	mnemonic := NewMnemonic(128)
 	fmt.Println(mnemonic)
 
 }
@@ -237,7 +237,7 @@ func TestNewBipWallet(t *testing.T) {
 	}
 	w := NewWallet(path.Join(common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 	w.UnlockWallet("ljr20040224")
-	mnemonic := NewMnemonic()
+	mnemonic := NewMnemonic(128)
 	w.InitializeHdWallet(mnemonic)
 	w.AddAccountWithNextHdKey()
 	fmt.Println(w.mnemonicPhrase)
