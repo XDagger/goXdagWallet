@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/manifoldco/promptui"
 	"goXdagWallet/components"
 	"goXdagWallet/config"
 	"goXdagWallet/xdago/base58"
@@ -11,14 +12,9 @@ import (
 	"goXdagWallet/xlog"
 	"os"
 	"path"
-	"time"
-
-	"github.com/briandowns/spinner"
-	"github.com/manifoldco/promptui"
 )
 
 var WalletAccount components.WalletState
-var spin = spinner.New(spinner.CharSets[9], 100*time.Millisecond) // Build our new spinner
 
 func NewCli(accountStatus int) {
 	fmt.Println("Starting xdag wallet, version ", config.GetConfig().Version)
