@@ -109,5 +109,6 @@
   "Wallet_Create": "Create",
   "Wallet_Import": "Import",
   "Wallet_Export": "Export Mnemonic",
+  "Display_Mnemonic": "Display Mnemonic",
   "Rpc_Get_Balance_fail": "Get account balance failed"
 }

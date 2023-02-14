@@ -109,5 +109,6 @@
   "Wallet_Create": "新建",
   "Wallet_Import": "导入",
   "Wallet_Export": "导出助记词",
+  "Display_Mnemonic": "查看助记词",
   "Rpc_Get_Balance_fail": "获取账户余额失败"
 }

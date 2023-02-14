@@ -14,6 +14,7 @@ import (
 	"goXdagWallet/i18n"
 	"goXdagWallet/xlog"
 	"io"
+	"strings"
 )
 
 type myEntry struct {
@@ -47,7 +48,12 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("WalletWindow_AddressCopied"), w)
 	})
-
+	displayBtn := widget.NewButtonWithIcon(i18n.GetString("Display_Mnemonic"), theme.FileIcon(),
+		func() {
+			dialog.ShowCustom(i18n.GetString("Common_MessageTitle"), i18n.GetString("Common_Cancel"),
+				formatMnemonic(BipWallet.GetMnemonic()), w)
+		})
+	displayBtn.Importance = widget.HighImportance
 	exportBtn := widget.NewButtonWithIcon(i18n.GetString("Wallet_Export"), theme.FileIcon(),
 		func() {
 			dlgSave := dialog.NewFileSave(
@@ -93,7 +99,8 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("Rpc_Get_Balance_fail"), WalletWindow)
 	}
-	exportBtnContainer := container.New(layout.NewPaddedLayout(), exportBtn)
+	exportBtnContainer := container.New(layout.NewHBoxLayout(), layout.NewSpacer(), exportBtn,
+		layout.NewSpacer(), displayBtn, layout.NewSpacer())
 	var png []byte
 	png, _ = qrcode.Encode("xdag:"+address, qrcode.Medium, 256)
 
@@ -118,6 +125,14 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 		container.NewHBox(layout.NewSpacer(), image, layout.NewSpacer()))
 	if LogonWindow.WalletType == HAS_ONLY_XDAG {
 		c.Remove(exportBtnContainer)
+	}
+	return c
+}
+
+func formatMnemonic(m string) fyne.CanvasObject {
+	c := container.New(layout.NewGridLayout(3))
+	for _, k := range strings.Fields(m) {
+		c.Add(widget.NewLabel(k))
 	}
 	return c
 }
