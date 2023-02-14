@@ -3,8 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"github.com/briandowns/spinner"
-	"github.com/manifoldco/promptui"
 	"goXdagWallet/components"
 	"goXdagWallet/xdago/base58"
 	"goXdagWallet/xdago/cryptography"
@@ -12,8 +10,12 @@ import (
 	xdagoUtils "goXdagWallet/xdago/utils"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/briandowns/spinner"
+	"github.com/manifoldco/promptui"
 )
 
 var spin = spinner.New(spinner.CharSets[9], 100*time.Millisecond) // Build our new spinner
@@ -46,18 +48,27 @@ func OpenAndRunWallet() {
 var validateCmd = func(input string) error {
 	if input != "help" && input != "exit" && input != "account" &&
 		input != "balance" && !strings.HasPrefix(input, "xfer ") &&
-		!strings.HasPrefix(input, "export ") {
+		input != "mnemonic" && !strings.HasPrefix(input, "export ") {
 		return errors.New("unknown command, input 'help' to list available commands")
 	}
-	if strings.HasSuffix(input, "xfer ") {
+	if strings.HasPrefix(input, "xfer ") {
 		items := strings.Fields(input)
 		if len(items) != 4 {
 			return errors.New("transfer command parameters error")
 		}
-
+		if !components.ValidateBipAddress(items[2]) {
+			return errors.New("address format error")
+		}
+		value, err := strconv.ParseFloat(items[1], 64)
+		if err != nil || value <= 0.0 {
+			return errors.New("amount number error")
+		}
+		if !components.ValidateRemark(items[3]) {
+			return errors.New("remark format error")
+		}
 	}
 
-	if strings.HasSuffix(input, "export ") {
+	if strings.HasPrefix(input, "export ") {
 		items := strings.Fields(input)
 		if len(items) != 2 {
 			return errors.New("export command parameters error")
@@ -96,6 +107,7 @@ func RunWallet(walletExists int) {
 			fmt.Println("   balance -- display balance of wallet account")
 			fmt.Println("xfer V A R -- transfer V coins to address A with remark R")
 			if walletExists == components.HAS_ONLY_BIP {
+				fmt.Println("  mnemonic -- display mnemonic of wallet account")
 				fmt.Println("  export P -- export mnemonic to file P")
 			}
 			fmt.Println("---------------------------------------------------------")
@@ -122,6 +134,12 @@ func RunWallet(walletExists int) {
 			} else {
 				fmt.Println(balance)
 			}
+		case "mnemonic":
+			if walletExists == components.HAS_ONLY_BIP {
+				fmt.Println(components.BipWallet.GetMnemonic())
+			} else {
+				fmt.Println("It's a Non Mnemonic wallet")
+			}
 		}
 
 		if strings.HasPrefix(result, "xfer ") {
@@ -136,6 +154,20 @@ func RunWallet(walletExists int) {
 				fromAddress = components.XdagAddress
 				fromKey = components.XdagKey
 			}
+
+			fromValue, errBlc := components.BalanceRpc(fromAddress)
+			if errBlc != nil {
+				spin.Stop()
+				fmt.Println("Get balance failed", errBlc)
+				continue
+			}
+			balance, _ := strconv.ParseFloat(fromValue, 64)
+			value, _ := strconv.ParseFloat(items[1], 64)
+			if balance < value {
+				spin.Stop()
+				fmt.Println("Insufficient amount")
+				continue
+			}
 			errTx := components.TransferRpc(fromAddress, items[2], items[1], items[3], fromKey)
 			spin.Stop()
 			if errTx != nil {
@@ -146,12 +178,16 @@ func RunWallet(walletExists int) {
 		}
 
 		if strings.HasPrefix(result, "export ") {
-			items := strings.Fields(result)
-			errExp := components.BipWallet.ExportMnemonic(items[1])
-			if errExp != nil {
-				fmt.Println("Export mnemonic failed", err)
+			if walletExists == components.HAS_ONLY_BIP {
+				items := strings.Fields(result)
+				errExp := components.BipWallet.ExportMnemonic(items[1])
+				if errExp != nil {
+					fmt.Println("Export mnemonic failed", err)
+				} else {
+					fmt.Println("Export mnemonic success")
+				}
 			} else {
-				fmt.Println("Export mnemonic success")
+				fmt.Println("It's a Non Mnemonic wallet")
 			}
 		}
 	}

@@ -14,7 +14,21 @@ var HelloServiceName = "Xdag"
 
 type Xdag struct{}
 
-func (s *Xdag) SendRawTransaction(request string, replay *string) error {
+func (s *Xdag) UnlockWallet(request string, replay *string) error {
+	b, _ := hex.DecodeString(request)
+	hash := cryptography.HashTwice(b)
+	*replay = hex.EncodeToString(hash[:])
+	return nil
+}
+
+func (s *Xdag) LockWallet(request string, replay *string) error {
+	b, _ := hex.DecodeString(request)
+	hash := cryptography.HashTwice(b)
+	*replay = hex.EncodeToString(hash[:])
+	return nil
+}
+
+func (s *Xdag) Transfer(request string, replay *string) error {
 	b, _ := hex.DecodeString(request)
 	hash := cryptography.HashTwice(b)
 	*replay = hex.EncodeToString(hash[:])
@@ -27,7 +41,7 @@ func (s *Xdag) GetBalance(request string, replay *string) error {
 	return nil
 }
 
-func RunServer() {
+func RunServer(ip, port string) {
 	rpc.RegisterName(HelloServiceName, new(Xdag))
 
 	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
@@ -41,6 +55,5 @@ func RunServer() {
 		rpc.ServeRequest(jsonrpc.NewServerCodec(conn)) //rpc.ServeRequest类似于rpc.ServeCodec,以同步的方式处理请求
 	})
 
-	http.ListenAndServe("127.0.0.1:10001", nil)
-
+	http.ListenAndServe(ip+":"+port, nil)
 }
