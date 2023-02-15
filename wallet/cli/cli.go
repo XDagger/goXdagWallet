@@ -34,7 +34,7 @@ func connectWallet() {
 	if WalletAccount.WalletType == components.HAS_BOTH {
 		selectWallet()
 	} else {
-		WalletAccount.Password = showPassword()
+		WalletAccount.Password = ShowPassword()
 		copy(components.Password[:], WalletAccount.Password)
 	}
 }
@@ -56,7 +56,7 @@ func selectWallet() {
 	} else {
 		WalletAccount.WalletType = components.HAS_ONLY_XDAG
 	}
-	WalletAccount.Password = showPassword()
+	WalletAccount.Password = ShowPassword()
 	copy(components.Password[:], WalletAccount.Password)
 }
 func registerWallet() {
@@ -81,7 +81,7 @@ func registerWallet() {
 		if components.CopyOldWallet(folder) != nil {
 			fmt.Println("Import wallet data failed")
 		} else {
-			WalletAccount.Password = showPassword()
+			WalletAccount.Password = ShowPassword()
 			copy(components.Password[:], WalletAccount.Password)
 			res := components.ConnectXdagWallet()
 			if res == 0 {
@@ -96,7 +96,7 @@ func registerWallet() {
 			var psDone bool
 			var passwd string
 			for !psDone {
-				passwd = showPassword()
+				passwd = ShowPassword()
 				psDone = reshowPassword(passwd)
 			}
 
@@ -111,8 +111,8 @@ func registerWallet() {
 			}
 
 		} else { // Import Mnemonic
-			filePath := inputFilePath()
-			WalletAccount.Password = showPassword()
+			filePath := InputFilePath()
+			WalletAccount.Password = ShowPassword()
 
 			pathDest := path.Join(pwd, common.BIP32_WALLET_FOLDER)
 			if err := os.RemoveAll(pathDest); err != nil {

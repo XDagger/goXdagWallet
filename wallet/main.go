@@ -70,8 +70,10 @@ func main() {
 		cli.NewCli(accountStatus)
 	} else if *mode == "server" {
 		if accountStatus != components.HAS_ONLY_BIP {
-			fmt.Println("Wallet not found")
-			return
+			err := server.ImportServWallet()
+			if err != nil {
+				return
+			}
 		}
 		if net.ParseIP(*ip) == nil {
 			fmt.Println("Ip address format error")

@@ -38,7 +38,7 @@ var validateFolder = func(input string) error {
 	}
 }
 
-func inputFilePath() string {
+func InputFilePath() string {
 	prompt := promptui.Prompt{
 		Label:    "Path to Mnemonic text file",
 		Validate: validateFile,

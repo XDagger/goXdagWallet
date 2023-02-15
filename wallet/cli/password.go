@@ -14,7 +14,7 @@ var validatePwd = func(input string) error {
 	return nil
 }
 
-func showPassword() string {
+func ShowPassword() string {
 	prompt := promptui.Prompt{
 		Label:    "Password",
 		Validate: validatePwd,
