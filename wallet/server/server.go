@@ -1,43 +1,126 @@
 package server
 
 import (
-	"encoding/hex"
+	"errors"
 	"fmt"
+	"goXdagWallet/components"
+	"goXdagWallet/xdago/base58"
 	"goXdagWallet/xdago/cryptography"
 	"io"
 	"net/http"
 	"net/rpc"
 	"net/rpc/jsonrpc"
+	"strconv"
+	"sync"
 )
 
 var HelloServiceName = "Xdag"
 
-type Xdag struct{}
+type XferParem struct {
+	Amount  string
+	Address string
+	Remark  string
+}
 
-func (s *Xdag) UnlockWallet(request string, replay *string) error {
-	b, _ := hex.DecodeString(request)
-	hash := cryptography.HashTwice(b)
-	*replay = hex.EncodeToString(hash[:])
+type Xdag struct {
+	lock sync.Mutex
+}
+
+func (s *Xdag) Unlock(password string, reply *string) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	res := components.ConnectBipWallet(password)
+	if res {
+		components.PwdStr = password
+		b := cryptography.ToBytesAddress(components.BipWallet.GetDefKey())
+		components.BipAddress = base58.ChkEnc(b[:])
+	} else {
+		return errors.New("incorrect password")
+	}
+	*reply = components.BipAddress
 	return nil
 }
 
-func (s *Xdag) LockWallet(request string, replay *string) error {
-	b, _ := hex.DecodeString(request)
-	hash := cryptography.HashTwice(b)
-	*replay = hex.EncodeToString(hash[:])
+func (s *Xdag) Lock(password string, reply *string) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if components.PwdStr == "" || components.BipAddress == "" {
+		*reply = "wallet locked"
+		return nil
+	}
+	if components.BipWallet == nil {
+		*reply = "wallet locked"
+		return nil
+	}
+	if password != components.PwdStr {
+		return errors.New("incorrect password")
+	}
+
+	components.BipWallet.LockWallet()
+	*reply = components.BipAddress
+	components.PwdStr = ""
+	components.BipAddress = ""
 	return nil
 }
 
-func (s *Xdag) Transfer(request string, replay *string) error {
-	b, _ := hex.DecodeString(request)
-	hash := cryptography.HashTwice(b)
-	*replay = hex.EncodeToString(hash[:])
+func (s *Xdag) Account(request string, reply *string) error {
+	if components.PwdStr == "" || components.BipAddress == "" ||
+		components.BipWallet == nil || components.BipWallet.IsLocked() {
+		return errors.New("wallet is locked")
+	}
+	*reply = components.BipAddress
 	return nil
 }
 
-func (s *Xdag) GetBalance(request string, replay *string) error {
-	fmt.Println(request)
-	*replay = "1024.000000000"
+func (s *Xdag) Transfer(request XferParem, reply *string) error {
+	if components.PwdStr == "" || components.BipAddress == "" ||
+		components.BipWallet == nil || components.BipWallet.IsLocked() {
+		return errors.New("wallet is locked")
+	}
+	if !components.ValidateBipAddress(request.Address) {
+		return errors.New("address format error")
+	}
+	value, err := strconv.ParseFloat(request.Amount, 64)
+	if err != nil || value <= 0.0 {
+		return errors.New("amount number error")
+	}
+	if !components.ValidateRemark(request.Remark) {
+		return errors.New("remark format error")
+	}
+
+	fromValue, err := components.BalanceRpc(components.BipAddress)
+	if err != nil {
+		return err
+	}
+	balance, _ := strconv.ParseFloat(fromValue, 64)
+	if balance < value {
+		return errors.New("insufficient amount")
+	}
+	err = components.TransferRpc(components.BipAddress, request.Address,
+		request.Amount, request.Remark, components.BipWallet.GetDefKey())
+	if err != nil {
+		return err
+	}
+	*reply = components.BipAddress
+	return nil
+}
+
+func (s *Xdag) Balance(address string, reply *string) error {
+	if components.PwdStr == "" || components.BipAddress == "" ||
+		components.BipWallet == nil || components.BipWallet.IsLocked() {
+		return errors.New("wallet is locked")
+	}
+
+	if address == "" {
+		address = components.BipAddress
+	} else if !components.ValidateBipAddress(address) {
+		return errors.New("invalid address")
+	}
+	balance, err := components.BalanceRpc(address)
+	if err != nil {
+		return err
+	}
+	*reply = balance
 	return nil
 }
 
@@ -52,8 +135,8 @@ func RunServer(ip, port string) {
 			ReadCloser: r.Body,
 			Writer:     rw,
 		}
-		rpc.ServeRequest(jsonrpc.NewServerCodec(conn)) //rpc.ServeRequest类似于rpc.ServeCodec,以同步的方式处理请求
+		rpc.ServeRequest(jsonrpc.NewServerCodec(conn))
 	})
-
+	fmt.Println("Listen and serve on", ip+":"+port, "...")
 	http.ListenAndServe(ip+":"+port, nil)
 }

@@ -3,15 +3,20 @@ package main
 
 import (
 	"flag"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
+	"fmt"
 	"goXdagWallet/cli"
 	"goXdagWallet/components"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
+	"goXdagWallet/server"
 	"goXdagWallet/xlog"
+	"net"
 	"os"
 	"path"
+	"strconv"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
 )
 
 var splashDone = make(chan struct{})
@@ -36,6 +41,8 @@ func main() {
 	accountStatus := components.Xdag_Wallet_fount() // search wallet data files
 
 	mode := flag.String("mode", "gui", "run mode: gui, cli, server")
+	ip := flag.String("ip", "127.0.0.1", "rpc server ip address")
+	port := flag.Uint("port", 10001, "rpc server port number")
 	flag.Parse()
 
 	if *mode == "gui" {
@@ -61,6 +68,22 @@ func main() {
 		components.WalletApp.Run()
 	} else if *mode == "cli" {
 		cli.NewCli(accountStatus)
+	} else if *mode == "server" {
+		if accountStatus != components.HAS_ONLY_BIP {
+			fmt.Println("Wallet not found")
+			return
+		}
+		if net.ParseIP(*ip) != nil {
+			fmt.Println("Ip address format error")
+			return
+		}
+		if *port < 1 || *port > 65535 {
+			fmt.Println("Port number error")
+			return
+		}
+		server.RunServer(*ip, strconv.Itoa(int(*port)))
+	} else {
+		fmt.Println("Unknown mode")
 	}
 	os.Unsetenv("FYNE_FONT")
 }

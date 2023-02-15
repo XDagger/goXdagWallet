@@ -1,6 +1,11 @@
 package components
 
 import (
+	"goXdagWallet/i18n"
+	"goXdagWallet/xlog"
+	"io"
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -11,10 +16,6 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	qrcode "github.com/skip2/go-qrcode"
-	"goXdagWallet/i18n"
-	"goXdagWallet/xlog"
-	"io"
-	"strings"
 )
 
 type myEntry struct {
@@ -53,7 +54,7 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 			dialog.ShowCustom(i18n.GetString("Common_MessageTitle"), i18n.GetString("Common_Cancel"),
 				formatMnemonic(BipWallet.GetMnemonic()), w)
 		})
-	displayBtn.Importance = widget.HighImportance
+	displayBtn.Importance = widget.MediumImportance
 	exportBtn := widget.NewButtonWithIcon(i18n.GetString("Wallet_Export"), theme.FileIcon(),
 		func() {
 			dlgSave := dialog.NewFileSave(
@@ -99,8 +100,8 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("Rpc_Get_Balance_fail"), WalletWindow)
 	}
-	exportBtnContainer := container.New(layout.NewHBoxLayout(), layout.NewSpacer(), exportBtn,
-		layout.NewSpacer(), displayBtn, layout.NewSpacer())
+	exportBtnContainer := container.New(layout.NewHBoxLayout(), layout.NewSpacer(), displayBtn,
+		layout.NewSpacer(), exportBtn, layout.NewSpacer())
 	var png []byte
 	png, _ = qrcode.Encode("xdag:"+address, qrcode.Medium, 256)
 
