@@ -16,10 +16,10 @@ import (
 
 var HelloServiceName = "Xdag"
 
-type XferParem struct {
-	Amount  string
-	Address string
-	Remark  string
+type XferParam struct {
+	Amount  string `json:"amount"`
+	Address string `json:"address"`
+	Remark  string `json:"remark"`
 }
 
 type Xdag struct {
@@ -37,7 +37,7 @@ func (s *Xdag) Unlock(password string, reply *string) error {
 	} else {
 		return errors.New("incorrect password")
 	}
-	*reply = components.BipAddress
+	*reply = "success"
 	return nil
 }
 
@@ -57,9 +57,9 @@ func (s *Xdag) Lock(password string, reply *string) error {
 	}
 
 	components.BipWallet.LockWallet()
-	*reply = components.BipAddress
 	components.PwdStr = ""
 	components.BipAddress = ""
+	*reply = "success"
 	return nil
 }
 
@@ -72,7 +72,7 @@ func (s *Xdag) Account(request string, reply *string) error {
 	return nil
 }
 
-func (s *Xdag) Transfer(request XferParem, reply *string) error {
+func (s *Xdag) Transfer(request XferParam, reply *string) error {
 	if components.PwdStr == "" || components.BipAddress == "" ||
 		components.BipWallet == nil || components.BipWallet.IsLocked() {
 		return errors.New("wallet is locked")
@@ -101,7 +101,7 @@ func (s *Xdag) Transfer(request XferParem, reply *string) error {
 	if err != nil {
 		return err
 	}
-	*reply = components.BipAddress
+	*reply = "success"
 	return nil
 }
 

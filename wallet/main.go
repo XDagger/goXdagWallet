@@ -73,7 +73,7 @@ func main() {
 			fmt.Println("Wallet not found")
 			return
 		}
-		if net.ParseIP(*ip) != nil {
+		if net.ParseIP(*ip) == nil {
 			fmt.Println("Ip address format error")
 			return
 		}
