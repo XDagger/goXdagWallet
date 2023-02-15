@@ -34,7 +34,7 @@ Mobile version is coming.
   - method: Xdag.Balance
     - params: ["\<wallet address\>"]
     - response: {"id":1,"result": "\<balance of the address\>","error":null}
-  - method: Xdag.Tranfer
+  - method: Xdag.Transfer
     - params: [{"amount":"\<amount\>","address":"\<to address\>","remark":"\<remark\>"}]
     - response: {"id":1,"result": "success","error":null}
 
