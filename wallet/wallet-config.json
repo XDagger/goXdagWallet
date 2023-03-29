@@ -6,7 +6,7 @@
     "is_test_net": false,
     "disable_mining": true,
     "pool_address": "http://43.156.157.212:10001",
-    "testnet_api_url": ""
+    "testnet_api_url": "http://43.156.157.212/api/block"
   },
   "version": "0.6.0",
   "culture_info": "en-US",

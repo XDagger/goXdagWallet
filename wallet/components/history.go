@@ -351,7 +351,13 @@ func refreshTable(page int, query string) {
 	if getApiUrl() == "" {
 		return
 	}
-	err := getUrl(getApiUrl(), XdagAddress, query, page, &body)
+	var address string
+	if LogonWindow.WalletType == HAS_ONLY_XDAG {
+		address = XdagAddress
+	} else {
+		address = BipAddress
+	}
+	err := getUrl(getApiUrl(), address, query, page, &body)
 	if err != nil {
 		historyProgressContainer.Hide()
 		historyRefreshContainer.Show()
@@ -400,7 +406,7 @@ func refreshTable(page int, query string) {
 	}
 	pageLabel.Set(strconv.Itoa(curPage) + "/" + strconv.Itoa(pageCount))
 
-	historyStatus.Set(i18n.GetString("WalletWindow_HistoryColumns_BlockAddress") + " : " + XdagAddress)
+	historyStatus.Set(i18n.GetString("WalletWindow_HistoryColumns_BlockAddress") + " : " + address)
 
 	historyTable = widget.NewTable(
 		func() (int, int) { return len(historyData) + 1, 5 },
@@ -517,6 +523,10 @@ func getApiUrl() string {
 			return "https://testexplorer.xdag.io/api/block"
 		}
 	} else {
-		return "https://explorer.xdag.io/api/block"
+		if len(config.GetConfig().Option.TestnetApiUrl) > 0 {
+			return config.GetConfig().Option.TestnetApiUrl
+		} else {
+			return "https://explorer.xdag.io/api/block"
+		}
 	}
 }
