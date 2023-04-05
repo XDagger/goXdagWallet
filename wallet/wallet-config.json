@@ -5,8 +5,8 @@
     "specified_pool_address": null,
     "is_test_net": false,
     "disable_mining": true,
-    "pool_address": "http://43.156.157.212:10001",
-    "testnet_api_url": "http://43.156.157.212/api/block"
+    "pool_address": "https://mainnet-rpc.xdagj.org:10001",
+    "testnet_api_url": ""
   },
   "version": "0.6.0",
   "culture_info": "en-US",

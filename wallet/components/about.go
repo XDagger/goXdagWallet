@@ -13,8 +13,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// TODO: change community address to BIP32
-const CommunityAddress = "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
+const (
+	CommunityOldAddress = "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
+	CommunityAddress    = "84ke9P9FsxruqX6Jz14Tsqt6bsZusmMJd"
+)
 
 func AboutPage(w fyne.Window) *fyne.Container {
 	link, _ := url.Parse("https://xdag.io/")
