@@ -3,6 +3,15 @@ package components
 import (
 	"compress/gzip"
 	"errors"
+	"goXdagWallet/config"
+	"goXdagWallet/i18n"
+	"io"
+	"net/http"
+	"net/url"
+	"regexp"
+	"strconv"
+	"time"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
@@ -11,15 +20,6 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/buger/jsonparser"
-	"goXdagWallet/config"
-	"goXdagWallet/i18n"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"regexp"
-	"strconv"
-	"time"
 )
 
 type HistoryItem struct {
@@ -44,7 +44,7 @@ var prevBtn *widget.Button
 var pageLabel = binding.NewString()
 var queryParam string
 var defaultParam string
-var re = regexp.MustCompile("^((19|20|21)\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$")
+var re = regexp.MustCompile(`^((19|20|21)[0-9][0-9])-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$`)
 
 func dateValidator() fyne.StringValidator {
 	return func(text string) error {
@@ -198,6 +198,7 @@ func setDefaultFilter(amountFrom, amountTo *numericalEntry, dateFrom, remark *wi
 }
 func HistoryPage(w fyne.Window) *fyne.Container {
 	defaultParam = loadQuery()
+	queryParam = defaultParam
 	refreshBtn := widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 		historyStatus.Set(i18n.GetString("WalletWindow_HistoryBusy"))
 		historyProgressContainer.Show()
@@ -350,7 +351,13 @@ func refreshTable(page int, query string) {
 	if getApiUrl() == "" {
 		return
 	}
-	err := getUrl(getApiUrl(), Address, query, page, &body)
+	var address string
+	if LogonWindow.WalletType == HAS_ONLY_XDAG {
+		address = XdagAddress
+	} else {
+		address = BipAddress
+	}
+	err := getUrl(getApiUrl(), address, query, page, &body)
 	if err != nil {
 		historyProgressContainer.Hide()
 		historyRefreshContainer.Show()
@@ -385,12 +392,11 @@ func refreshTable(page int, query string) {
 	current, _ := jsonparser.GetInt(body, "addresses_pagination", "current_page")
 	prev, _ := jsonparser.GetString(body, "addresses_pagination", "links", "prev")
 	if len(prev) == 0 {
-		current = 0
 		prevBtn.Disable()
 	} else {
 		prevBtn.Enable()
 	}
-	curPage = int(current + 1)
+	curPage = int(current)
 
 	next, _ := jsonparser.GetString(body, "addresses_pagination", "links", "next")
 	if len(next) == 0 {
@@ -400,7 +406,7 @@ func refreshTable(page int, query string) {
 	}
 	pageLabel.Set(strconv.Itoa(curPage) + "/" + strconv.Itoa(pageCount))
 
-	historyStatus.Set(i18n.GetString("WalletWindow_HistoryColumns_BlockAddress") + " : " + Address)
+	historyStatus.Set(i18n.GetString("WalletWindow_HistoryColumns_BlockAddress") + " : " + address)
 
 	historyTable = widget.NewTable(
 		func() (int, int) { return len(historyData) + 1, 5 },
@@ -447,10 +453,16 @@ func refreshTable(page int, query string) {
 			}
 
 		})
-	historyTable.SetColumnWidth(0, 82)
+	if config.GetConfig().CultureInfo == "ru-RU" ||
+		config.GetConfig().CultureInfo == "fr-FR" {
+		historyTable.SetColumnWidth(0, 122)
+	} else {
+		historyTable.SetColumnWidth(0, 82)
+	}
+
 	historyTable.SetColumnWidth(1, 178)
 	historyTable.SetColumnWidth(2, 372)
-	historyTable.SetColumnWidth(3, 222)
+	historyTable.SetColumnWidth(3, 188)
 	historyTable.SetColumnWidth(4, 152)
 	historyTable.Refresh()
 	if total == 0 {
@@ -496,7 +508,7 @@ func getUrl(apiUrl, address, query string, page int, body *[]byte) error {
 	default:
 		reader = resp.Body
 	}
-	*body, err = ioutil.ReadAll(resp.Body)
+	*body, err = io.ReadAll(reader)
 	if err != nil {
 		return err
 	}
@@ -511,6 +523,10 @@ func getApiUrl() string {
 			return "https://testexplorer.xdag.io/api/block"
 		}
 	} else {
-		return "https://explorer.xdag.io/api/block"
+		if len(config.GetConfig().Option.TestnetApiUrl) > 0 {
+			return config.GetConfig().Option.TestnetApiUrl
+		} else {
+			return "https://explorer.xdag.io/api/block"
+		}
 	}
 }

@@ -2,8 +2,8 @@ package i18n
 
 import (
 	"encoding/json"
+	"errors"
 	"goXdagWallet/config"
-	"io/ioutil"
 	"os"
 	"path"
 )
@@ -14,7 +14,7 @@ func stringRead(res string) []byte {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
 
-	bytes, err := ioutil.ReadFile(path.Join(pwd, "data", res))
+	bytes, err := os.ReadFile(path.Join(pwd, "data", res))
 	if err != nil {
 		return nil
 	}
@@ -25,7 +25,7 @@ func LoadI18nStrings() error {
 	lang := config.GetConfig().CultureInfo
 	data := stringRead(lang + ".json")
 	if len(data) == 0 {
-		return nil
+		return errors.New(lang + ".json reading error")
 	}
 	err := json.Unmarshal(data, &i18n)
 	if err != nil {

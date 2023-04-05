@@ -3,15 +3,18 @@ package components
 import (
 	"errors"
 	"fmt"
+	"goXdagWallet/config"
+	"goXdagWallet/i18n"
+	"goXdagWallet/xdago/secp256k1"
+	"goXdagWallet/xlog"
+	"strconv"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"goXdagWallet/config"
-	"goXdagWallet/i18n"
-	"strconv"
 )
 
 var TransStatus = widget.NewLabel("")
@@ -20,12 +23,14 @@ var TransProgressContainer *fyne.Container
 var AddressList *widget.List
 var AddressEntry = widget.NewEntry()
 
+//var SelectedAddress *widget.RadioGroup
+
 func addressValidator() fyne.StringValidator {
 	return func(text string) error {
 		if text == "" {
 			return nil
 		}
-		if ValidateAddress(text) {
+		if ValidateBipAddress(text) {
 			return nil
 		}
 		return errors.New(i18n.GetString("TransferWindow_AccountFormatError"))
@@ -44,7 +49,7 @@ func remarkValidator() fyne.StringValidator {
 	}
 }
 
-func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fyne.Container {
+func TransferPage(w fyne.Window) *fyne.Container {
 	amount := newNumericalEntry()
 	remark := widget.NewEntry()
 	AddressEntry.Validator = addressValidator()
@@ -53,11 +58,24 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 	TransProgressContainer = container.New(layout.NewPaddedLayout(), widget.NewProgressBarInfinite())
 	TransProgressContainer.Hide()
 
+	//if LogonWindow.WalletType == HAS_BOTH {
+	//	SelectedAddress = widget.NewRadioGroup([]string{
+	//		XdagAddress,
+	//		BipAddress}, func(selected string) {
+	//	})
+	//	SelectedAddress.Selected = XdagAddress
+	//	//SelectedAddress.Horizontal = true
+	//	SelectedAddress.Required = true
+	//
+	//}
 	btn := widget.NewButtonWithIcon(i18n.GetString("TransferWindow_TransferTitle"), theme.ConfirmIcon(),
 		func() {
-			if !checkInput(AddressEntry.Text, amount.Text, remark.Text, w) {
+			fromAccountPrivKey, fromAddress, fromValue := SelTransFromAddr()
+
+			if !checkInput(fromValue, AddressEntry.Text, amount.Text, remark.Text, w) {
 				return
 			}
+
 			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, AddressEntry.Text)
 			//fmt.Println(message)
 			dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
@@ -65,8 +83,18 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 					if b {
 						TransProgressContainer.Show()
 						TransBtnContainer.Hide()
+						DonaTransProgressContainer.Show()
+						DonaTransBtnContainer.Hide()
 						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						transWrap(AddressEntry.Text, amount.Text, remark.Text)
+						DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
+						err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
+						if err == nil {
+							config.InsertAddress(AddressEntry.Text)
+							setTransferDone()
+						} else {
+							xlog.Error(err)
+							setTransferError(err.Error())
+						}
 					}
 				}, w)
 
@@ -74,9 +102,11 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 	btn.Importance = widget.HighImportance
 	TransBtnContainer = container.New(layout.NewPaddedLayout(), btn)
 	makeAddrList()
+
 	top := container.NewVBox(
 		container.NewHBox(
 			layout.NewSpacer(), TransStatus, layout.NewSpacer()),
+		//makeTopBar(),
 		container.New(layout.NewMaxLayout(), &widget.Form{
 			Items: []*widget.FormItem{ // we can specify items in the constructor
 				{Text: i18n.GetString("WalletWindow_Transfer_ToAddress"), Widget: AddressEntry},
@@ -98,8 +128,8 @@ func TransferPage(w fyne.Window, transWrap func(string, string, string) int) *fy
 	)
 }
 
-func checkInput(addr, amount, remark string, window fyne.Window) bool {
-	if len(addr) == 0 || !ValidateAddress(addr) {
+func checkInput(fromValue, toAddr, amount, remark string, window fyne.Window) bool {
+	if len(toAddr) == 0 || !ValidateBipAddress(toAddr) {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_AccountFormatError"), window)
 		return false
@@ -112,7 +142,7 @@ func checkInput(addr, amount, remark string, window fyne.Window) bool {
 		return false
 	}
 
-	balance, _ := strconv.ParseFloat(Balance, 64)
+	balance, _ := strconv.ParseFloat(fromValue, 64)
 	if balance < value {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_InsufficientAmount"), window)
@@ -161,6 +191,8 @@ func makeAddrList() {
 func setTransferDone() {
 	TransProgressContainer.Hide()
 	TransBtnContainer.Show()
+	DonaTransProgressContainer.Hide()
+	DonaTransBtnContainer.Show()
 	dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 		i18n.GetString("TransferWindow_CommitSuccess"), WalletWindow)
 	makeAddrList()
@@ -169,6 +201,36 @@ func setTransferDone() {
 func setTransferError(e string) {
 	TransProgressContainer.Hide()
 	TransBtnContainer.Show()
+	DonaTransProgressContainer.Hide()
+	DonaTransBtnContainer.Show()
 	dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 		i18n.GetString("TransferWindow_CommitFailed")+e, WalletWindow)
 }
+
+func SelTransFromAddr() (*secp256k1.PrivateKey, string, string) {
+	if LogonWindow.WalletType == HAS_ONLY_XDAG {
+		return XdagKey, XdagAddress, XdagBalance
+	} else { //  LogonWindow.WalletType == HAS_ONLY_BIP
+		return BipWallet.GetDefKey(), BipAddress, BipBalance
+	}
+	//else { // WalletType == HAS_BOTH
+	//	if SelectedAddress.Selected == XdagAddress {
+	//		return XdagKey, XdagAddress, XdagBalance
+	//	} else {
+	//		return BipWallet.GetDefKey(), BipAddress, BipBalance
+	//	}
+	//}
+}
+
+//
+//func makeTopBar() fyne.CanvasObject {
+//	if LogonWindow.WalletType == HAS_BOTH {
+//		return container.NewVBox(
+//			container.NewHBox(layout.NewSpacer(), TransStatus, layout.NewSpacer()),
+//			container.NewHBox(widget.NewLabel(i18n.GetString("TransferWindow_FromAddress")),
+//				SelectedAddress))
+//	} else {
+//		return container.NewHBox(
+//			layout.NewSpacer(), TransStatus, layout.NewSpacer())
+//	}
+//}

@@ -1,7 +1,4 @@
-#include "../../clib/xDagWallet/src/client/events.h"
+//#include "../../clib/xDagWallet/src/client/events.h"
 
-void init_event_callback();
-extern int goEventCallback(void*, xdag_event *);
-
-void init_password_callback();
+int init_password_callback(int);
 extern int goPasswordCallback(const char *prompt, char *buf, unsigned size);

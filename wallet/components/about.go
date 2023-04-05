@@ -13,15 +13,24 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+const (
+	CommunityOldAddress = "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
+	CommunityAddress    = "84ke9P9FsxruqX6Jz14Tsqt6bsZusmMJd"
+)
+
 func AboutPage(w fyne.Window) *fyne.Container {
 	link, _ := url.Parse("https://xdag.io/")
 	tele, _ := url.Parse("https://t.me/dagger_cryptocurrency")
 	discord, _ := url.Parse("https://discord.gg/YxXUVQJ")
-	address := "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
+
 	var testNet string
 	if config.GetConfig().Option.IsTestNet {
 		if config.GetConfig().CultureInfo == "zh-CN" {
 			testNet = "测试网"
+		} else if config.GetConfig().CultureInfo == "fr-FR" {
+			testNet = "Réseau Test"
+		} else if config.GetConfig().CultureInfo == "ru-RU" {
+			testNet = "тестовая сеть"
 		} else {
 			testNet = "Test Net"
 		}
@@ -50,9 +59,9 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			widget.NewLabel("为社区团队捐赠XDAG:"),
 			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel(address),
+			widget.NewLabel(CommunityAddress),
 			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-				w.Clipboard().SetContent(address)
+				w.Clipboard().SetContent(CommunityAddress)
 				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 					i18n.GetString("WalletWindow_AddressCopied"), w)
 			}),
@@ -83,16 +92,88 @@ func AboutPage(w fyne.Window) *fyne.Container {
 			widget.NewLabel("Donate XDAG to Community Team:"),
 			layout.NewSpacer()),
 		container.NewHBox(layout.NewSpacer(),
-			widget.NewLabel(address),
+			widget.NewLabel(CommunityAddress),
 			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-				w.Clipboard().SetContent(address)
+				w.Clipboard().SetContent(CommunityAddress)
 				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 					i18n.GetString("WalletWindow_AddressCopied"), w)
 			}),
 			layout.NewSpacer()),
 	)
+	frContainer := container.NewVBox(
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Portefeuille XDAG ("+config.GetConfig().Version+") "+testNet), layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("XDAG est une nouvelle application de la technologie des Graphes Acycliques Dirigés (DAG) qui"),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("résout les problèmes auxquels est actuellement confrontée la technologie blockchain."),
+			layout.NewSpacer()), container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Le premier DAG minable."),
+			layout.NewSpacer()),
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Site web："), widget.NewHyperlink("xdag.io", link),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Communauté XDAG："), widget.NewHyperlink("Discord", discord),
+			widget.NewHyperlink("Telegram", tele),
+			layout.NewSpacer()),
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Faire un don à l équipe communautaire XDAG:"),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel(CommunityAddress),
+			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
+				w.Clipboard().SetContent(CommunityAddress)
+				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+					i18n.GetString("WalletWindow_AddressCopied"), w)
+			}),
+			layout.NewSpacer()),
+	)
+
+	ruContainer := container.NewVBox(
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("XDAG кошелек ("+config.GetConfig().Version+") "+testNet), layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("XDAG - новое применение технологии направленного ациклического графа (DAG),"),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("решающей проблемы, с которыми в настоящее время сталкивается технология блокчейн."),
+			layout.NewSpacer()), container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Первый DAG, который можно майнить."),
+			layout.NewSpacer()),
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Веб-сайт："), widget.NewHyperlink("xdag.io", link),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Присоединиться к XDAG："), widget.NewHyperlink("Discord", discord),
+			widget.NewHyperlink("Telegram", tele),
+			layout.NewSpacer()),
+		widget.NewLabel(""),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel("Подарить XDAG команде сообщества:"),
+			layout.NewSpacer()),
+		container.NewHBox(layout.NewSpacer(),
+			widget.NewLabel(CommunityAddress),
+			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
+				w.Clipboard().SetContent(CommunityAddress)
+				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+					i18n.GetString("WalletWindow_AddressCopied"), w)
+			}),
+			layout.NewSpacer()),
+	)
+
 	if config.GetConfig().CultureInfo == "zh-CN" {
 		return cnContainer
+	} else if config.GetConfig().CultureInfo == "fr-FR" {
+		return frContainer
+	} else if config.GetConfig().CultureInfo == "ru-RU" {
+		return ruContainer
 	} else {
 		return enContainer
 	}

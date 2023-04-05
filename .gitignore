@@ -4,9 +4,13 @@
 storage/
 storage-testnet/
 *.dat
+*.bin
 main
 goXdagWallet
 go_build_goXdagWallet
+goXdagWallet.exe
+goXdagWallet.exe~
+libxdag_*.a
 *.exe
 *.apk
 *.app

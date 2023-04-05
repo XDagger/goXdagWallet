@@ -7,6 +7,37 @@ Fyne is a cross-platform GUI in Go inspired by Material Design.
 The wallet can run on Windows, Linux, Mac now.
 
 Mobile version is coming.
+## usage
+- usage: by command-line parameter -help
+- 3 run modes: gui(default), cli, server, by commnad-line parameter -mode
+- cli commands:
+  - help -- display commands list
+  - exit -- exit cli wallet
+  - account -- display address of wallet account
+  - balance -- display balance of wallet account
+  - xfer V A R -- transfer V coins to address A with remark R
+  - mnemonic -- display mnemonic of wallet account
+  - export P -- export mnemonic to file P
+- jsonrpc server: by command-line parameter -mode server -ip \<ip address\> -port \<port number\>
+  - method: Xdag.Unlock
+    - params: ["\<wallet password\>"]
+    - response: {"id":1,"result":"success","error":null}
+  - method: Xdag.Lock
+    - params: ["\<wallet password\>"]
+    - response: {"id":1,"result":"success","error":null}
+  - method: Xdag.Account
+    - params: [""]
+    - response: {"id":1,"result": "\<wallet address\>","error":null}
+  - method: Xdag.Balance
+    - params: [""]
+    - response: {"id":1,"result": "\<wallet balance\>","error":null}
+  - method: Xdag.Balance
+    - params: ["\<wallet address\>"]
+    - response: {"id":1,"result": "\<balance of the address\>","error":null}
+  - method: Xdag.Transfer
+    - params: [{"amount":"\<amount\>","address":"\<to address\>","remark":"\<remark\>"}]
+    - response: {"id":1,"result": "success","error":null}
+
 ## repo structure
  - clib - a wrapper of XDAG Wallet C library
    - xDagWallet - XDAG wallet C library
@@ -18,6 +49,9 @@ Mobile version is coming.
    - config - wallet config
    - wallet_state - wallet state
    - xlog - wallet log
+   - xdago - bip32,bip39,bip44
+   - cli - command line mode
+   - server - rpc server mode
 
 ## build
 enter /clib

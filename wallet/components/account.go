@@ -1,6 +1,11 @@
 package components
 
 import (
+	"goXdagWallet/i18n"
+	"goXdagWallet/xlog"
+	"io"
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -11,7 +16,6 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	qrcode "github.com/skip2/go-qrcode"
-	"goXdagWallet/i18n"
 )
 
 type myEntry struct {
@@ -45,6 +49,46 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("WalletWindow_AddressCopied"), w)
 	})
+	displayBtn := widget.NewButtonWithIcon(i18n.GetString("Display_Mnemonic"), theme.FileIcon(),
+		func() {
+			dialog.ShowCustom(i18n.GetString("Common_MessageTitle"), i18n.GetString("Common_Cancel"),
+				formatMnemonic(BipWallet.GetMnemonic()), w)
+		})
+	displayBtn.Importance = widget.MediumImportance
+	exportBtn := widget.NewButtonWithIcon(i18n.GetString("Wallet_Export"), theme.FileIcon(),
+		func() {
+			dlgSave := dialog.NewFileSave(
+				func(uri fyne.URIWriteCloser, err error) {
+					defer func() {
+						w.Resize(fyne.NewSize(640, 480))
+					}()
+					if uri == nil || err != nil {
+						return
+					}
+					defer uri.Close()
+					if BipWallet.GetMnemonic() != "" {
+						_, err = io.WriteString(uri, BipWallet.GetMnemonic())
+						if err != nil {
+							xlog.Error(err)
+							dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+								i18n.GetString("WalletExport_File_Failed"), w)
+							return
+						}
+					} else {
+						xlog.Error("mnemonic is empty")
+						dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+							i18n.GetString("WalletExport_File_Failed"), w)
+						return
+					}
+					dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+						i18n.GetString("WalletExport_File_Success"), w)
+				}, w)
+			w.Resize(fyne.NewSize(800, 500))
+			dlgSave.Resize(fyne.NewSize(800, 500))
+			dlgSave.SetFileName("mnemonic-" + address[:6] + ".txt")
+			dlgSave.Show()
+		})
+	exportBtn.Importance = widget.HighImportance
 
 	addr := newMyEntry()
 	addr.Text = address
@@ -52,7 +96,12 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 
 	bala := newMyEntryWithData(AccountBalance)
 	AccountBalance.Set(balance)
-
+	if balance == "" {
+		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+			i18n.GetString("Rpc_Get_Balance_fail"), WalletWindow)
+	}
+	exportBtnContainer := container.New(layout.NewHBoxLayout(), layout.NewSpacer(), displayBtn,
+		layout.NewSpacer(), exportBtn, layout.NewSpacer())
 	var png []byte
 	png, _ = qrcode.Encode("xdag:"+address, qrcode.Medium, 256)
 
@@ -62,7 +111,7 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 	})
 	image.SetMinSize(fyne.NewSize(256, 256))
 
-	return container.NewVBox(
+	c := container.NewVBox(
 		widget.NewLabel(""),
 		container.New(layout.NewMaxLayout(), &widget.Form{
 			Items: []*widget.FormItem{
@@ -72,6 +121,19 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 					Widget: bala},
 			},
 		}),
+		exportBtnContainer,
 		widget.NewLabel(""),
 		container.NewHBox(layout.NewSpacer(), image, layout.NewSpacer()))
+	if LogonWindow.WalletType == HAS_ONLY_XDAG {
+		c.Remove(exportBtnContainer)
+	}
+	return c
+}
+
+func formatMnemonic(m string) fyne.CanvasObject {
+	c := container.New(layout.NewGridLayout(3))
+	for _, k := range strings.Fields(m) {
+		c.Add(widget.NewLabel(k))
+	}
+	return c
 }

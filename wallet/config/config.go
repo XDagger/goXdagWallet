@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -40,14 +39,14 @@ type DefaultQuery struct {
 func InitConfig() {
 	newConf := false
 
-	conf.Version = "0.4.0"
+	conf.Version = "0.5.5"
 	conf.CultureInfo = "en-US"
 	conf.Option.DisableMining = true
-	conf.Option.PoolAddress = "test.xdag.org:13656"
+	conf.Option.PoolAddress = "xdag.org:13656"
 
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
-	data, err := ioutil.ReadFile(path.Join(pwd, configFile))
+	data, err := os.ReadFile(path.Join(pwd, configFile))
 	if err == nil {
 		err = json.Unmarshal(data, &conf)
 		if err != nil {
@@ -62,7 +61,7 @@ func InitConfig() {
 	}
 	if newConf {
 		data, _ = json.MarshalIndent(conf, "", "  ")
-		ioutil.WriteFile(configFile, data, 666)
+		os.WriteFile(configFile, data, 666)
 	}
 }
 func DeleteAddress(id int) {
@@ -97,7 +96,7 @@ func InsertAddress(address string) {
 
 func SaveConfig() error {
 	data, _ := json.MarshalIndent(conf, "", "  ")
-	ioutil.WriteFile(configFile, data, 666)
+	os.WriteFile(configFile, data, 666)
 	return nil
 }
 

@@ -1,8 +1,21 @@
 package components
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"goXdagWallet/config"
+	"goXdagWallet/i18n"
+	"goXdagWallet/xdago/common"
+	"goXdagWallet/xlog"
+	"image/color"
+	"io"
+	"os"
+	"path"
+	"strings"
+	"time"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/cmd/fyne_settings/settings"
@@ -12,46 +25,50 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	cp "github.com/otiai10/copy"
-	"goXdagWallet/config"
-	"goXdagWallet/i18n"
-	"goXdagWallet/xlog"
-	"image/color"
-	"io"
-	"os"
-	"path"
-	"time"
 )
 
+type WalletState struct {
+	HasAccount    bool
+	Password      string
+	WalletType    int // XDAG: 1, BIP32: 2
+	MnemonicBytes []byte
+}
 type LogonWin struct {
 	Win               fyne.Window
 	BtnContainer      *fyne.Container
+	LogonBtn          *widget.Button
 	ProgressContainer *fyne.Container
-	HasAccount        bool
-	Password          string
+	WalletState
 }
 
 var StatusInfo = canvas.NewText("", color.White)
 
-func (l *LogonWin) NewLogonWindow(hasAccount int) {
-
+func (l *LogonWin) NewLogonWindow(accountStatus int) {
+	xlog.Info("Starting xdag wallet, version ", config.GetConfig().Version)
 	w := WalletApp.NewWindow(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
 		getTestTitle())
 	l.Win = w
 
-	var btn *widget.Button
-	l.HasAccount = hasAccount == 0
-	if hasAccount == 0 { // found wallet key file
-		btn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), l.connectClick)
-	} else if hasAccount == -1 { // not fount
-		btn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), l.connectClick)
+	l.HasAccount = accountStatus >= 0
+
+	//if accountStatus == HAS_BOTH || accountStatus == WALLET_NOT_FOUND {
+	//	l.SelectWalletType()
+	//} else {
+	l.WalletType = accountStatus
+	//}
+
+	if l.HasAccount { // found wallet key file
+		l.LogonBtn = widget.NewButton(i18n.GetString("LogonWindow_ConnectWallet"), l.connectClick)
+	} else { // not fount
+		l.LogonBtn = widget.NewButton(i18n.GetString("LogonWindow_RegisterWallet"), l.connectClick)
 	}
-	btn.Importance = widget.HighImportance
+	l.LogonBtn.Importance = widget.HighImportance
 
 	//l.StatusInfo = canvas.NewText("", color.White)
 	StatusInfo.Alignment = fyne.TextAlignCenter
 	progress := widget.NewProgressBarInfinite()
 	progress.Hide() // for primary color changing
-	l.BtnContainer = container.New(layout.NewPaddedLayout(), btn)
+	l.BtnContainer = container.New(layout.NewPaddedLayout(), l.LogonBtn)
 	l.ProgressContainer = container.New(layout.NewPaddedLayout(), progress)
 
 	settingBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
@@ -62,10 +79,10 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 				i18n.LoadI18nStrings()
 				l.Win.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
 					getTestTitle())
-				if hasAccount == 0 { // found wallet key file
-					btn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
-				} else if hasAccount == -1 { // not fount
-					btn.SetText(i18n.GetString("LogonWindow_RegisterWallet"))
+				if accountStatus >= 0 { // found wallet key file
+					l.LogonBtn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
+				} else if accountStatus == WALLET_NOT_FOUND { // not fount
+					l.LogonBtn.SetText(i18n.GetString("LogonWindow_RegisterWallet"))
 				}
 			}, l.Win)
 	})
@@ -93,7 +110,7 @@ func (l *LogonWin) NewLogonWindow(hasAccount int) {
 			l.ProgressContainer,
 			layout.NewSpacer()))
 	w.SetContent(content)
-	w.Resize(fyne.NewSize(410, 305))
+	w.Resize(fyne.NewSize(435, 324))
 	w.SetOnClosed(func() {
 		xlog.CleanXdagLog(xlog.StdXdagLog)
 		WalletApp.Quit()
@@ -110,12 +127,16 @@ func (l *LogonWin) StartConnect() {
 	StatusInfo.Text = i18n.GetString("LogonWindow_ConnectingAccount")
 	canvas.Refresh(StatusInfo)
 }
-func (l *LogonWin) StartRegister() {
+func (l *LogonWin) StartRegister() bool {
 	l.BtnContainer.Hide()
 	l.ProgressContainer.Objects[0].Show() // for primary color changing
 	StatusInfo.Text = i18n.GetString("WalletState_Registering")
 	canvas.Refresh(StatusInfo)
-	go registerTimer()
+
+	w, b := NewBipWallet(PwdStr, 128)
+	BipWallet = w
+	return b
+
 }
 
 func (l *LogonWin) connectClick() {
@@ -126,71 +147,21 @@ func (l *LogonWin) connectClick() {
 	}
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
-	var title string
+	accountStatus := l.WalletType
 	if l.HasAccount {
-		title = i18n.GetString("PasswordWindow_InputPassword")
-		l.showPasswordDialog(title,
-			i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+		if accountStatus == HAS_BOTH {
+			l.SelectWalletType()
+		} else {
+			l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
+				i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+		}
 	} else {
-
-		confirmFrm := dialog.NewConfirm(i18n.GetString("Wallet_Choice"),
-			i18n.GetString("Wallet_CreateOrImport"),
-			func(b bool) {
-				if b {
-					dlgOpen := dialog.NewFolderOpen(
-						func(uri fyne.ListableURI, err error) {
-							defer func() {
-								l.Win.Resize(fyne.NewSize(410, 305))
-							}()
-
-							if uri == nil || err != nil {
-								return
-							}
-							if !checkOldWallet(uri.Path()) {
-								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-									i18n.GetString("WalletImport_WalletNotExist"), l.Win)
-								return
-							}
-							if copyOldWallet(uri.Path()) != nil {
-								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-									i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
-								return
-							}
-							l.HasAccount = true
-							title = i18n.GetString("PasswordWindow_InputPassword")
-							l.showPasswordDialog(title,
-								i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
-
-						}, l.Win)
-					l.Win.Resize(fyne.NewSize(800, 500))
-					dlgOpen.Resize(fyne.NewSize(800, 500))
-					dlgOpen.Show()
-
-				} else {
-
-					pathDest := path.Join(pwd, "xdagj_dat")
-					if err := os.RemoveAll(pathDest); err != nil {
-						dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-							i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
-						return
-					}
-					if err := os.MkdirAll(pathDest, 0666); err != nil {
-						dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-							i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
-						return
-					}
-					title = i18n.GetString("PasswordWindow_SetPassword")
-					l.showPasswordDialog(title,
-						i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
-				}
-			}, l.Win)
-		confirmFrm.SetConfirmText(i18n.GetString("Wallet_Import"))
-		confirmFrm.SetDismissText(i18n.GetString("Wallet_Create"))
-		confirmFrm.Show()
+		l.CreateOrImport(pwd)
 	}
 }
 
 func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
+	l.LogonBtn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
 	wgt := widget.NewEntry()
 	wgt.Password = true
 
@@ -199,13 +170,31 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 			Password[i] = 0
 		}
 		str := wgt.Text
+		if len(str) == 0 {
+			return
+		}
 		if b {
 			if l.HasAccount {
 				if len(str) > 0 {
 					copy(Password[:], str)
+					PwdStr = str
 				}
 				l.StartConnect()
-				ConnectWallet()
+				if l.WalletType == HAS_ONLY_XDAG {
+					res := ConnectXdagWallet()
+					if res == 0 {
+						NewWalletWindow(l.WalletType)
+					} else {
+						l.passwordIncorrect()
+					}
+				} else if l.WalletType == HAS_ONLY_BIP {
+					res := ConnectBipWallet(PwdStr)
+					if res {
+						NewWalletWindow(l.WalletType)
+					} else {
+						l.passwordIncorrect()
+					}
+				}
 			} else {
 				l.Password = str
 				l.ReShowPasswordDialog(i18n.GetString("PasswordWindow_RetypePassword"),
@@ -214,6 +203,13 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 		}
 
 	}, parent)
+}
+
+func (l *LogonWin) passwordIncorrect() {
+	StatusInfo.Text = i18n.GetString("Message_PasswordIncorrect")
+	canvas.Refresh(StatusInfo)
+	time.Sleep(time.Second * 5)
+	l.Win.Close()
 }
 
 func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.Window) {
@@ -229,9 +225,17 @@ func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.W
 			if str == l.Password {
 				if len(str) > 0 {
 					copy(Password[:], str)
+					PwdStr = str
 				}
-				l.StartRegister()
-				ConnectWallet()
+				if l.StartRegister() {
+					NewWalletWindow(HAS_ONLY_BIP)
+				} else {
+					StatusInfo.Text = i18n.GetString("WalletState_Register_failed")
+					canvas.Refresh(StatusInfo)
+					time.Sleep(time.Second * 5)
+					l.Win.Close()
+				}
+
 			} else {
 				dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 					i18n.GetString("PasswordWindow_PasswordMismatch"), l.Win)
@@ -242,9 +246,13 @@ func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.W
 
 func showLanguageDialog(title, ok, dismiss string, callback func(string), parent fyne.Window) {
 	lang := "en-US"
-	radio := widget.NewRadioGroup([]string{"English", "中文"}, func(value string) {
+	radio := widget.NewRadioGroup([]string{"English", "中文", "Français", "Русский"}, func(value string) {
 		if value == "English" {
 			lang = "en-US"
+		} else if value == "Français" {
+			lang = "fr-FR"
+		} else if value == "Русский" {
+			lang = "ru-RU"
 		} else {
 			lang = "zh-CN"
 		}
@@ -257,27 +265,7 @@ func showLanguageDialog(title, ok, dismiss string, callback func(string), parent
 }
 
 func GetAppIcon() fyne.Resource {
-	return resourceIconPng
-}
-
-func registerTimer() {
-	start := time.Now()
-	timer := time.NewTicker(1 * time.Second)
-	for {
-		select {
-		case <-timer.C:
-			span := time.Now().Sub(start)
-			z := time.Unix(0, 0).UTC()
-			StatusInfo.Text = fmt.Sprintf(i18n.GetString("LogonWindow_InitializingElapsedTime"),
-				z.Add(span).Format("04:05"))
-			canvas.Refresh(StatusInfo)
-			break
-		case <-regDone:
-			return
-		default:
-
-		}
-	}
+	return resourceWalletPng
 }
 
 func getTestTitle() string {
@@ -285,6 +273,10 @@ func getTestTitle() string {
 	if config.GetConfig().Option.IsTestNet {
 		if config.GetConfig().CultureInfo == "zh-CN" {
 			testNet = "测试网"
+		} else if config.GetConfig().CultureInfo == "fr-FR" {
+			testNet = "Réseau Test"
+		} else if config.GetConfig().CultureInfo == "ru-RU" {
+			testNet = "тестовая сеть"
 		} else {
 			testNet = "Test Net"
 		}
@@ -292,7 +284,7 @@ func getTestTitle() string {
 	return testNet
 }
 
-func checkOldWallet(walletDir string) bool {
+func CheckOldWallet(walletDir string) bool {
 
 	pathName := path.Join(walletDir, "dnet_key.dat")
 	fi, err := os.Stat(pathName)
@@ -313,14 +305,12 @@ func checkOldWallet(walletDir string) bool {
 	}
 
 	pathName = path.Join(walletDir, "storage")
-	fi, err = os.Stat(pathName)
-	if err != nil {
-		return false
-	}
-	return true
+	_, err = os.Stat(pathName)
+
+	return err == nil
 }
 
-func copyOldWallet(walletDir string) error {
+func CopyOldWallet(walletDir string) error {
 	pwd, _ := os.Executable()
 	pwd, _ = path.Split(pwd)
 	pathDest := path.Join(pwd, "xdagj_dat")
@@ -338,6 +328,44 @@ func copyOldWallet(walletDir string) error {
 	}
 	if err := cp.Copy(path.Join(walletDir, "storage"), path.Join(pathDest, "storage")); err != nil {
 		return err
+	}
+
+	//l.importConfig(walletDir)
+
+	return nil
+}
+
+func (l *LogonWin) ImportMnemonic(data []byte) error {
+	pwd, _ := os.Executable()
+	pwd, _ = path.Split(pwd)
+	pathDest := path.Join(pwd, common.BIP32_WALLET_FOLDER)
+	if err := os.RemoveAll(pathDest); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(pathDest, 0666); err != nil {
+		return err
+	}
+
+	if len(data) < 12 || len(data) > 24 || len(data)%3 != 0 {
+		xlog.Error("mnemonic file length error")
+		return errors.New("mnemonic file length error")
+	}
+
+	destination, err := os.Create(path.Join(pathDest, common.BIP32_WALLET_FILE_NAME))
+	if err != nil {
+		xlog.Error(err)
+		return err
+	}
+	defer destination.Close()
+
+	nBytes, err := io.Copy(destination, bytes.NewBuffer(data))
+	if err != nil {
+		xlog.Error(err)
+		return err
+	}
+	if int(nBytes) != len(data) {
+		xlog.Error("copy mnemonic file failed")
+		return errors.New("copy mnemonic file failed")
 	}
 	return nil
 }
@@ -364,4 +392,184 @@ func copyFile(walletDir, pathDest, fileName string, n int64) error {
 		return errors.New(fileName + " copy  failed")
 	}
 	return nil
+}
+
+func (l *LogonWin) importConfig(walletDir string) {
+
+	configName := path.Join(walletDir, "wallet-config.json")
+	_, err := os.Stat(configName)
+	if err != nil {
+		walletDir = strings.TrimSuffix(walletDir, `\`)
+		walletDir = strings.TrimSuffix(walletDir, `/`)
+		configName = path.Join(path.Dir(walletDir), "wallet-config.json")
+		_, err = os.Stat(configName)
+		if err != nil {
+			return
+		}
+	}
+	var oldConf config.Config
+	data, err := os.ReadFile(configName)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(data, &oldConf)
+	if err != nil {
+		return
+	}
+
+	if config.GetConfig().CultureInfo == "en-US" && oldConf.CultureInfo != "en-US" {
+
+		config.GetConfig().CultureInfo = oldConf.CultureInfo
+
+		i18n.LoadI18nStrings()
+
+		l.Win.Resize(fyne.NewSize(410, 305))
+
+		l.Win.SetTitle(fmt.Sprintf(i18n.GetString("LogonWindow_Title"), config.GetConfig().Version) +
+			getTestTitle())
+
+		l.LogonBtn.SetText(i18n.GetString("LogonWindow_ConnectWallet"))
+
+		l.Win.Resize(fyne.NewSize(410, 305))
+	}
+
+	config.GetConfig().Query = oldConf.Query
+
+	for _, a := range oldConf.Addresses {
+		config.InsertAddress(a)
+	}
+}
+
+func (l *LogonWin) CreateOrImport(pwd string) {
+	selectTypes := widget.NewRadioGroup([]string{
+		i18n.GetString("LogonWindow_Create_Mnemonic"),
+		i18n.GetString("LogonWindow_Import_Mnemonic"),
+		i18n.GetString("LogonWindow_Import_NonMnemonic")},
+		func(selected string) {
+		})
+	selectTypes.Selected = i18n.GetString("LogonWindow_Create_Mnemonic")
+	selectTypes.Required = true
+
+	content := []*widget.FormItem{
+		{Text: i18n.GetString("LogonWindow_SelectWalletType") + ":", Widget: selectTypes},
+	}
+	query := dialog.NewForm(i18n.GetString("LogonWindow_SelectWalletTitle"),
+		"   "+i18n.GetString("Common_Confirm")+"    ",
+		"    "+i18n.GetString("Common_Cancel")+"     ",
+		content,
+		func(b bool) {
+			if b {
+				if selectTypes.Selected == i18n.GetString("LogonWindow_Import_NonMnemonic") {
+					l.WalletType = HAS_ONLY_XDAG
+					dlgOpen := dialog.NewFolderOpen(
+						func(uri fyne.ListableURI, err error) {
+							defer func() {
+								l.Win.Resize(fyne.NewSize(410, 305))
+							}()
+
+							if uri == nil || err != nil {
+								return
+							}
+							if !CheckOldWallet(uri.Path()) {
+								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+									i18n.GetString("WalletImport_WalletNotExist"), l.Win)
+								return
+							}
+							if CopyOldWallet(uri.Path()) != nil {
+								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+									i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
+								return
+							}
+							l.importConfig(uri.Path())
+							l.HasAccount = true
+							l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
+								i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+
+						}, l.Win)
+					l.Win.Resize(fyne.NewSize(800, 500))
+					dlgOpen.Resize(fyne.NewSize(800, 500))
+					dlgOpen.Show()
+				} else {
+					l.WalletType = HAS_ONLY_BIP
+					if selectTypes.Selected == i18n.GetString("LogonWindow_Create_Mnemonic") {
+						pathDest := path.Join(pwd, common.BIP32_WALLET_FOLDER)
+						if err := os.RemoveAll(pathDest); err != nil {
+							dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+								i18n.GetString("WalletCreate_FilesFailed"), l.Win)
+							return
+						}
+						if err := os.MkdirAll(pathDest, 0666); err != nil {
+							dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+								i18n.GetString("WalletCreate_FilesFailed"), l.Win)
+							return
+						}
+						l.showPasswordDialog(i18n.GetString("PasswordWindow_SetPassword"),
+							i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+					} else {
+						dlgOpen := dialog.NewFileOpen(
+							func(uri fyne.URIReadCloser, err error) {
+								defer func() {
+									l.Win.Resize(fyne.NewSize(410, 305))
+								}()
+								if uri == nil || err != nil {
+									return
+								}
+								defer uri.Close()
+								l.MnemonicBytes, err = io.ReadAll(uri)
+								if err != nil || len(l.MnemonicBytes) == 0 {
+									dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+										i18n.GetString("WalletImport_FilesCopyFailed"), l.Win)
+									return
+								}
+								l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
+									i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+
+							}, l.Win)
+						l.Win.Resize(fyne.NewSize(800, 500))
+						dlgOpen.Resize(fyne.NewSize(800, 500))
+						dlgOpen.Show()
+					}
+				}
+			} else {
+				l.Win.Close()
+			}
+		},
+		l.Win)
+	query.Resize(fyne.NewSize(150, 250))
+	query.Show()
+}
+
+func (l *LogonWin) SelectWalletType() {
+	selectTypes := widget.NewRadioGroup([]string{
+		i18n.GetString("LogonWindow_WalletType_NonMnemonic"),
+		i18n.GetString("LogonWindow_WalletType_Mnemonic")},
+		func(selected string) {
+		})
+	selectTypes.Selected = i18n.GetString("LogonWindow_WalletType_NonMnemonic")
+	selectTypes.Required = true
+
+	content := []*widget.FormItem{
+		{Text: i18n.GetString("LogonWindow_SelectWalletType") + ":", Widget: selectTypes},
+	}
+	query := dialog.NewForm(i18n.GetString("LogonWindow_SelectWalletTitle"),
+		"   "+i18n.GetString("Common_Confirm")+"    ",
+		"    "+i18n.GetString("Common_Cancel")+"     ",
+		content,
+		func(b bool) {
+			if b {
+				if selectTypes.Selected == i18n.GetString("LogonWindow_WalletType_NonMnemonic") {
+					l.WalletType = HAS_ONLY_XDAG
+				} else {
+					l.WalletType = HAS_ONLY_BIP
+				}
+				l.showPasswordDialog(i18n.GetString("PasswordWindow_InputPassword"),
+					i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), l.Win)
+			} else {
+				l.Win.Close()
+			}
+		},
+		l.Win)
+	query.Resize(fyne.NewSize(150, 200))
+	query.Show()
 }
