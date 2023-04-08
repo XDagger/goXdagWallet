@@ -51,42 +51,47 @@ func AccountPage(address, balance string, w fyne.Window) *fyne.Container {
 	})
 	displayBtn := widget.NewButtonWithIcon(i18n.GetString("Display_Mnemonic"), theme.FileIcon(),
 		func() {
-			dialog.ShowCustom(i18n.GetString("Common_MessageTitle"), i18n.GetString("Common_Cancel"),
-				formatMnemonic(BipWallet.GetMnemonic()), w)
+			showPwdConfirm(w, func() {
+				dialog.ShowCustom(i18n.GetString("Common_MessageTitle"), i18n.GetString("Common_Cancel"),
+					formatMnemonic(BipWallet.GetMnemonic()), w)
+			})
+
 		})
 	displayBtn.Importance = widget.MediumImportance
 	exportBtn := widget.NewButtonWithIcon(i18n.GetString("Wallet_Export"), theme.FileIcon(),
 		func() {
-			dlgSave := dialog.NewFileSave(
-				func(uri fyne.URIWriteCloser, err error) {
-					defer func() {
-						w.Resize(fyne.NewSize(640, 480))
-					}()
-					if uri == nil || err != nil {
-						return
-					}
-					defer uri.Close()
-					if BipWallet.GetMnemonic() != "" {
-						_, err = io.WriteString(uri, BipWallet.GetMnemonic())
-						if err != nil {
-							xlog.Error(err)
+			showPwdConfirm(w, func() {
+				dlgSave := dialog.NewFileSave(
+					func(uri fyne.URIWriteCloser, err error) {
+						defer func() {
+							w.Resize(fyne.NewSize(640, 480))
+						}()
+						if uri == nil || err != nil {
+							return
+						}
+						defer uri.Close()
+						if BipWallet.GetMnemonic() != "" {
+							_, err = io.WriteString(uri, BipWallet.GetMnemonic())
+							if err != nil {
+								xlog.Error(err)
+								dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+									i18n.GetString("WalletExport_File_Failed"), w)
+								return
+							}
+						} else {
+							xlog.Error("mnemonic is empty")
 							dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 								i18n.GetString("WalletExport_File_Failed"), w)
 							return
 						}
-					} else {
-						xlog.Error("mnemonic is empty")
 						dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-							i18n.GetString("WalletExport_File_Failed"), w)
-						return
-					}
-					dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
-						i18n.GetString("WalletExport_File_Success"), w)
-				}, w)
-			w.Resize(fyne.NewSize(800, 500))
-			dlgSave.Resize(fyne.NewSize(800, 500))
-			dlgSave.SetFileName("mnemonic-" + address[:6] + ".txt")
-			dlgSave.Show()
+							i18n.GetString("WalletExport_File_Success"), w)
+					}, w)
+				w.Resize(fyne.NewSize(800, 500))
+				dlgSave.Resize(fyne.NewSize(800, 500))
+				dlgSave.SetFileName("mnemonic-" + address[:6] + ".txt")
+				dlgSave.Show()
+			})
 		})
 	exportBtn.Importance = widget.HighImportance
 
@@ -136,4 +141,25 @@ func formatMnemonic(m string) fyne.CanvasObject {
 		c.Add(widget.NewLabel(k))
 	}
 	return c
+}
+
+func showPwdConfirm(parent fyne.Window, f func()) {
+	wgt := widget.NewEntry()
+	wgt.Password = true
+
+	dialog.ShowCustomConfirm(
+		i18n.GetString("PasswordWindow_InputPassword"),
+		i18n.GetString("Common_Confirm"),
+		i18n.GetString("Common_Cancel"),
+		wgt, func(b bool) {
+			if b {
+				str := wgt.Text
+				if PwdStr == str {
+					f()
+				} else {
+					dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
+						i18n.GetString("Message_PasswordIncorrect"), parent)
+				}
+			}
+		}, parent)
 }

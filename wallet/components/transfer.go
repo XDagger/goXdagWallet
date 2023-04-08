@@ -70,34 +70,39 @@ func TransferPage(w fyne.Window) *fyne.Container {
 	//}
 	btn := widget.NewButtonWithIcon(i18n.GetString("TransferWindow_TransferTitle"), theme.ConfirmIcon(),
 		func() {
-			fromAccountPrivKey, fromAddress, fromValue := SelTransFromAddr()
+			showPwdConfirm(w, func() {
 
-			if !checkInput(fromValue, AddressEntry.Text, amount.Text, remark.Text, w) {
-				return
-			}
+				fromAccountPrivKey, fromAddress, fromValue := SelTransFromAddr()
 
-			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, AddressEntry.Text)
-			//fmt.Println(message)
-			dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
-				message, func(b bool) {
-					if b {
-						TransProgressContainer.Show()
-						TransBtnContainer.Hide()
-						DonaTransProgressContainer.Show()
-						DonaTransBtnContainer.Hide()
-						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
-						if err == nil {
-							config.InsertAddress(AddressEntry.Text)
-							setTransferDone()
-						} else {
-							xlog.Error(err)
-							setTransferError(err.Error())
+				if !checkInput(fromValue, AddressEntry.Text, amount.Text, remark.Text, fromAddress, w) {
+					return
+				}
+				if fromAddress == AddressEntry.Text {
+					return
+				}
+
+				message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, AddressEntry.Text)
+				//fmt.Println(message)
+				dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
+					message, func(b bool) {
+						if b {
+							TransProgressContainer.Show()
+							TransBtnContainer.Hide()
+							DonaTransProgressContainer.Show()
+							DonaTransBtnContainer.Hide()
+							TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
+							DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
+							err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
+							if err == nil {
+								config.InsertAddress(AddressEntry.Text)
+								setTransferDone()
+							} else {
+								xlog.Error(err)
+								setTransferError(err.Error())
+							}
 						}
-					}
-				}, w)
-
+					}, w)
+			})
 		})
 	btn.Importance = widget.HighImportance
 	TransBtnContainer = container.New(layout.NewPaddedLayout(), btn)
@@ -128,8 +133,8 @@ func TransferPage(w fyne.Window) *fyne.Container {
 	)
 }
 
-func checkInput(fromValue, toAddr, amount, remark string, window fyne.Window) bool {
-	if len(toAddr) == 0 || !ValidateBipAddress(toAddr) {
+func checkInput(fromValue, toAddr, amount, remark, fromAddress string, window fyne.Window) bool {
+	if len(toAddr) == 0 || !ValidateBipAddress(toAddr) || fromAddress == toAddr {
 		dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 			i18n.GetString("TransferWindow_AccountFormatError"), window)
 		return false
