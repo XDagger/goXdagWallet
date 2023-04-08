@@ -503,8 +503,12 @@ func getUrl(apiUrl, address, query string, page int, body *[]byte) error {
 	var reader io.ReadCloser
 	switch resp.Header.Get("Content-Encoding") {
 	case "gzip":
-		reader, _ = gzip.NewReader(resp.Body)
-		defer reader.Close()
+		reader, err = gzip.NewReader(resp.Body)
+		if err == nil {
+			defer reader.Close()
+		} else {
+			return err
+		}
 	default:
 		reader = resp.Body
 	}

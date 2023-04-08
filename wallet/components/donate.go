@@ -38,32 +38,33 @@ func DonatePage(w fyne.Window) *fyne.Container {
 
 	btn := widget.NewButtonWithIcon(i18n.GetString("WalletWindow_TabDonate"), theme.ConfirmIcon(),
 		func() {
-			fromAccountPrivKey, fromAddress, fromValue := SelTransFromAddr()
-			if !checkInput(fromValue, DonaAddressEntry.Text, amount.Text, remark.Text, w) {
-				return
-			}
+			showPwdConfirm(w, func() {
+				fromAccountPrivKey, fromAddress, fromValue := SelTransFromAddr()
+				if !checkInput(fromValue, DonaAddressEntry.Text, amount.Text, remark.Text, fromAddress, w) {
+					return
+				}
 
-			message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, DonaAddressEntry.Text)
-			//fmt.Println(message)
-			dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
-				message, func(b bool) {
-					if b {
-						DonaTransProgressContainer.Show()
-						DonaTransBtnContainer.Hide()
-						TransProgressContainer.Show()
-						TransBtnContainer.Hide()
-						DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-						err := TransferRpc(fromAddress, DonaAddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
-						if err == nil {
-							setTransferDone()
-						} else {
-							xlog.Error(err)
-							setTransferError(err.Error())
+				message := fmt.Sprintf(i18n.GetString("TransferWindow_ConfirmTransfer"), amount.Text, DonaAddressEntry.Text)
+				//fmt.Println(message)
+				dialog.ShowConfirm(i18n.GetString("Common_ConfirmTitle"),
+					message, func(b bool) {
+						if b {
+							DonaTransProgressContainer.Show()
+							DonaTransBtnContainer.Hide()
+							TransProgressContainer.Show()
+							TransBtnContainer.Hide()
+							DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
+							TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
+							err := TransferRpc(fromAddress, DonaAddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
+							if err == nil {
+								setTransferDone()
+							} else {
+								xlog.Error(err)
+								setTransferError(err.Error())
+							}
 						}
-					}
-				}, w)
-
+					}, w)
+			})
 		})
 	btn.Importance = widget.HighImportance
 	DonaTransBtnContainer = container.New(layout.NewPaddedLayout(), btn)
