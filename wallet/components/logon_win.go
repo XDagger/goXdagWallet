@@ -98,19 +98,19 @@ func (l *LogonWin) NewLogonWindow(accountStatus int) {
 	appearanceBtn.Resize(fyne.NewSize(20, 20))
 	appearanceBtn.Importance = widget.HighImportance
 
-	image := canvas.NewImageFromResource(resourceXj3Png)
+	image := canvas.NewImageFromResource(resourceSplashPng)
 	content := container.New(layout.NewMaxLayout(), image,
 		container.New(layout.NewVBoxLayout(),
 			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), appearanceBtn, settingBtn),
 			layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(),
 			layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(),
 			layout.NewSpacer(),
+			layout.NewSpacer(),
 			StatusInfo,
 			l.BtnContainer,
-			l.ProgressContainer,
-			layout.NewSpacer()))
+			l.ProgressContainer))
 	w.SetContent(content)
-	w.Resize(fyne.NewSize(435, 324))
+	w.Resize(fyne.NewSize(608, 388))
 	w.SetOnClosed(func() {
 		xlog.CleanXdagLog(xlog.StdXdagLog)
 		WalletApp.Quit()
