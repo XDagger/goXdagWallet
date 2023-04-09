@@ -73,6 +73,7 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) err
 	if hash != blockHash(blockHexStr) {
 		return errors.New("transaction block hash error")
 	}
+	xlog.Info("from:", from, ", to:", to, ", amount:", amount, ", transaction:", hash)
 
 	return nil
 }

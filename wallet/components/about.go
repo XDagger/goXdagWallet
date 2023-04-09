@@ -15,7 +15,7 @@ import (
 
 const (
 	CommunityOldAddress = "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
-	CommunityAddress    = "84ke9P9FsxruqX6Jz14Tsqt6bsZusmMJd"
+	CommunityAddress    = "4duPWMbYUgAifVYkKDCWxLvRRkSByf5gb"
 )
 
 func AboutPage(w fyne.Window) *fyne.Container {
