@@ -170,9 +170,6 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 			Password[i] = 0
 		}
 		str := wgt.Text
-		if len(str) == 0 {
-			return
-		}
 		if b {
 			if l.HasAccount {
 				if len(str) > 0 {
