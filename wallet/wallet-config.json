@@ -5,10 +5,10 @@
     "specified_pool_address": null,
     "is_test_net": false,
     "disable_mining": true,
-    "pool_address": "https://mainnet-rpc.xdagj.org:10001",
+    "pool_address": "https://mainnet-rpc.xdagj.org",
     "testnet_api_url": ""
   },
-  "version": "0.6.1",
+  "version": "0.6.2",
   "culture_info": "en-US",
   "addresses": [],
   "query": {
