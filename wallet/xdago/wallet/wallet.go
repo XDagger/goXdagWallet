@@ -526,6 +526,7 @@ func ImportWalletFromMnemonicFile(pathSrc, dirDest, pwd string) (*Wallet, error)
 }
 
 func ImportWalletFromMnemonicStr(mnemonic, dirDest, pwd string) (*Wallet, error) {
+	mnemonic = strings.TrimSpace(mnemonic)
 	words := strings.Fields(mnemonic)
 	if len(words) < 12 || len(words) > 24 || len(words)%3 != 0 {
 		return nil, errors.New("mnemonic words count error")
