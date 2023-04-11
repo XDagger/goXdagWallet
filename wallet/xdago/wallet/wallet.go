@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
+	"goXdagWallet/fileutils"
 	"goXdagWallet/xdago/common"
 	"goXdagWallet/xdago/cryptography"
 	"goXdagWallet/xdago/secp256k1"
@@ -16,6 +17,8 @@ import (
 
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
+	"github.com/tyler-smith/go-bip39/wordlists"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -230,11 +233,11 @@ func (w *Wallet) Flush() bool {
 
 	dir := path.Dir(w.file)
 	if _, err = os.Stat(dir); os.IsNotExist(err) {
-		if err = os.MkdirAll(dir, 0666); err != nil {
+		if err = fileutils.MkdirAll(dir); err != nil {
 			xlog.Fatal("create wallet dir failed," + err.Error())
 		}
 	}
-	err = os.WriteFile(w.file, wr.BytesUncheck(), 0666)
+	err = fileutils.WriteFile(w.file, wr.BytesUncheck())
 	if err != nil {
 		xlog.Fatal("flush wallet data failed," + err.Error())
 	}
@@ -481,7 +484,7 @@ func (w *Wallet) ExportDefKey(path string) error {
 		return errors.New("no key to export")
 	}
 	b := key.Key.Bytes()
-	return os.WriteFile(path, b[:], 0666)
+	return fileutils.WriteFile(path, b[:])
 
 }
 
@@ -496,7 +499,7 @@ func (w *Wallet) ExportMnemonic(path string) error {
 	if w.mnemonicPhrase == "" {
 		return errors.New("no mnemonic to export")
 	}
-	return os.WriteFile(path, []byte(w.mnemonicPhrase), 0666)
+	return fileutils.WriteFile(path, []byte(w.mnemonicPhrase))
 }
 
 func ImportWalletFromDefKey(pathSrc, dirDest, pwd string) (*Wallet, error) {
@@ -525,7 +528,12 @@ func ImportWalletFromMnemonicFile(pathSrc, dirDest, pwd string) (*Wallet, error)
 func ImportWalletFromMnemonicStr(mnemonic, dirDest, pwd string) (*Wallet, error) {
 	words := strings.Fields(mnemonic)
 	if len(words) < 12 || len(words) > 24 || len(words)%3 != 0 {
-		return nil, errors.New("mnemonic words count is not 15")
+		return nil, errors.New("mnemonic words count error")
+	}
+	for _, v := range words {
+		if !slices.Contains(wordlists.English, v) {
+			return nil, errors.New("unknown mnemonic words")
+		}
 	}
 	w := NewWallet(path.Join(dirDest, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 	w.password = pwd

@@ -2,9 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/manifoldco/promptui"
 	"goXdagWallet/components"
 	"goXdagWallet/config"
+	"goXdagWallet/fileutils"
 	"goXdagWallet/xdago/base58"
 	"goXdagWallet/xdago/common"
 	"goXdagWallet/xdago/cryptography"
@@ -12,6 +12,8 @@ import (
 	"goXdagWallet/xlog"
 	"os"
 	"path"
+
+	"github.com/manifoldco/promptui"
 )
 
 var WalletAccount components.WalletState
@@ -118,7 +120,7 @@ func registerWallet() {
 			if err := os.RemoveAll(pathDest); err != nil {
 				fmt.Println("Clear dir failed", err)
 			}
-			if err := os.MkdirAll(pathDest, 0666); err != nil {
+			if err := fileutils.MkdirAll(pathDest); err != nil {
 				fmt.Println("Make dir failed", err)
 			}
 			components.PwdStr = WalletAccount.Password

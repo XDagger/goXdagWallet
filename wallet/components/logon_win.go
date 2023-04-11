@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"goXdagWallet/config"
+	"goXdagWallet/fileutils"
 	"goXdagWallet/i18n"
 	"goXdagWallet/xdago/common"
 	"goXdagWallet/xlog"
@@ -314,7 +315,7 @@ func CopyOldWallet(walletDir string) error {
 	if err := os.RemoveAll(pathDest); err != nil {
 		return err
 	}
-	if err := os.MkdirAll(pathDest, 0666); err != nil {
+	if err := fileutils.MkdirAll(pathDest); err != nil {
 		return err
 	}
 	if err := copyFile(walletDir, pathDest, "dnet_key.dat", 2048); err != nil {
@@ -339,7 +340,7 @@ func (l *LogonWin) ImportMnemonic(data []byte) error {
 	if err := os.RemoveAll(pathDest); err != nil {
 		return err
 	}
-	if err := os.MkdirAll(pathDest, 0666); err != nil {
+	if err := fileutils.MkdirAll(pathDest); err != nil {
 		return err
 	}
 
@@ -496,7 +497,7 @@ func (l *LogonWin) CreateOrImport(pwd string) {
 								i18n.GetString("WalletCreate_FilesFailed"), l.Win)
 							return
 						}
-						if err := os.MkdirAll(pathDest, 0666); err != nil {
+						if err := fileutils.MkdirAll(pathDest); err != nil {
 							dialog.ShowInformation(i18n.GetString("Common_MessageTitle"),
 								i18n.GetString("WalletCreate_FilesFailed"), l.Win)
 							return

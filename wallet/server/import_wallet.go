@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"goXdagWallet/cli"
 	"goXdagWallet/components"
+	"goXdagWallet/fileutils"
 	"goXdagWallet/xdago/common"
 	bip "goXdagWallet/xdago/wallet"
 	"os"
@@ -23,7 +24,7 @@ func ImportServWallet() error {
 		fmt.Println("Clear dir failed", err)
 		return err
 	}
-	if err = os.MkdirAll(pathDest, 0666); err != nil {
+	if err = fileutils.MkdirAll(pathDest); err != nil {
 		fmt.Println("Make dir failed", err)
 		return err
 	}

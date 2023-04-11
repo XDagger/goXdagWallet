@@ -161,11 +161,9 @@ func RunWallet(walletExists int) {
 				fmt.Println("Get balance failed", errBlc)
 				continue
 			}
-			balance, _ := strconv.ParseFloat(fromValue, 64)
-			value, _ := strconv.ParseFloat(items[1], 64)
-			if balance < value {
+
+			if !checkInput(fromValue, items[2], items[1], items[3], fromAddress) {
 				spin.Stop()
-				fmt.Println("Insufficient amount")
 				continue
 			}
 			errTx := components.TransferRpc(fromAddress, items[2], items[1], items[3], fromKey)
@@ -191,4 +189,29 @@ func RunWallet(walletExists int) {
 			}
 		}
 	}
+}
+
+func checkInput(fromValue, toAddr, amount, remark, fromAddress string) bool {
+	if len(toAddr) == 0 || !components.ValidateBipAddress(toAddr) || fromAddress == toAddr {
+		fmt.Println("Receive Address format is incorrect.")
+		return false
+	}
+
+	value, err := strconv.ParseFloat(amount, 64)
+	if err != nil || value <= 0.0 {
+		fmt.Println("Amount should be a positive number.")
+		return false
+	}
+
+	balance, _ := strconv.ParseFloat(fromValue, 64)
+	if balance < value {
+		fmt.Println("Insufficient amount")
+		return false
+	}
+
+	if len(remark) > 0 && !components.ValidateRemark(remark) {
+		fmt.Println("Remark format is incorrect")
+		return false
+	}
+	return true
 }
