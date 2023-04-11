@@ -17,6 +17,8 @@ import (
 
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
+	"github.com/tyler-smith/go-bip39/wordlists"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -526,7 +528,12 @@ func ImportWalletFromMnemonicFile(pathSrc, dirDest, pwd string) (*Wallet, error)
 func ImportWalletFromMnemonicStr(mnemonic, dirDest, pwd string) (*Wallet, error) {
 	words := strings.Fields(mnemonic)
 	if len(words) < 12 || len(words) > 24 || len(words)%3 != 0 {
-		return nil, errors.New("mnemonic words count is not 15")
+		return nil, errors.New("mnemonic words count error")
+	}
+	for _, v := range words {
+		if !slices.Contains(wordlists.English, v) {
+			return nil, errors.New("unknown mnemonic words")
+		}
 	}
 	w := NewWallet(path.Join(dirDest, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 	w.password = pwd
