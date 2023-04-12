@@ -111,7 +111,7 @@ func ValidateBipAddress(address string) bool {
 }
 
 func ValidateRemark(remark string) bool {
-	return utf8string.NewString(remark).IsASCII()
+	return utf8string.NewString(remark).IsASCII() && len(remark) < 32
 }
 
 func NewWalletWindow(walletExists int) {
