@@ -110,10 +110,17 @@ func AddressFromStorage() (string, error) {
 	} else {
 		begin = XDAG_MAIN_ERA
 	}
+	var res []byte
 	block, err := LoadBlock(begin, GetCurrentTimestamp())
 	if err != nil {
 		return "", err
 	}
-	hash := cryptography.HashTwice(block)
+	for err == nil {
+		res = block
+		t := binary.LittleEndian.Uint64(block[16:24])
+		t = t + 0x10000
+		block, err = LoadBlock(t, GetCurrentTimestamp())
+	}
+	hash := cryptography.HashTwice(res)
 	return Hash2Address(hash), nil
 }
