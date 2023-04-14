@@ -8,7 +8,7 @@
     "pool_address": "https://mainnet-rpc.xdagj.org",
     "testnet_api_url": ""
   },
-  "version": "0.6.2",
+  "version": "0.6.3",
   "culture_info": "en-US",
   "addresses": [],
   "query": {
