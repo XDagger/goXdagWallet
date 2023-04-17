@@ -28,9 +28,13 @@ func AboutPage(w fyne.Window) *fyne.Container {
 		if config.GetConfig().CultureInfo == "zh-CN" {
 			testNet = "测试网"
 		} else if config.GetConfig().CultureInfo == "fr-FR" {
-			testNet = "Réseau Test"
+			testNet = "Réseau d'essai"
 		} else if config.GetConfig().CultureInfo == "ru-RU" {
 			testNet = "тестовая сеть"
+		} else if config.GetConfig().CultureInfo == "it-IT" {
+			testNet = "Rete di prova"
+		} else if config.GetConfig().CultureInfo == "sp-SP" {
+			testNet = "Red de prueba"
 		} else {
 			testNet = "Test Net"
 		}

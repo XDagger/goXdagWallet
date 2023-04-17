@@ -244,17 +244,22 @@ func (l *LogonWin) ReShowPasswordDialog(title, ok, dismiss string, parent fyne.W
 
 func showLanguageDialog(title, ok, dismiss string, callback func(string), parent fyne.Window) {
 	lang := "en-US"
-	radio := widget.NewRadioGroup([]string{"English", "中文", "Français", "Русский"}, func(value string) {
+	radio := widget.NewRadioGroup([]string{"English", "中文", "Français", "Русский", "Español", "Italiano"}, func(value string) {
 		if value == "English" {
 			lang = "en-US"
 		} else if value == "Français" {
 			lang = "fr-FR"
 		} else if value == "Русский" {
 			lang = "ru-RU"
+		} else if value == "Italiano" {
+			lang = "it-IT"
+		} else if value == "Español" {
+			lang = "sp-SP"
 		} else {
 			lang = "zh-CN"
 		}
 	})
+	radio.Resize(fyne.Size{Width: radio.Size().Width, Height: radio.Size().Height * 2})
 	dialog.ShowCustomConfirm(title, ok, dismiss, radio, func(b bool) {
 		if b {
 			callback(lang)
