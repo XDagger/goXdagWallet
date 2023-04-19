@@ -66,6 +66,10 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) err
 	if blockHexStr == "" {
 		return errors.New("create transaction block error")
 	}
+
+	txHash := blockHash(blockHexStr)
+	xlog.Info(from, "to", to, amount, "transaction:", txHash)
+
 	hash, err := xdagjRpc("xdag_sendRawTransaction", blockHexStr)
 	if err != nil {
 		return err
@@ -79,11 +83,10 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) err
 		return errors.New(hash)
 	}
 
-	if hash != blockHash(blockHexStr) {
-		xlog.Error("want", blockHash(blockHexStr), "get", hash)
+	if hash != txHash {
+		xlog.Error("want", txHash, "get", hash)
 		return errors.New("transaction block hash error")
 	}
-	xlog.Info(from, "to", to, amount, "transaction:", hash)
 
 	return nil
 }
