@@ -103,7 +103,9 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	}
 	var inAddress string
 	var err error
-	isFromOld := len(from) == common.XDAG_ADDRESS_SIZE
+
+	_, err = checkBase58Address(from)
+	isFromOld := err != nil
 
 	if isFromOld { // old xdag address
 		if !ValidateXdagAddress(from) {
