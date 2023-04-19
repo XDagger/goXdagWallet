@@ -50,7 +50,7 @@ func xdagjRpc(method string, params string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//fmt.Println(string(body))
+	xlog.Info(string(body))
 	errMsg, err := jsonparser.GetString(body, "error", "message")
 	if err == nil {
 		return "", errors.New(errMsg)
