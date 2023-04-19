@@ -75,8 +75,12 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) err
 		return errors.New("transaction rpc return empty hash")
 	}
 
+	if !ValidateXdagAddress(hash) {
+		return errors.New(hash)
+	}
+
 	if hash != blockHash(blockHexStr) {
-		xlog.Error("want", hash, "get", blockHash(blockHexStr))
+		xlog.Error("want", blockHash(blockHexStr), "get", hash)
 		return errors.New("transaction block hash error")
 	}
 	xlog.Info(from, "to", to, amount, "transaction:", hash)
