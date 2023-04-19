@@ -39,7 +39,7 @@ func xdagjRpc(method string, params string) (string, error) {
 	}
 	request.Header.Set("Content-Type", "application/json")
 	client := &http.Client{
-		Timeout: 15 * time.Second,
+		Timeout: 20 * time.Second,
 	}
 	response, err := client.Do(request)
 	if err != nil {
@@ -103,25 +103,17 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	}
 	var inAddress string
 	var err error
-	isFromOld := len(from) == common.XDAG_ADDRESS_SIZE
+
+	inAddress, err = checkBase58Address(from)
+	isFromOld := err != nil
 
 	if isFromOld { // old xdag address
-		if !ValidateXdagAddress(from) {
+		hash, err := xdagoUtils.Address2Hash(from)
+		if err != nil {
 			xlog.Error("transaction send address length error")
 			return ""
 		}
-		hash, err := xdagoUtils.Address2Hash(from)
-		if err != nil {
-			xlog.Error(err)
-			return ""
-		}
 		inAddress = hex.EncodeToString(hash[:24])
-	} else { // new base58 address
-		inAddress, err = checkBase58Address(from)
-		if err != nil {
-			xlog.Error(err)
-			return ""
-		}
 	}
 
 	outAddress, err := checkBase58Address(to)
