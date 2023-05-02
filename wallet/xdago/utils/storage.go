@@ -57,8 +57,10 @@ func makeFile(t uint64) string {
 }
 
 // LoadBlock loads first wallet block from XDAG storage, ignore check sum
-func LoadBlock(startTime, endTime uint64) ([]byte, error) {
+func LoadBlock(startTime, endTime uint64) ([]string, error) {
 	var mask uint64
+	var addrsses []string
+	var hash [32]byte
 	for startTime < endTime {
 		datPath := makeFile(startTime)
 		//fmt.Println(datPath)
@@ -84,10 +86,13 @@ func LoadBlock(startTime, endTime uint64) ([]byte, error) {
 			fieldTypes := binary.LittleEndian.Uint64(block[8:16])
 			// header(1/8),5(sign_r),5(sign_s)
 			if fieldTypes == 0x0551 || fieldTypes == 0x0558 {
-				return block, nil
-			} else {
-				return nil, errors.New("block type error")
+				// return block, nil
+				hash = cryptography.HashTwice(block)
+				addrsses = append(addrsses, Hash2Address(hash))
 			}
+			// else {
+			// 	return nil, errors.New("block type error")
+			// }
 		} else if FileExists(makeDir3(startTime)) {
 			mask = (uint64(1) << 16) - 1
 		} else if FileExists(makeDir2(startTime)) {
@@ -100,27 +105,33 @@ func LoadBlock(startTime, endTime uint64) ([]byte, error) {
 		startTime |= mask
 		startTime++
 	}
-	return nil, errors.New("load block error")
+	// return nil, errors.New("load block error")
+	return addrsses, nil
 }
 
-func AddressFromStorage() (string, error) {
+func AddressFromStorage() ([]string, error) {
 	var begin uint64
 	if config.GetConfig().Option.IsTestNet {
 		begin = XDAG_TEST_ERA
 	} else {
 		begin = XDAG_MAIN_ERA
 	}
-	var res []byte
-	block, err := LoadBlock(begin, GetCurrentTimestamp())
+	// var res []byte
+	// block, err := LoadBlock(begin, GetCurrentTimestamp())
+	addr, err := LoadBlock(begin, GetCurrentTimestamp())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	for err == nil {
-		res = block
-		t := binary.LittleEndian.Uint64(block[16:24])
-		t = t + 0x10000
-		block, err = LoadBlock(t, GetCurrentTimestamp())
+	if len(addr) < 1 {
+		return nil, errors.New("wallet address not found")
 	}
-	hash := cryptography.HashTwice(res)
-	return Hash2Address(hash), nil
+	return addr, nil
+	// for err == nil {
+	// 	res = block
+	// 	t := binary.LittleEndian.Uint64(block[16:24])
+	// 	t = t + 0x10000
+	// 	block, err = LoadBlock(t, GetCurrentTimestamp())
+	// }
+	// hash := cryptography.HashTwice(res)
+	// return Hash2Address(hash), nil
 }

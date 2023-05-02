@@ -58,37 +58,37 @@ func xdagjRpc(method string, params string) (string, error) {
 	return jsonparser.GetString(body, "result")
 }
 
-func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) error {
+func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) (string, error) {
 
 	value, _ := strconv.ParseFloat(amount, 64)
 	blockHexStr := transactionBlock(from, to, remark, value, key)
 	//xlog.Info(blockHexStr)
 	if blockHexStr == "" {
-		return errors.New("create transaction block error")
+		return "", errors.New("create transaction block error")
 	}
 
 	txHash := blockHash(blockHexStr)
-	xlog.Info(from, "to", to, amount, "transaction:", txHash)
+	xlog.Info(from, "to", to, amount, remark, "transaction:", txHash)
 
 	hash, err := xdagjRpc("xdag_sendRawTransaction", blockHexStr)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if hash == "" {
-		return errors.New("transaction rpc return empty hash")
+		return "", errors.New("transaction rpc return empty hash")
 	}
 
 	if !ValidateXdagAddress(hash) {
-		return errors.New(hash)
+		return "", errors.New(hash)
 	}
 
 	if hash != txHash {
 		xlog.Error("want", txHash, "get", hash)
-		return errors.New("transaction block hash error")
+		return "", errors.New("transaction block hash error")
 	}
 
-	return nil
+	return hash, nil
 }
 
 func BalanceRpc(address string) (string, error) {
@@ -282,4 +282,22 @@ func blockHash(block string) string {
 	b, _ := hex.DecodeString(block)
 	hash := cryptography.HashTwice(b)
 	return xdagoUtils.Hash2Address(hash)
+}
+
+func AddressWithBalance(addresses []string) []string {
+	var res []string
+	for _, addr := range addresses {
+		value, err := BalanceRpc(addr)
+		if err != nil {
+			xlog.Error(err)
+			continue
+		}
+		_, err = strconv.ParseFloat(value, 64)
+		if err != nil {
+			xlog.Error(err)
+			continue
+		}
+		res = append(res, addr)
+	}
+	return res
 }

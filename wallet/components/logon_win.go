@@ -181,7 +181,12 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 				if l.WalletType == HAS_ONLY_XDAG {
 					res := ConnectXdagWallet()
 					if res == 0 {
-						NewWalletWindow(l.WalletType)
+						if XdagAddress == "" && len(OldAddresses) > 1 {
+							showAddressSelect(l.Win)
+						} else {
+							NewWalletWindow(l.WalletType)
+						}
+
 					} else {
 						l.passwordIncorrect()
 					}

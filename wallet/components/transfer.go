@@ -92,7 +92,7 @@ func TransferPage(w fyne.Window) *fyne.Container {
 							DonaTransBtnContainer.Hide()
 							TransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
 							DonaTransStatus.Text = i18n.GetString("TransferWindow_CommittingTransaction")
-							err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
+							_, err := TransferRpc(fromAddress, AddressEntry.Text, amount.Text, remark.Text, fromAccountPrivKey)
 							if err == nil {
 								config.InsertAddress(AddressEntry.Text)
 								setTransferDone()

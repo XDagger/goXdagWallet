@@ -36,7 +36,7 @@ Mobile version is coming.
     - response: {"id":1,"result": "\<balance of the address\>","error":null}
   - method: Xdag.Transfer
     - params: [{"amount":"\<amount\>","address":"\<to address\>","remark":"\<remark\>"}]
-    - response: {"id":1,"result": "success","error":null}
+    - response: {"id":1,"result": "success:\<transaction hash\>","error":null}
 
 ## repo structure
  - clib - a wrapper of XDAG Wallet C library

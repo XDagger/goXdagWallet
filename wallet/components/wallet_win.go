@@ -16,7 +16,9 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 	"golang.org/x/exp/utf8string"
 )
 
@@ -205,4 +207,16 @@ func getBalance() (string, string) {
 			return XdagAddress, ""
 		}
 	}
+}
+
+func showAddressSelect(w fyne.Window) {
+	radio := widget.NewRadioGroup(OldAddresses, func(value string) {
+		XdagAddress = value
+	})
+	radio.SetSelected(OldAddresses[0])
+	XdagAddress = OldAddresses[0]
+	dialog.ShowCustomConfirm(i18n.GetString("PasswordWindow_RetypePassword"),
+		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), radio, func(b bool) {
+			NewWalletWindow(HAS_ONLY_XDAG)
+		}, w)
 }
