@@ -96,12 +96,12 @@ func (s *Xdag) Transfer(request XferParam, reply *string) error {
 	if balance < value {
 		return errors.New("insufficient amount")
 	}
-	err = components.TransferRpc(components.BipAddress, request.Address,
+	hash, err := components.TransferRpc(components.BipAddress, request.Address,
 		request.Amount, request.Remark, components.BipWallet.GetDefKey())
 	if err != nil {
 		return err
 	}
-	*reply = "success"
+	*reply = "success:" + hash
 	return nil
 }
 

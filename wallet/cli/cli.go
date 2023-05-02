@@ -135,3 +135,19 @@ func registerWallet() {
 		}
 	}
 }
+
+func selectAddress() {
+	prompt := promptui.Select{
+		Label: "Select wallet address",
+		Items: components.OldAddresses,
+	}
+
+	_, result, err := prompt.Run()
+
+	for err != nil {
+		fmt.Printf("Input selection failed %v\n", err)
+		_, result, err = prompt.Run()
+	}
+
+	components.XdagAddress = result
+}

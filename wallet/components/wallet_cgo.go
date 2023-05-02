@@ -41,9 +41,20 @@ func ConnectXdagWallet() int32 {
 			if err != nil {
 				xlog.Error(err)
 				return -5
+			} else if len(addr) < 1 {
+				xlog.Error("wallet address not found")
+				return -6
+			} else if len(addr) == 1 {
+				XdagAddress = addr[0]
 			} else {
-				XdagAddress = addr
 				xlog.Info(addr)
+				OldAddresses = AddressWithBalance(addr)
+				if len(OldAddresses) == 0 {
+					xlog.Error("check old addresses balance failed")
+					return -7
+				} else if len(OldAddresses) == 1 {
+					XdagAddress = OldAddresses[0]
+				}
 			}
 		}
 	}

@@ -28,6 +28,9 @@ func OpenAndRunWallet() {
 		res := components.ConnectXdagWallet()
 		spin.Stop()
 		if res == 0 {
+			if components.XdagAddress == "" && len(components.OldAddresses) > 0 {
+				selectAddress()
+			}
 			RunWallet(WalletAccount.WalletType)
 		} else {
 			fmt.Println("Password incorrect")
@@ -166,7 +169,7 @@ func RunWallet(walletExists int) {
 				spin.Stop()
 				continue
 			}
-			errTx := components.TransferRpc(fromAddress, items[2], items[1], items[3], fromKey)
+			_, errTx := components.TransferRpc(fromAddress, items[2], items[1], items[3], fromKey)
 			spin.Stop()
 			if errTx != nil {
 				fmt.Println("Transfer failed", err)
