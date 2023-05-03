@@ -186,16 +186,17 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 						} else {
 							NewWalletWindow(l.WalletType)
 						}
-
+					} else if res < -64 {
+						l.loginIncorrect(i18n.GetString("LogonWindow_InitializeFailed"))
 					} else {
-						l.passwordIncorrect()
+						l.loginIncorrect(i18n.GetString("Message_PasswordIncorrect"))
 					}
 				} else if l.WalletType == HAS_ONLY_BIP {
 					res := ConnectBipWallet(PwdStr)
 					if res {
 						NewWalletWindow(l.WalletType)
 					} else {
-						l.passwordIncorrect()
+						l.loginIncorrect(i18n.GetString("Message_PasswordIncorrect"))
 					}
 				}
 			} else {
@@ -208,8 +209,8 @@ func (l *LogonWin) showPasswordDialog(title, ok, dismiss string, parent fyne.Win
 	}, parent)
 }
 
-func (l *LogonWin) passwordIncorrect() {
-	StatusInfo.Text = i18n.GetString("Message_PasswordIncorrect")
+func (l *LogonWin) loginIncorrect(msg string) {
+	StatusInfo.Text = msg
 	canvas.Refresh(StatusInfo)
 	time.Sleep(time.Second * 5)
 	l.Win.Close()
