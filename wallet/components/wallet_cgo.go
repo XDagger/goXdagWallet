@@ -40,10 +40,10 @@ func ConnectXdagWallet() int32 {
 			addr, err := xdagoUtils.AddressFromStorage()
 			if err != nil {
 				xlog.Error(err)
-				return -5
+				return -128
 			} else if len(addr) < 1 {
 				xlog.Error("wallet address not found")
-				return -6
+				return -256
 			} else if len(addr) == 1 {
 				XdagAddress = addr[0]
 			} else {
@@ -51,7 +51,7 @@ func ConnectXdagWallet() int32 {
 				OldAddresses = AddressWithBalance(addr)
 				if len(OldAddresses) == 0 {
 					xlog.Error("check old addresses balance failed")
-					return -7
+					return -512
 				} else if len(OldAddresses) == 1 {
 					XdagAddress = OldAddresses[0]
 				}
