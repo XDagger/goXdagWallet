@@ -22,6 +22,11 @@ type XferParam struct {
 	Remark  string `json:"remark"`
 }
 
+type XferRespone struct {
+	Status string `json:"Status"`
+	TxHash string `json:"TxHash"`
+}
+
 type Xdag struct {
 	lock sync.Mutex
 }
@@ -72,7 +77,7 @@ func (s *Xdag) Account(request string, reply *string) error {
 	return nil
 }
 
-func (s *Xdag) Transfer(request XferParam, reply *string) error {
+func (s *Xdag) Transfer(request XferParam, reply *XferRespone) error {
 	if components.PwdStr == "" || components.BipAddress == "" ||
 		components.BipWallet == nil || components.BipWallet.IsLocked() {
 		return errors.New("wallet is locked")
@@ -101,7 +106,11 @@ func (s *Xdag) Transfer(request XferParam, reply *string) error {
 	if err != nil {
 		return err
 	}
-	*reply = "success:" + hash
+	// *reply = "success:" + hash
+	*reply = XferRespone{
+		Status: "success",
+		TxHash: hash,
+	}
 	return nil
 }
 

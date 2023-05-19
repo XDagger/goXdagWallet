@@ -36,12 +36,12 @@ Mobile version is coming.
     - response: {"id":1,"result": "\<balance of the address\>","error":null}
   - method: Xdag.Transfer
     - params: [{"amount":"\<amount\>","address":"\<to address\>","remark":"\<remark\>"}]
-    - response: {"id":1,"result": "success:\<transaction hash\>","error":null}
+    - response: {"id":1,"result": {"Status":"success","TxHash":"\<transaction hash\>"},"error":null}
 
 ## repo structure
  - clib - a wrapper of XDAG Wallet C library
    - xDagWallet - XDAG wallet C library
- - wallet - golang XDAG wallet app 
+ - wallet - golang XDAG wallet app
    - i18n - international strings
    - data - i18n config json, fonts
    - images - image and icon bundled in components/resource.go
@@ -74,7 +74,7 @@ in Mac
 
 if library not found , go to /wallet/components/wallet_cgo.go
 
-change the library path in code: 
+change the library path in code:
 
 `//#cgo darwin LDFLAGS: ....`
 
@@ -83,7 +83,7 @@ enter /wallet
 
 copy goXdagWallet(.exe), wallet-config.json and data folder to your deployment path.
 
-### Windows 
+### Windows
 
 also need copy libcrypto-1_1-x64.dll and libwinpthread-1.dll in MingW64's bin path to deployment path.
 
@@ -108,7 +108,7 @@ download and build from source
 
 `$ sudo pacman libsecp256k1 openssl`
 
-- Mac 
+- Mac
 
 `$ brew install openssl`
 
@@ -122,5 +122,5 @@ build secp256k1 from source
 
 ## features
 
- - frequently transferred addresses list 
+ - frequently transferred addresses list
  - history query filter and pagination
