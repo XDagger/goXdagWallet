@@ -12,6 +12,7 @@ import (
 	"goXdagWallet/xlog"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/manifoldco/promptui"
 )
@@ -63,7 +64,7 @@ func selectWallet() {
 }
 func registerWallet() {
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 	fmt.Println("Registering wallet....")
 	prompt := promptui.Select{
 		Label: "Select Wallet Type",

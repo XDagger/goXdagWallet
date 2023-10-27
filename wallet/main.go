@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -23,7 +24,7 @@ var splashDone = make(chan struct{})
 
 func init() {
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 
 	os.Setenv("FYNE_FONT", path.Join(pwd, "data", "myFont.ttf"))
 

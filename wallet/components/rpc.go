@@ -62,7 +62,7 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) (st
 
 	value, _ := strconv.ParseFloat(amount, 64)
 	blockHexStr := transactionBlock(from, to, remark, value, key)
-	//xlog.Info(blockHexStr)
+	xlog.Debug(blockHexStr)
 	if blockHexStr == "" {
 		return "", errors.New("create transaction block error")
 	}
@@ -106,6 +106,7 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 
 	inAddress, err = checkBase58Address(from)
 	isFromOld := err != nil
+	xlog.Debug("is old address", isFromOld)
 
 	if isFromOld { // old xdag address
 		hash, err := xdagoUtils.Address2Hash(from)

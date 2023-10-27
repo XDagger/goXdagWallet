@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 const configFile = "wallet-config.json"
@@ -45,7 +46,7 @@ func InitConfig() {
 	conf.Option.PoolAddress = "xdag.org:13656"
 
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 	data, err := os.ReadFile(path.Join(pwd, configFile))
 	if err == nil {
 		err = json.Unmarshal(data, &conf)

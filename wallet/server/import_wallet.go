@@ -9,11 +9,12 @@ import (
 	bip "goXdagWallet/xdago/wallet"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 func ImportServWallet() error {
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 
 	filePath := cli.InputFilePath()
 	cli.WalletAccount.Password = cli.ShowPassword()
