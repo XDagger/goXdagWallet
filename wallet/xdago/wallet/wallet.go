@@ -499,7 +499,7 @@ func (w *Wallet) ExportMnemonic(path string) error {
 	if w.mnemonicPhrase == "" {
 		return errors.New("no mnemonic to export")
 	}
-	return fileutils.WriteFile(path, []byte(w.mnemonicPhrase))
+	return fileutils.WriteFile(path, []byte(strings.TrimSpace(w.mnemonicPhrase)))
 }
 
 func ImportWalletFromDefKey(pathSrc, dirDest, pwd string) (*Wallet, error) {
