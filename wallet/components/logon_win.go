@@ -14,6 +14,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -147,7 +148,7 @@ func (l *LogonWin) connectClick() {
 		return
 	}
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 	accountStatus := l.WalletType
 	if l.HasAccount {
 		if accountStatus == HAS_BOTH {
@@ -321,7 +322,7 @@ func CheckOldWallet(walletDir string) bool {
 
 func CopyOldWallet(walletDir string) error {
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 	pathDest := path.Join(pwd, "xdagj_dat")
 	if err := os.RemoveAll(pathDest); err != nil {
 		return err
@@ -346,7 +347,7 @@ func CopyOldWallet(walletDir string) error {
 
 func (l *LogonWin) ImportMnemonic(data []byte) error {
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 	pathDest := path.Join(pwd, common.BIP32_WALLET_FOLDER)
 	if err := os.RemoveAll(pathDest); err != nil {
 		return err

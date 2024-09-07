@@ -923,3 +923,7 @@ func RecoverCompact(signature, hash []byte) (*secp256k1.PublicKey, bool, error) 
 	pubKey := secp256k1.NewPublicKey(&Q.X, &Q.Y)
 	return pubKey, wasCompressed, nil
 }
+
+func (sig *Signature) Bytes() ([32]byte, [32]byte) {
+	return sig.r.Bytes(), sig.s.Bytes()
+}

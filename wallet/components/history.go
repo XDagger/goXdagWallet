@@ -492,7 +492,7 @@ func getUrl(apiUrl, address, query string, page int, body *[]byte) error {
 	req.Header.Set("User-Agent", "Apache-HttpClient/4.3.1")
 
 	client := &http.Client{
-		Timeout: 8 * time.Minute,
+		Timeout: 18 * time.Second,
 	}
 	resp, err := client.Do(req)
 	if err != nil {

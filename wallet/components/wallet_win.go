@@ -12,6 +12,7 @@ import (
 	"goXdagWallet/xlog"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -28,7 +29,7 @@ func Xdag_Wallet_fount() int {
 	hasXdagWallet := 0
 	hasBip32Wallet := 0
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 	pathName := path.Join(pwd, "xdagj_dat", "dnet_key.dat")
 	// change current working directory
 	os.Chdir(pwd)
@@ -64,7 +65,7 @@ func ConnectBipWallet(password string) bool {
 	xlog.Info("Initializing cryptography...")
 	xlog.Info("Reading wallet...")
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 	wallet := bip.NewWallet(path.Join(pwd, common.BIP32_WALLET_FOLDER, common.BIP32_WALLET_FILE_NAME))
 	res := wallet.UnlockWallet(password)
 	if wallet.IsHdWalletInitialized() {
@@ -79,7 +80,7 @@ func ConnectBipWallet(password string) bool {
 }
 func NewBipWallet(password string, bitSize int) (*bip.Wallet, bool) {
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 	if len(LogonWindow.MnemonicBytes) > 0 {
 		xlog.Info("import Mnemonic...")
 		fmt.Println("Importing Mnemonic...")
@@ -113,7 +114,7 @@ func ValidateBipAddress(address string) bool {
 }
 
 func ValidateRemark(remark string) bool {
-	return utf8string.NewString(remark).IsASCII() && len(remark) < 32
+	return utf8string.NewString(remark).IsASCII() && len(remark) <= 32
 }
 
 func NewWalletWindow(walletExists int) {

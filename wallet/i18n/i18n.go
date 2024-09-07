@@ -6,13 +6,14 @@ import (
 	"goXdagWallet/config"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 var i18n = make(map[string]string)
 
 func stringRead(res string) []byte {
 	pwd, _ := os.Executable()
-	pwd, _ = path.Split(pwd)
+	pwd = filepath.Dir(pwd)
 
 	bytes, err := os.ReadFile(path.Join(pwd, "data", res))
 	if err != nil {
