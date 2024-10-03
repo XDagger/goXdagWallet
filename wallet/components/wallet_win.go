@@ -1,12 +1,15 @@
 package components
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"goXdagWallet/config"
 	"goXdagWallet/i18n"
 	"goXdagWallet/xdago/base58"
 	"goXdagWallet/xdago/common"
 	"goXdagWallet/xdago/cryptography"
+	"goXdagWallet/xdago/secp256k1"
 	xdagoUtils "goXdagWallet/xdago/utils"
 	bip "goXdagWallet/xdago/wallet"
 	"goXdagWallet/xlog"
@@ -216,8 +219,54 @@ func showAddressSelect(w fyne.Window) {
 	})
 	radio.SetSelected(OldAddresses[0])
 	XdagAddress = OldAddresses[0]
+
+	scrollContainer := container.NewVScroll(radio)
+	scrollContainer.SetMinSize(fyne.Size{Width: scrollContainer.Size().Width, Height: w.Canvas().Size().Height / 3})
+
 	dialog.ShowCustomConfirm(i18n.GetString("PasswordWindow_RetypePassword"),
-		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), radio, func(b bool) {
-			NewWalletWindow(HAS_ONLY_XDAG)
+		i18n.GetString("Common_Confirm"), i18n.GetString("Common_Cancel"), scrollContainer, func(b bool) {
+			if b {
+
+				if len(OldKeys) > 1 {
+					k := verifyKey(AddressVerify[XdagAddress])
+					if k == nil {
+						xlog.Error("private key is empty.", XdagAddress)
+						return
+					}
+					XdagKey = k
+				}
+				NewWalletWindow(HAS_ONLY_XDAG)
+			}
 		}, w)
+}
+
+func verifyKey(d xdagoUtils.VerifyData) *secp256k1.PrivateKey {
+	// fmt.Println(d.SignR)
+	// fmt.Println(d.SignS)
+
+	r, _ := hex.DecodeString(d.SignR)
+	s, _ := hex.DecodeString(d.SignS)
+	var fieldTypes = [8]byte{0x51, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	for _, privKey := range OldKeys {
+		var block0 = [1024]byte{}
+
+		copy(block0[8:16], fieldTypes[:])
+		binary.LittleEndian.PutUint64(block0[16:24], d.Timestamp)
+
+		pubKey := privKey.PubKey()
+		copy(block0[512:], pubKey.SerializeCompressed())
+
+		// fmt.Println(hex.EncodeToString(block0[:545]))
+
+		signHash := cryptography.HashTwice(block0[:545])
+
+		// fmt.Println(hex.EncodeToString(signHash[:]))
+
+		verify := cryptography.EcdsaVerify(pubKey, signHash[:], r, s)
+
+		if verify {
+			return privKey
+		}
+	}
+	return nil
 }

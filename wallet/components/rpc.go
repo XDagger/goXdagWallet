@@ -62,7 +62,7 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) (st
 
 	value, _ := strconv.ParseFloat(amount, 64)
 	blockHexStr := transactionBlock(from, to, remark, value, key)
-	xlog.Debug(blockHexStr)
+	xlog.Info(blockHexStr)
 	if blockHexStr == "" {
 		return "", errors.New("create transaction block error")
 	}
@@ -92,7 +92,7 @@ func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) (st
 }
 
 func BalanceRpc(address string) (string, error) {
-
+	xlog.Info(address)
 	return xdagjRpc("xdag_getBalance", address)
 }
 
@@ -285,8 +285,9 @@ func blockHash(block string) string {
 	return xdagoUtils.Hash2Address(hash)
 }
 
-func AddressWithBalance(addresses []string) []string {
+func AddressWithBalance(addresses []string, m map[string]xdagoUtils.VerifyData) ([]string, map[string]xdagoUtils.VerifyData) {
 	var res []string
+	addrMap := make(map[string]xdagoUtils.VerifyData)
 	for _, addr := range addresses {
 		value, err := BalanceRpc(addr)
 		if err != nil {
@@ -299,6 +300,7 @@ func AddressWithBalance(addresses []string) []string {
 			continue
 		}
 		res = append(res, addr)
+		addrMap[addr] = m[addr]
 	}
-	return res
+	return res, addrMap
 }

@@ -16,6 +16,7 @@ struct key_internal
     uint8_t pub_bit;
 };
 
+static uint8_t *allkeys = 0;
 static struct key_internal *def_key = 0;
 static struct xdag_public_key *keys_arr = 0;
 int nkeys = 0, maxnkeys = 0;
@@ -77,8 +78,8 @@ static int add_key(xdag_hash_t priv)
     keys_arr[nkeys].key = k->key;
     keys_arr[nkeys].pub = (uint64_t *)((uintptr_t)&k->pub | k->pub_bit);
 
-//  xdag_debug("Key %2d: priv=[%s] pub=[%02x:%s]", nkeys, xdag_log_hash(k->priv), 0x02 + k->pub_bit, xdag_log_hash(k->pub));
-//    xdag_mess("Key %2d: priv=[%s] pub=[%02x:%s]", nkeys, xdag_log_hash(k->priv), 0x02 + k->pub_bit, xdag_log_hash(k->pub));
+    //  xdag_debug("Key %2d: priv=[%s] pub=[%02x:%s]", nkeys, xdag_log_hash(k->priv), 0x02 + k->pub_bit, xdag_log_hash(k->pub));
+    //    xdag_mess("Key %2d: priv=[%s] pub=[%02x:%s]", nkeys, xdag_log_hash(k->priv), 0x02 + k->pub_bit, xdag_log_hash(k->pub));
 
     nkeys++;
 
@@ -173,4 +174,34 @@ void *xdag_default_key(void)
         return 0;
     }
     return (void *)def_key->priv;
+}
+
+int xdag_key_number(void)
+{
+    return nkeys;
+}
+
+void *xdag_address_key()
+{
+    if (nkeys == 0)
+    {
+        return 0;
+    }
+    if (allkeys)
+    {
+        return allkeys;
+    }
+
+    allkeys = malloc(sizeof(xdag_hash_t) * nkeys);
+
+    struct key_internal *k = def_key;
+    int i = 0;
+    while (k)
+    {
+        memcpy(allkeys + i, k->priv, sizeof(xdag_hash_t));
+        k = k->prev;
+        i += sizeof(xdag_hash_t);
+    }
+
+    return allkeys;
 }
