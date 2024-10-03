@@ -10,7 +10,17 @@ int xdag_set_password_callback_wrap(password_callback callback, int is_testnet)
     return client_init(is_testnet);
 }
 
+int xdag_get_key_number()
+{
+    return xdag_key_number();
+}
+
 void *xdag_get_default_key()
 {
     return xdag_default_key();
+}
+
+void *xdag_get_address_key()
+{
+    return xdag_address_key();
 }

@@ -30,31 +30,37 @@ func ConnectXdagWallet() int32 {
 	if result == 0 {
 		xlog.Info("Initializing cryptography...")
 		xlog.Info("Reading wallet...")
-		k := getDefaultKey()
+		k := getAddressKey()
 		if k == nil {
 			xlog.Error("get default key failed.")
 			fmt.Println("get default key failed.")
 			return -4
-		} else {
+		} else if len(k) == 32 {
 			XdagKey = secp256k1.PrivKeyFromBytes(k)
-			addr, err := xdagoUtils.AddressFromStorage()
-			if err != nil {
-				xlog.Error(err)
-				return -128
-			} else if len(addr) < 1 {
-				xlog.Error("wallet address not found")
-				return -256
-			} else if len(addr) == 1 {
-				XdagAddress = addr[0]
-			} else {
-				xlog.Info(addr)
-				OldAddresses = AddressWithBalance(addr)
-				if len(OldAddresses) == 0 {
-					xlog.Error("check old addresses balance failed")
-					return -512
-				} else if len(OldAddresses) == 1 {
-					XdagAddress = OldAddresses[0]
-				}
+		} else if len(k) > 32 {
+			n := 0
+			for n+32 <= len(k) {
+				OldKeys = append(OldKeys, secp256k1.PrivKeyFromBytes(k[n:n+32]))
+				n += 32
+			}
+		}
+		addr, verify, err := xdagoUtils.AddressFromStorage()
+		if err != nil {
+			xlog.Error(err)
+			return -128
+		} else if len(addr) < 1 {
+			xlog.Error("wallet address not found")
+			return -256
+		} else if len(addr) == 1 {
+			XdagAddress = addr[0]
+		} else {
+			xlog.Info(addr)
+			OldAddresses, AddressVerify = AddressWithBalance(addr, verify)
+			if len(OldAddresses) == 0 {
+				xlog.Error("check old addresses balance failed")
+				return -512
+			} else if len(OldAddresses) == 1 {
+				XdagAddress = OldAddresses[0]
 			}
 		}
 	}
@@ -73,6 +79,20 @@ func getDefaultKey() []byte {
 	p := C.xdag_get_default_key()
 	if uintptr(p) > 0 {
 		key := C.GoBytes(p, 32)
+		//fmt.Println(hex.EncodeToString(key[:]))
+		//xlog.Info("default private key:", hex.EncodeToString(key[:]))
+		return key
+	}
+	return nil
+}
+
+// func getAddressKey(addr string, timestamp uint64) []byte {
+func getAddressKey() []byte {
+	// p := C.xdag_get_address_key(C.CString(addr), C.uint64_t(timestamp))
+	n := C.xdag_get_key_number()
+	p := C.xdag_get_address_key()
+	if uintptr(p) > 0 {
+		key := C.GoBytes(p, 32*n)
 		//fmt.Println(hex.EncodeToString(key[:]))
 		//xlog.Info("default private key:", hex.EncodeToString(key[:]))
 		return key

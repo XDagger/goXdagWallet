@@ -28,6 +28,10 @@ extern "C"
     extern void xdag_wallet_finish(void);
 
     extern void *xdag_default_key(void);
+
+    extern void *xdag_address_key(void);
+    extern int xdag_key_number(void);
+
 #ifdef __cplusplus
 };
 #endif
