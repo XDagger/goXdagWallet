@@ -53,39 +53,17 @@ Mobile version is coming.
    - cli - command line mode
    - server - rpc server mode
 
-## build
-enter /clib
-
-build runtime library with CMakeLists.txt
-
-need MingW64 in Windows
-
-enter /wallet
-
-`$ go mod tidy`
-
-`$ CGO_ENABLED=1 go build`
-
-in Windows
-
-`> CGO_ENABLED=1 go build -ldflags -H=windowsgui`
-
-in Mac
-
-if library not found , go to /wallet/components/wallet_cgo.go
-
-change the library path in code:
-
-`//#cgo darwin LDFLAGS: ....`
-
-## deployment
-enter /wallet
-
-copy goXdagWallet(.exe), wallet-config.json and data folder to your deployment path.
+## prepare
 
 ### Windows
 
-also need copy libcrypto-1_1-x64.dll and libwinpthread-1.dll in MingW64's bin path to deployment path.
+install MSYS2
+
+build secp256k1 from source in MSYS2
+
+`github.com/bitcoin-core/secp256k1.git`
+
+`$ pacman -S openssl`
 
 ### Linux and Mac
 
@@ -106,7 +84,7 @@ download and build from source
 
 - Manjaro and Arch linux:
 
-`$ sudo pacman libsecp256k1 openssl`
+`$ sudo pacman -S libsecp256k1 openssl`
 
 - Mac
 
@@ -119,6 +97,38 @@ download and build from source
 build secp256k1 from source
 
 `github.com/bitcoin-core/secp256k1.git`
+
+if library not found , go to /wallet/components/wallet_cgo.go
+
+change the library path in code:
+
+`//#cgo darwin LDFLAGS: ....`
+
+## build
+enter /clib
+
+build runtime library with CMakeLists.txt
+
+need MingW64 in Windows
+
+enter /wallet
+
+`$ go mod tidy`
+
+`$ CGO_ENABLED=1 go build`
+
+in Windows
+
+`> CGO_ENABLED=1 go build -ldflags -H=windowsgui`
+
+## deployment
+enter /wallet
+
+copy goXdagWallet(.exe), wallet-config.json and data folder to your deployment path.
+
+### Windows
+
+also need copy libcrypto-1_1-x64.dll and libwinpthread-1.dll in MingW64's bin path to deployment path.
 
 ## features
 
