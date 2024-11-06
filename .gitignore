@@ -3,6 +3,7 @@
 .DS_Store
 storage/
 storage-testnet/
+res/
 *.dat
 *.bin
 main
@@ -16,5 +17,8 @@ libxdag_*.a
 *.app
 *.log
 *.out
+*.key
+*.dll
+*.txt
 ._*
 fyne.syso
