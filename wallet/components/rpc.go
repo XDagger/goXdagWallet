@@ -59,9 +59,12 @@ func xdagjRpc(method string, params string) (string, error) {
 }
 
 func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) (string, error) {
-
+	txNonce, err := getTxNonce(from)
+	if err != nil {
+		return "", err
+	}
 	value, _ := strconv.ParseFloat(amount, 64)
-	blockHexStr := transactionBlock(from, to, remark, value, key)
+	blockHexStr := transactionBlock(from, to, remark, value, key, txNonce)
 	xlog.Info(blockHexStr)
 	if blockHexStr == "" {
 		return "", errors.New("create transaction block error")
@@ -96,7 +99,7 @@ func BalanceRpc(address string) (string, error) {
 	return xdagjRpc("xdag_getBalance", address)
 }
 
-func transactionBlock(from, to, remark string, value float64, key *secp256k1.PrivateKey) string {
+func transactionBlock(from, to, remark string, value float64, key *secp256k1.PrivateKey, txNonce uint64) string {
 	if key == nil {
 		xlog.Error("transaction default key error")
 		return ""
@@ -161,7 +164,10 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	sb.WriteString("0000000000000000")
 
 	// tranx_nonce
-	sb.WriteString("0000000000000000000000000000000000000000000000000000000000000000")
+	sb.WriteString("000000000000000000000000000000000000000000000000")
+	var nonceByte []byte
+	binary.LittleEndian.PutUint64(nonceByte, txNonce)
+	sb.WriteString(hex.EncodeToString(nonceByte))
 
 	// input field: input address
 	sb.WriteString(inAddress)
@@ -314,4 +320,18 @@ func AddressWithBalance(addresses []string, m map[string]xdagoUtils.VerifyData) 
 		addrMap[addr] = m[addr]
 	}
 	return res, addrMap
+}
+
+func getTxNonce(address string) (uint64, error) {
+	nonceStr, err := xdagjRpc("xdag_getTransactionNonce", address)
+	if err != nil {
+		xlog.Error("get transaction nonce error", err)
+		return 0, err
+	}
+	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
+	if err != nil {
+		xlog.Error("parse transaction nonce error", err)
+		return 0, err
+	}
+	return nonce, nil
 }
