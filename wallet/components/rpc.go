@@ -165,9 +165,9 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 
 	// tranx_nonce
 	sb.WriteString("000000000000000000000000000000000000000000000000")
-	var nonceByte []byte
-	binary.LittleEndian.PutUint64(nonceByte, txNonce)
-	sb.WriteString(hex.EncodeToString(nonceByte))
+	var nonceByte [8]byte
+	binary.LittleEndian.PutUint64(nonceByte[:], txNonce)
+	sb.WriteString(hex.EncodeToString(nonceByte[:]))
 
 	// input field: input address
 	sb.WriteString(inAddress)
