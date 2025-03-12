@@ -155,7 +155,8 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	compKey := key.PubKey().SerializeCompressed()
 
 	// header: field types
-	sb.WriteString(fieldTypes(config.GetConfig().Option.IsTestNet, isFromOld,
+	// sb.WriteString(fieldTypes(config.GetConfig().Option.IsTestNet, isFromOld,
+	sb.WriteString(fieldTypes(false, isFromOld,
 		len(remark) > 0, compKey[0] == secp256k1.PubKeyFormatCompressedEven))
 
 	// header: timestamp

@@ -13,7 +13,6 @@ package components
 import "C"
 import (
 	"fmt"
-	"goXdagWallet/config"
 	"goXdagWallet/xdago/secp256k1"
 	xdagoUtils "goXdagWallet/xdago/utils"
 	"goXdagWallet/xlog"
@@ -22,9 +21,9 @@ import (
 
 func ConnectXdagWallet() int32 {
 	var testnet int
-	if config.GetConfig().Option.IsTestNet {
-		testnet = 1
-	}
+	// if config.GetConfig().Option.IsTestNet {
+	// 	testnet = 1
+	// }
 	res := C.init_password_callback(C.int(testnet))
 	result := int32(res)
 	if result == 0 {

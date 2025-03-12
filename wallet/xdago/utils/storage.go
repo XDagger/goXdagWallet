@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"goXdagWallet/config"
 	"goXdagWallet/xdago/common"
 	"goXdagWallet/xdago/cryptography"
 	"io"
@@ -29,11 +28,11 @@ type VerifyData struct {
 
 func makeDir1(t uint64) string {
 	var dir string
-	if config.GetConfig().Option.IsTestNet {
-		dir = xdagStoreTestNet
-	} else {
-		dir = xdagStoreFolder
-	}
+	// if config.GetConfig().Option.IsTestNet {
+	// 	dir = xdagStoreTestNet
+	// } else {
+	dir = xdagStoreFolder
+	// }
 	subdir := fmt.Sprintf("%02x", uint8(t>>40))
 
 	return path.Join(xdagjDatFolder, dir, subdir)
@@ -128,11 +127,11 @@ func LoadBlock(startTime, endTime uint64) ([]string, map[string]VerifyData, erro
 
 func AddressFromStorage() ([]string, map[string]VerifyData, error) {
 	var begin uint64
-	if config.GetConfig().Option.IsTestNet {
-		begin = XDAG_TEST_ERA
-	} else {
-		begin = XDAG_MAIN_ERA
-	}
+	// if config.GetConfig().Option.IsTestNet {
+	// 	begin = XDAG_TEST_ERA
+	// } else {
+	begin = XDAG_MAIN_ERA
+	// }
 	// var res []byte
 	// block, err := LoadBlock(begin, GetCurrentTimestamp())
 	addr, m, err := LoadBlock(begin, GetCurrentTimestamp())
