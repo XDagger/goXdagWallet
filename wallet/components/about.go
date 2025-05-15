@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	CommunityOldAddress = "FQglVQtb60vQv2DOWEUL7yh3smtj7g1s"
-	CommunityAddress    = "4duPWMbYUgAifVYkKDCWxLvRRkSByf5gb"
+	CommunityOldAddress = "4duPWMbYUgAifVYkKDCWxLvRRkSByf5gb"
+	CommunityAddress    = "PKcBtHWDSnAWfZntqWPBLedqBShuKSTzS"
 )
 
 func AboutPage(w fyne.Window) *fyne.Container {
 	link, _ := url.Parse("https://xdag.io/")
-	tele, _ := url.Parse("https://t.me/dagger_cryptocurrency")
+	tele, _ := url.Parse("https://t.me/XDAG_Community")
 	discord, _ := url.Parse("https://discord.gg/YxXUVQJ")
 
 	var testNet string
@@ -181,5 +181,4 @@ func AboutPage(w fyne.Window) *fyne.Container {
 	} else {
 		return enContainer
 	}
-
 }

@@ -114,11 +114,13 @@ func saveQuery(amountFrom, amountTo, remark, direction, timestamp string) {
 	default:
 		config.GetConfig().Query.Timestamp = "week"
 	}
+	config.GetConfig().Query.Timestamp = "year"
 	config.SaveConfig()
 }
 func loadQuery() string {
 	var condition string
 	query := config.GetConfig().Query
+	query.Timestamp = "year"
 	switch query.Timestamp {
 	case "week":
 		condition = condition + "&addresses_date_from=" +
@@ -157,6 +159,7 @@ func loadQuery() string {
 func setDefaultFilter(amountFrom, amountTo *numericalEntry, dateFrom, remark *widget.Entry,
 	transferTime, direction *widget.RadioGroup) {
 	query := config.GetConfig().Query
+	query.Timestamp = "year"
 	switch query.Timestamp {
 	case "week":
 		transferTime.Selected = i18n.GetString("WalletWindow_Filter_Week")
@@ -435,8 +438,10 @@ func refreshTable(page int, query string) {
 				case 0:
 					if historyData[id.Row-1].Direction == "input" {
 						label.SetText(i18n.GetString("WalletWindow_History_Input"))
-					} else {
+					} else if historyData[id.Row-1].Direction == "output" {
 						label.SetText(i18n.GetString("WalletWindow_History_Output"))
+					} else {
+						label.SetText("Snapshot")
 					}
 
 				case 1:

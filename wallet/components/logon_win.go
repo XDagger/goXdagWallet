@@ -287,6 +287,10 @@ func getTestTitle() string {
 			testNet = "Réseau Test"
 		} else if config.GetConfig().CultureInfo == "ru-RU" {
 			testNet = "тестовая сеть"
+		} else if config.GetConfig().CultureInfo == "it-IT" {
+			testNet = "Rete di prova"
+		} else if config.GetConfig().CultureInfo == "sp-SP" {
+			testNet = "Red de prueba"
 		} else {
 			testNet = "Test Net"
 		}

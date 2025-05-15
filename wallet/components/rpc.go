@@ -59,9 +59,12 @@ func xdagjRpc(method string, params string) (string, error) {
 }
 
 func TransferRpc(from, to, amount, remark string, key *secp256k1.PrivateKey) (string, error) {
-
+	txNonce, err := getTxNonce(from)
+	if err != nil {
+		return "", err
+	}
 	value, _ := strconv.ParseFloat(amount, 64)
-	blockHexStr := transactionBlock(from, to, remark, value, key)
+	blockHexStr := transactionBlock(from, to, remark, value, key, txNonce)
 	xlog.Info(blockHexStr)
 	if blockHexStr == "" {
 		return "", errors.New("create transaction block error")
@@ -96,7 +99,7 @@ func BalanceRpc(address string) (string, error) {
 	return xdagjRpc("xdag_getBalance", address)
 }
 
-func transactionBlock(from, to, remark string, value float64, key *secp256k1.PrivateKey) string {
+func transactionBlock(from, to, remark string, value float64, key *secp256k1.PrivateKey, txNonce uint64) string {
 	if key == nil {
 		xlog.Error("transaction default key error")
 		return ""
@@ -152,13 +155,20 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	compKey := key.PubKey().SerializeCompressed()
 
 	// header: field types
-	sb.WriteString(fieldTypes(config.GetConfig().Option.IsTestNet, isFromOld,
+	// sb.WriteString(fieldTypes(config.GetConfig().Option.IsTestNet, isFromOld,
+	sb.WriteString(fieldTypes(false, isFromOld,
 		len(remark) > 0, compKey[0] == secp256k1.PubKeyFormatCompressedEven))
 
 	// header: timestamp
 	sb.WriteString(hex.EncodeToString(timeBytes[:]))
 	// header: fee
 	sb.WriteString("0000000000000000")
+
+	// tranx_nonce
+	sb.WriteString("000000000000000000000000000000000000000000000000")
+	var nonceByte [8]byte
+	binary.LittleEndian.PutUint64(nonceByte[:], txNonce)
+	sb.WriteString(hex.EncodeToString(nonceByte[:]))
 
 	// input field: input address
 	sb.WriteString(inAddress)
@@ -182,11 +192,11 @@ func transactionBlock(from, to, remark string, value float64, key *secp256k1.Pri
 	sb.WriteString(s)
 	// zero fields
 	if len(remark) > 0 {
-		for i := 0; i < 18; i++ {
+		for i := 0; i < 16; i++ {
 			sb.WriteString("00000000000000000000000000000000")
 		}
 	} else {
-		for i := 0; i < 20; i++ {
+		for i := 0; i < 18; i++ {
 			sb.WriteString("00000000000000000000000000000000")
 		}
 	}
@@ -222,11 +232,11 @@ func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (s
 	var sb strings.Builder
 	sb.WriteString(block)
 	if hasRemark {
-		for i := 0; i < 22; i++ {
+		for i := 0; i < 20; i++ {
 			sb.WriteString("00000000000000000000000000000000")
 		}
 	} else {
-		for i := 0; i < 24; i++ {
+		for i := 0; i < 22; i++ {
 			sb.WriteString("00000000000000000000000000000000")
 		}
 	}
@@ -245,9 +255,19 @@ func transactionSign(block string, key *secp256k1.PrivateKey, hasRemark bool) (s
 
 func fieldTypes(isTest, isFromOld, hasRemark, isPubKeyEven bool) string {
 
-	// 1/8--2/C--D--[9]--6/7--5--5
-	// header(main/test)--input(old/new)--output--[remark]--pubKey(even/odd)--sign_r--sign_s
+	// 1/8--E--2/C--D--[9]--6/7--5--5
+	// header(main/test)--tranx_nonce--input(old/new)--output--[remark]--pubKey(even/odd)--sign_r--sign_s
 	var sb strings.Builder
+
+	sb.WriteString("E") // tranx_nonce
+
+	if isTest {
+		sb.WriteString("8") // test net
+	} else {
+		sb.WriteString("1") // main net
+	}
+
+	sb.WriteString("D") // output
 
 	if isFromOld {
 		sb.WriteString("2") // old address
@@ -255,25 +275,23 @@ func fieldTypes(isTest, isFromOld, hasRemark, isPubKeyEven bool) string {
 		sb.WriteString("C") // new address
 	}
 
-	if isTest {
-		sb.WriteString("8") // test net
-	} else {
-		sb.WriteString("1") // main net
-
-	}
-
 	if hasRemark { // with remark
 		if isPubKeyEven {
-			sb.WriteString("9D560500000000") // even public key
+			sb.WriteString("6") // even public key
 		} else {
-			sb.WriteString("9D570500000000") // odd public key
+			sb.WriteString("7") // odd public key
 		}
+		sb.WriteString("95500000000") // remark & signs
 	} else { // without remark
+
+		sb.WriteString("5") // sign
+
 		if isPubKeyEven {
-			sb.WriteString("6D550000000000") // even public key
+			sb.WriteString("6") // even public key
 		} else {
-			sb.WriteString("7D550000000000") // odd public key
+			sb.WriteString("7") // odd public key
 		}
+		sb.WriteString("0500000000") //sign
 	}
 
 	return sb.String()
@@ -303,4 +321,18 @@ func AddressWithBalance(addresses []string, m map[string]xdagoUtils.VerifyData) 
 		addrMap[addr] = m[addr]
 	}
 	return res, addrMap
+}
+
+func getTxNonce(address string) (uint64, error) {
+	nonceStr, err := xdagjRpc("xdag_getTransactionNonce", address)
+	if err != nil {
+		xlog.Error("get transaction nonce error", err)
+		return 0, err
+	}
+	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
+	if err != nil {
+		xlog.Error("parse transaction nonce error", err)
+		return 0, err
+	}
+	return nonce, nil
 }
