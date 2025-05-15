@@ -27,15 +27,15 @@ type VerifyData struct {
 }
 
 func makeDir1(t uint64) string {
-	var dir string
+	// var dir string
 	// if config.GetConfig().Option.IsTestNet {
 	// 	dir = xdagStoreTestNet
 	// } else {
-	dir = xdagStoreFolder
+	// dir = xdagStoreFolder
 	// }
 	subdir := fmt.Sprintf("%02x", uint8(t>>40))
 
-	return path.Join(xdagjDatFolder, dir, subdir)
+	return path.Join(xdagjDatFolder, xdagStoreFolder, subdir)
 }
 
 func makeDir2(t uint64) string {
@@ -93,7 +93,7 @@ func LoadBlock(startTime, endTime uint64) ([]string, map[string]VerifyData, erro
 			block := buffer.Bytes()
 			fieldTypes := binary.LittleEndian.Uint64(block[8:16])
 			// header(1/8),5(sign_r),5(sign_s)
-			if fieldTypes == 0x0551 || fieldTypes == 0x0558 {
+			if fieldTypes == 0x0551 {
 				timestamp := binary.LittleEndian.Uint64(block[16:24])
 				r := hex.EncodeToString(block[32:64])
 				s := hex.EncodeToString(block[64:96])
@@ -126,15 +126,15 @@ func LoadBlock(startTime, endTime uint64) ([]string, map[string]VerifyData, erro
 }
 
 func AddressFromStorage() ([]string, map[string]VerifyData, error) {
-	var begin uint64
+	// var begin uint64
 	// if config.GetConfig().Option.IsTestNet {
 	// 	begin = XDAG_TEST_ERA
 	// } else {
-	begin = XDAG_MAIN_ERA
+	// begin = XDAG_MAIN_ERA
 	// }
 	// var res []byte
 	// block, err := LoadBlock(begin, GetCurrentTimestamp())
-	addr, m, err := LoadBlock(begin, GetCurrentTimestamp())
+	addr, m, err := LoadBlock(XDAG_MAIN_ERA, GetCurrentTimestamp())
 	if err != nil {
 		return nil, nil, err
 	}
